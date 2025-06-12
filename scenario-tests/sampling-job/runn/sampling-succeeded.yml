@@ -1,4 +1,4 @@
-desc: Sampling Job
+desc: Sampling Job - Succeeded
 runners:
   req: ${USER_API_ENDPOINT}
 vars:

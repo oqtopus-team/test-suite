@@ -1,0 +1,18 @@
+version: '3'
+tasks:
+  runn-list:
+    desc: "list up runn list"
+    cmds:
+      - runn list */runn/*.yml
+  runn-id:
+    desc: "runn with runnbook id"
+    cmds:
+      - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose
+  runn-all:
+    desc: "runn all tests sequentially"
+    cmds:
+      - runn run */runn/*.yml --env-file .env --verbose
+  runn-all-con:
+    desc: "runn all tests concurrently"
+    cmds:
+      - runn run */runn/*.yml --env-file .env --concurrent 8
