@@ -2,63 +2,74 @@ desc: Sampling Job - Succeeded
 runners:
   req: ${USER_API_ENDPOINT}
 vars:
-  token: ${Q_API_TOKEN}
+  q_api_token: ${Q_API_TOKEN}
   device_id: ${DEVICE_ID}
+  job_name: sampling-job-succeeded
+  job_type: sampling
+  program: >-
+    OPENQASM 3;
+    include "stdgates.inc";
+    qubit[2] q;
+    bit[2] c;
+    h q[0];
+    cx q[0],q[1];
+    c = measure q;
 steps:
   post:
-   desc: post sampling job
+   desc: post job
    req:
      /v1/jobs:
        post:
          headers:
-           q-api-token: "{{ vars.token }}"
+           q-api-token: "{{ vars.q_api_token }}"
          body:
            application/json:
-             description: runn sampling job
+             description: "description of {{ vars.job_name }}"
              device_id: "{{ vars.device_id }}"
              job_info:
                program:
-               - OPENQASM 3; include "stdgates.inc"; qubit[2] q; bit[2] c; x q[1]; c = measure q;
-             job_type: sampling
-             name: sampling-job
+                 - "{{ vars.program }}"
+             job_type: "{{ vars.job_type }}"
+             name: "{{ vars.job_name }}"
              shots: 1000
-             status: submitted
              transpiler_info:
                transpiler_lib: qiskit
                transpiler_options:
                  optimization_level: 2
    test: | 
      current.res.status == 200
-   dump:
-     expr: current.res.body.job_id + "(sampling-job) is posted"
+  message:
+    desc: dump the state
+    dump:
+      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"
   wait:
     desc: check job status
     loop:
       count: 20
-      until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed"'
+      until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed" || current.res.body.status == "canceled"'
       minInterval: 5
       maxInterval: 10
     req:
       /v1/jobs/{{steps.post.res.body.job_id}}:
         get:
           headers:
-            q-api-token: "{{ vars.token }}"
+            q-api-token: "{{ vars.q_api_token }}"
     dump:
-      expr: steps.post.res.body.job_id + "(sampling-job) is in " + current.res.body.status
+      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status
   check:
     test: |
       steps.wait.res.body.status == "succeeded"
       && steps.wait.res.body.job_id != null
       && steps.wait.res.body.job_id == steps.post.res.body.job_id
-      && steps.wait.res.body.name == "sampling-job"
-      && steps.wait.res.body.description == "runn sampling job"
+      && steps.wait.res.body.name == vars.job_name
+      && steps.wait.res.body.description == "description of " + vars.job_name
       && steps.wait.res.body.device_id == vars.device_id
       && steps.wait.res.body.shots == 1000
-      && steps.wait.res.body.job_type == "sampling"
+      && steps.wait.res.body.job_type == vars.job_type
       && steps.wait.res.body.job_info != null
       && steps.wait.res.body.job_info.program != null
       && len(steps.wait.res.body.job_info.program) == 1
-      && steps.wait.res.body.job_info.program[0] == "OPENQASM 3; include \"stdgates.inc\"; qubit[2] q; bit[2] c; x q[1]; c = measure q;"
+      && steps.wait.res.body.job_info.program[0] == vars.program
       && steps.wait.res.body.transpiler_info != null
       && steps.wait.res.body.transpiler_info.transpiler_lib == "qiskit"
       && steps.wait.res.body.transpiler_info.transpiler_options != null
@@ -66,6 +77,9 @@ steps:
       && steps.wait.res.body.job_info.result != null
       && steps.wait.res.body.job_info.result.sampling != null
       && steps.wait.res.body.job_info.result.sampling.counts != null
+      && steps.wait.res.body.job_info.transpile_result.transpiled_program != null
+      && steps.wait.res.body.job_info.transpile_result.stats != null
+      && steps.wait.res.body.job_info.transpile_result.virtual_physical_mapping != null
       && steps.wait.res.body.simulator_info == null
       && steps.wait.res.body.mitigation_info == null
       && steps.wait.res.body.execution_time != null
@@ -74,3 +88,6 @@ steps:
       && steps.wait.res.body.ready_at != null
       && steps.wait.res.body.running_at != null
       && steps.wait.res.body.ended_at != null
+      && date(steps.wait.res.body.submitted_at) <= date(steps.wait.res.body.ready_at)
+      && date(steps.wait.res.body.ready_at) <= date(steps.wait.res.body.running_at)
+      && date(steps.wait.res.body.running_at) <= date(steps.wait.res.body.ended_at)
