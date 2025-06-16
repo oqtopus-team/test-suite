@@ -6,6 +6,7 @@ vars:
   device_id: ${DEVICE_ID}
   job_name: sampling-job-succeeded
   job_type: sampling
+  shots: 1000
   program: >-
     OPENQASM 3;
     include "stdgates.inc";
@@ -31,7 +32,7 @@ steps:
                  - "{{ vars.program }}"
              job_type: "{{ vars.job_type }}"
              name: "{{ vars.job_name }}"
-             shots: 1000
+             shots: "{{ vars.shots }}"
              transpiler_info:
                transpiler_lib: qiskit
                transpiler_options:
@@ -64,7 +65,7 @@ steps:
       && steps.wait.res.body.name == vars.job_name
       && steps.wait.res.body.description == "description of " + vars.job_name
       && steps.wait.res.body.device_id == vars.device_id
-      && steps.wait.res.body.shots == 1000
+      && steps.wait.res.body.shots == vars.shots
       && steps.wait.res.body.job_type == vars.job_type
       && steps.wait.res.body.job_info != null
       && steps.wait.res.body.job_info.program != null
