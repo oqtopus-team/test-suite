@@ -15,6 +15,10 @@ vars:
     h q[0];
     cx q[0],q[1];
     c = measure q;
+  transpiler_info:
+    transpiler_lib: qiskit
+    transpiler_options:
+      optimization_level: 2
 steps:
   post:
    desc: post job
@@ -33,10 +37,7 @@ steps:
              job_type: "{{ vars.job_type }}"
              name: "{{ vars.job_name }}"
              shots: "{{ vars.shots }}"
-             transpiler_info:
-               transpiler_lib: qiskit
-               transpiler_options:
-                 optimization_level: 2
+             transpiler_info: "{{ vars.transpiler_info }}"
    test: | 
      current.res.status == 200
   message:
