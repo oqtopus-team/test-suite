@@ -1,7 +1,6 @@
 desc: Sampling Job - Succeeded
-runners:
-  req: ${USER_API_ENDPOINT}
 vars:
+  user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
   device_id: ${DEVICE_ID}
   job_name: sampling-job-succeeded
@@ -19,77 +18,57 @@ vars:
     transpiler_lib: qiskit
     transpiler_options:
       optimization_level: 2
+runners:
+  post_and_wait:
+    path: ../../custom-runn/post-and-wait.yml
+    params:
+      user_api_endpoint: "{{ vars.user_api_endpoint }}"
+      q_api_token: "{{ vars.q_api_token }}"
+      device_id: "{{ vars.device_id }}"
+      job_name: "{{ vars.job_name }}"
+      job_type: "{{ vars.job_type }}"
+      shots: "{{ vars.shots }}"
+      program: "{{ vars.program }}"
+      transpiler_info: "{{ vars.transpiler_info }}"
 steps:
-  post:
-   desc: post job
-   req:
-     /v1/jobs:
-       post:
-         headers:
-           q-api-token: "{{ vars.q_api_token }}"
-         body:
-           application/json:
-             description: "description of {{ vars.job_name }}"
-             device_id: "{{ vars.device_id }}"
-             job_info:
-               program:
-                 - "{{ vars.program }}"
-             job_type: "{{ vars.job_type }}"
-             name: "{{ vars.job_name }}"
-             shots: "{{ vars.shots }}"
-             transpiler_info: "{{ vars.transpiler_info }}"
-   test: | 
-     current.res.status == 200
-  message:
-    desc: dump the state
-    dump:
-      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"
-  wait:
-    desc: check job status
-    loop:
-      count: 20
-      until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed" || current.res.body.status == "canceled"'
-      minInterval: 5
-      maxInterval: 10
-    req:
-      /v1/jobs/{{steps.post.res.body.job_id}}:
-        get:
-          headers:
-            q-api-token: "{{ vars.q_api_token }}"
-    dump:
-      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status
-  check:
+  post_and_wait:
+    post_and_wait:
+      desc: Post a sampling job and wait
+  bind:
+    bind:
+      body: steps.post_and_wait.steps.wait.res.body
+  test:
     test: |
-      steps.wait.res.body.status == "succeeded"
-      && steps.wait.res.body.job_id != null
-      && steps.wait.res.body.job_id == steps.post.res.body.job_id
-      && steps.wait.res.body.name == vars.job_name
-      && steps.wait.res.body.description == "description of " + vars.job_name
-      && steps.wait.res.body.device_id == vars.device_id
-      && steps.wait.res.body.shots == vars.shots
-      && steps.wait.res.body.job_type == vars.job_type
-      && steps.wait.res.body.job_info != null
-      && steps.wait.res.body.job_info.program != null
-      && len(steps.wait.res.body.job_info.program) == 1
-      && steps.wait.res.body.job_info.program[0] == vars.program
-      && steps.wait.res.body.transpiler_info != null
-      && steps.wait.res.body.transpiler_info.transpiler_lib == "qiskit"
-      && steps.wait.res.body.transpiler_info.transpiler_options != null
-      && steps.wait.res.body.transpiler_info.transpiler_options.optimization_level == 2
-      && steps.wait.res.body.job_info.result != null
-      && steps.wait.res.body.job_info.result.sampling != null
-      && steps.wait.res.body.job_info.result.sampling.counts != null
-      && steps.wait.res.body.job_info.transpile_result.transpiled_program != null
-      && steps.wait.res.body.job_info.transpile_result.stats != null
-      && steps.wait.res.body.job_info.transpile_result.virtual_physical_mapping != null
-      && steps.wait.res.body.simulator_info == null
-      && steps.wait.res.body.mitigation_info == null
-      && steps.wait.res.body.execution_time != null
-      && steps.wait.res.body.execution_time > 0
-      && steps.wait.res.body.submitted_at != null
-      && steps.wait.res.body.ready_at != null
-      && steps.wait.res.body.running_at != null
-      && steps.wait.res.body.ended_at != null
-      && date(steps.wait.res.body.submitted_at) <= date(steps.wait.res.body.ready_at)
-      && date(steps.wait.res.body.ready_at) <= date(steps.wait.res.body.running_at)
-      && date(steps.wait.res.body.running_at) <= date(steps.wait.res.body.ended_at)
+      body.status == "succeeded"
+      && body.job_id != null
+      && body.job_id == steps.post_and_wait.steps.post.res.body.job_id
+      && body.name == vars.job_name
+      && body.description == "description of " + vars.job_name
+      && body.device_id == vars.device_id
+      && body.shots == vars.shots
+      && body.job_type == vars.job_type
+      && body.job_info != null
+      && body.job_info.program != null
+      && len(body.job_info.program) == 1
+      && body.job_info.program[0] == vars.program
+      && body.transpiler_info != null
+      && body.transpiler_info.transpiler_lib == "qiskit"
+      && body.transpiler_info.transpiler_options != null
+      && body.transpiler_info.transpiler_options.optimization_level == 2
+      && body.job_info.result != null
+      && body.job_info.result.sampling != null
+      && body.job_info.result.sampling.counts != null
+      && body.job_info.transpile_result.transpiled_program != null
+      && body.job_info.transpile_result.stats != null
+      && body.job_info.transpile_result.virtual_physical_mapping != null
+      && body.simulator_info == null
+      && body.mitigation_info == null
+      && body.execution_time != null
+      && body.execution_time > 0
+      && body.submitted_at != null
+      && body.ready_at != null
+      && body.running_at != null
+      && body.ended_at != null
+      && date(body.submitted_at) <= date(body.ready_at)
+      && date(body.ready_at) <= date(body.running_at)
+      && date(body.running_at) <= date(body.ended_at)
