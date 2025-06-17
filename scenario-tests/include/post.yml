@@ -1,15 +1,15 @@
-desc: Post a job and wait
+desc: Post a job
 vars:
-  user_api_endpoint: "{{ parent.params.user_api_endpoint }}"
-  q_api_token: "{{ parent.params.q_api_token }}"
-  device_id: "{{ parent.params.device_id }}"
-  job_name: "{{ parent.params.job_name }}"
-  job_type: "{{ parent.params.job_type }}"
-  transpiler_info: "{{ parent.params.transpiler_info }}"
-  shots: "{{ parent.params.shots }}"
-  program: "{{ parent.params.program }}"
+  user_api_endpoint: "{{ parent.vars.user_api_endpoint }}"
+  q_api_token: "{{ parent.vars.q_api_token }}"
+  device_id: "{{ parent.vars.device_id }}"
+  job_name: "{{ parent.vars.job_name }}"
+  job_type: "{{ parent.vars.job_type }}"
+  transpiler_info: "{{ parent.vars.transpiler_info }}"
+  shots: "{{ parent.vars.shots }}"
+  program: "{{ parent.vars.program }}"
 runners:
-  req: "{{ parent.params.user_api_endpoint }}"
+  req: "{{ parent.vars.user_api_endpoint }}"
 if: included
 steps:
   post:
