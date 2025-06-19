@@ -1,9 +1,0 @@
-desc: Sampling Job
-vars:
-  transpiler_info:
-    transpiler_lib: qiskit
-    transpiler_options:
-      optimization_level: 2
-steps:
-  test-job:
-    include: sampling-included.yml
