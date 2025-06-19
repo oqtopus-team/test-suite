@@ -1,4 +1,4 @@
-desc: Sampling Job - Succeeded
+desc: Sampling Job
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
@@ -14,10 +14,8 @@ vars:
     h q[0];
     cx q[0],q[1];
     c = measure q;
-  transpiler_info:
-    transpiler_lib: qiskit
-    transpiler_options:
-      optimization_level: 2
+  transpiler_info: "{{ parent.vars.transpiler_info }}"
+if: included
 steps:
   post:
     include: ../../include/post.yml
