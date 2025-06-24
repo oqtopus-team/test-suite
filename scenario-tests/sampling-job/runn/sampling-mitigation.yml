@@ -1,7 +1,7 @@
 desc: Sampling job with mitigiation
 vars:
 steps:
-  test-no-transpiler:
+  test-sampling-job-with-mitigation:
     include:
       path: sampling-included.yml
       vars:

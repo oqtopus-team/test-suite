@@ -1,7 +1,7 @@
 desc: Sampling job with default transpiler
 vars:
 steps:
-  test-no-transpiler:
+  test-sampling-with-default-transpiler:
     include:
       path: sampling-included.yml
       vars:

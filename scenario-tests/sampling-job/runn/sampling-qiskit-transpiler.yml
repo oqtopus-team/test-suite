@@ -1,7 +1,7 @@
 desc: Sampling Job with Qiskit transpiler
 steps:
-  test-qiskit:
-    desc: run Bell Circuit
+  test-sampling-job-with-qiskit-transpiler:
+    desc: sampling job with qiskit transpiler
     include:
       path: sampling-included.yml
       vars:
