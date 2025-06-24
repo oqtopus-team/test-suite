@@ -53,9 +53,9 @@ Each test follows this flow:
 | # | Transpiler | Backend | Qubits | Mitigation | Expected | Implemented in Dev | Implemented in Prod |
 |---|---|---|---|---|---|---|---|
 | 1 | qiskit | simulator | 4 | off | succeeded |  | |
-| 2 | qiskit | simulator | 4 | on | succeeded |  | |
-| 3 | qiskit | simulator | 16 | off | succeeded | | |
-| 4 | qiskit | simulator | 16 | on | succeeded | | |
+| 2 | qiskit | simulator | 4 | on | succeeded | | |
+| 3 | qiskit | simulator | 16 | off | succeeded | ✅ | |
+| 4 | qiskit | simulator | 16 | on | succeeded | ✅ | |
 | 5 | qiskit | QPU (real) | 4 | off | succeeded | | |
 | 6 | qiskit | QPU (real) | 4 | on | succeeded | | |
 | 7 | qiskit | QPU (real) | 16 | off | succeeded | | |
@@ -69,9 +69,9 @@ Each test follows this flow:
 | 15 | qiskit | simulator (mock) | 16 | off | failed | | |
 | 16 | qiskit | simulator (mock) | 16 | on | failed | | |
 | 17 | no transpiler | simulator | 4 | off | succeeded |  | |
-| 18 | no transpiler | simulator | 4 | on | succeeded |  | |
-| 19 | no transpiler | simulator | 16 | off | succeeded | | |
-| 20 | no transpiler | simulator | 16 | on | succeeded | | |
+| 18 | no transpiler | simulator | 4 | on | succeeded | | |
+| 19 | no transpiler | simulator | 16 | off | succeeded | ✅ | |
+| 20 | no transpiler | simulator | 16 | on | succeeded | ✅ | |
 | 21 | no transpiler | QPU (real) | 4 | off | succeeded | | |
 | 22 | no transpiler | QPU (real) | 4 | on | succeeded | | |
 | 23 | no transpiler | QPU (real) | 16 | off | succeeded | | |
@@ -84,4 +84,4 @@ Each test follows this flow:
 | 30 | no transpiler | simulator (mock) | 4 | on | failed | | |
 | 31 | no transpiler | simulator (mock) | 16 | off | failed | | |
 | 32 | no transpiler | simulator (mock) | 16 | on | failed | | |
-| 33 | default transpiler | simulator | 4 | off | succeeded | | |
+| 33 | default transpiler | simulator | 16 | off | succeeded | ✅ | |
