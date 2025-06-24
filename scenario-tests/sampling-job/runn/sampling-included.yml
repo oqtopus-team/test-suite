@@ -1,4 +1,4 @@
-desc: Included sampling job tests
+desc: sampling job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
