@@ -1,7 +1,14 @@
 # OQTOPUS Test Suite
 
-This repository contains external testing tools for the OQTOPUS system. It provides comprehensive testing capabilities including scenario tests and other validation tools to ensure the proper functionality of the OQTOPUS quantum computing platform.
+This repository contains external testing tools for the OQTOPUS quantum computing platform.
 
-## Overview
+## Contents
 
-The OQTOPUS Test Suite is a collection of external testing tools designed to validate various components and functionalities of the OQTOPUS system from outside the system. Currently, scenario tests are implemented, with additional test types planned for future implementation.
+- **[scenario-tests/](scenario-tests/)** - Scenario tests for quantum job execution using runn framework
+
+## Quick Start
+
+1. Navigate to the test directory you want to run
+2. Follow the instructions in the respective README.md file
+
+For detailed usage instructions, see the README.md in each test directory.
