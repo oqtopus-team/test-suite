@@ -30,6 +30,7 @@ steps:
               name: "{{ vars.job_name }}"
               shots: "{{ vars.shots }}"
               transpiler_info: "{{ vars.transpiler_info }}"
+              mitigation_info: "{{ parent.vars.mitigation_info }}"
     test: |
       current.res.status == 200
   message:
