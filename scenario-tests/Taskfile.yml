@@ -11,7 +11,7 @@ tasks:
   runn-all:
     desc: "runn all tests sequentially"
     cmds:
-      - runn run */runn/*.yml --env-file .env --verbose --scopes read:parent
+      - runn run */runn/*.yml --env-file .env --verbose --fail-fast --scopes read:parent
   runn-all-con:
     desc: "runn all tests concurrently"
     cmds:
