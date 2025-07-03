@@ -1,12 +1,12 @@
-desc: Sampling job with mitigiation
+desc: Sampling job with qiskit transpiler and mitigiation
 vars:
 steps:
-  test-sampling-job-with-mitigation:
+  test-sampling-job-with-qiskit-and-mitigation:
     include:
       path: sampling-included.yml
       vars:
         device_id: "Kawasaki"
-        job_name: sampling-job-with-mitigation
+        job_name: sampling-job-with-qiskit-and-mitigation
         program: >-
           OPENQASM 3;
           include "stdgates.inc";
