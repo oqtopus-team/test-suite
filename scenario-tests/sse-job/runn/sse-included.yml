@@ -1,0 +1,61 @@
+desc: SSE job tests to be included
+vars:
+  user_api_endpoint: ${USER_API_ENDPOINT}
+  q_api_token: ${Q_API_TOKEN}
+  device_id: "{{ parent.vars.device_id }}"
+  job_name: "{{ parent.vars.job_name }}"
+  job_type: sse
+  shots: 1000
+  program: "{{ parent.vars.program }}"
+  transpiler_info: "{{ parent.vars.transpiler_info }}"
+  mitigation_info: "{{ parent.vars.mitigation_info }}"
+  expected_status: "{{ parent.vars.expected_status }}"
+  expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
+  expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
+  expected_transpiled: "{{ parent.vars.expected_transpiled }}"
+if: included
+steps:
+  post:
+    include: ../../include/post.yml
+    bind:
+      post_res_job_id: steps.post.steps.post.res.body.job_id
+      wait_res_body: steps.post.steps.wait.res.body
+  status-test:
+    test: |
+      wait_res_body.status == vars.expected_status
+  basic-test:
+    test: |
+      wait_res_body.job_id == post_res_job_id
+      && wait_res_body.name == vars.job_name
+      && wait_res_body.description == "description of " + vars.job_name
+      && wait_res_body.device_id == vars.device_id
+      && wait_res_body.shots == vars.shots
+      && wait_res_body.job_type == vars.job_type
+      && len(wait_res_body.job_info?.program) == 1
+      && wait_res_body.job_info?.program[0] == vars.program
+      && wait_res_body.job_info?.result?.sampling?.counts != null
+      && wait_res_body.execution_time > 0
+      && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
+      && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
+      && date(wait_res_body.running_at) <= date(wait_res_body.ended_at)
+  transpiler-info-test:
+    test: |
+      wait_res_body.transpiler_info?.transpiler_lib == vars.expected_transpiler_lib
+      && toJSON(wait_res_body.transpiler_info?.transpiler_options) == toJSON(vars.expected_transpiler_options)
+  transpiler-result-test:
+      test: |
+        (wait_res_body.job_info?.transpile_result == null && vars.expected_transpiled == false)
+        || wait_res_body.job_info?.transpile_result?.transpiled_program != null
+        && len(wait_res_body.job_info?.transpile_result?.stats) > 0
+        && len(wait_res_body.job_info?.transpile_result?.stats.after) > 0
+        && len(wait_res_body.job_info?.transpile_result?.stats.before) > 0
+        && wait_res_body.job_info?.transpile_result?.virtual_physical_mapping["0"] != null
+        && wait_res_body.job_info?.transpile_result?.virtual_physical_mapping["1"] != null
+  mitigation-info-test:
+    test: |
+     wait_res_body.mitigation_info?.ro_error_mitigation == vars.mitigation_info?.ro_error_mitigation
+## must be null if no mitigation is used. Cloud is in fixing this issue.
+  simulator-info-test:
+    test: |
+      wait_res_body.simulator_info == null
+
