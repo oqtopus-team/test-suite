@@ -5,7 +5,6 @@ steps:
     include:
       path: sampling-included.yml
       vars:
-        device_id: "Kawasaki"
         job_name: sampling-job-with-default-transpiler
         program: >-
           OPENQASM 3;

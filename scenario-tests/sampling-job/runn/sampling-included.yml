@@ -2,7 +2,7 @@ desc: sampling job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
-  device_id: "{{ parent.vars.device_id }}"
+  device_id: ${DEVICE_ID:- "Kawasaki"}
   job_name: "{{ parent.vars.job_name }}"
   job_type: sampling
   shots: 1000
