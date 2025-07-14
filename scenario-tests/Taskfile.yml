@@ -8,6 +8,10 @@ tasks:
     desc: "runn with runnbook id"
     cmds:
       - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose --scopes read:parent
+  runn-id-stress:
+    desc: "runn with runnbook id (stress test)"
+    cmds:
+      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --scopes read:parent
   runn-all:
     desc: "runn all tests sequentially"
     cmds:
