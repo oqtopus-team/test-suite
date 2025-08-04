@@ -17,9 +17,8 @@ steps:
         transpiler_info:
           transpiler_lib: qiskit
           transpiler_options:
-            optimization_level: 2
+            optimization_level: 1
         expected_status: "succeeded"
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
-          optimization_level: 2
- 
+          optimization_level: 1
