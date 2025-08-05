@@ -5,7 +5,7 @@ tasks:
     cmds:
       - runn run endr.yml --env-file .env --verbose --scopes read:parent
 
-  start-endurance:
+  start-endr:
     desc: "Start the endurance test in the background"
     vars:
       RESULTS_DIR: "results"
@@ -31,7 +31,7 @@ tasks:
 
     silent: true
 
-  status-endurance:
+  status-endr:
     desc: "Check the status of the endurance test"
     cmds:
       - |
@@ -49,7 +49,7 @@ tasks:
         fi
     silent: true
 
-  stop-endurance:
+  stop-endr:
     desc: "Stop the endurance test"
     cmds:
       - |
