@@ -12,7 +12,7 @@ do
     echo "========================================"
     echo "Test started at: $(date)"
     echo "========================================"
-    /opt/homebrew/bin/runn run endr.yml --env-file .env --verbose --scopes read:parent
+    runn run endr.yml --env-file .env --verbose --scopes read:parent
     RESULT=$?
     if [ $RESULT -ne 0 ]; then
         echo "runn command failed with exit code $RESULT at $(date)"
