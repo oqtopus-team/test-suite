@@ -1,0 +1,65 @@
+version: '3'
+tasks:
+  runn-endr:
+    desc: "runn endurance test"
+    cmds:
+      - runn run endr.yml --env-file .env --verbose --scopes read:parent
+
+  start-endurance:
+    desc: "Start the endurance test in the background"
+    vars:
+      RESULTS_DIR: "results"
+      LOG_FILE: '{{.RESULTS_DIR}}/endurance_test_{{now.Format "2006_0102_1504_05"}}.log'
+      PID_FILE: 'endurance_test.pid'
+    cmds:
+      - |
+        mkdir -p "{{.RESULTS_DIR}}"
+        if [ -f endurance_test.pid ]; then
+          PID=$(cat endurance_test.pid)
+          if ps -p $PID > /dev/null; then
+            echo "Endurance test is already running with PID: $PID"
+            exit 1
+          else
+            echo "Stale PID file found. Removing it."
+            rm endurance_test.pid
+          fi
+        fi
+        echo "Log file: {{.LOG_FILE}}"
+        chmod +x run_endurance_test.sh
+        bash -c 'nohup ./run_endurance_test.sh >> "{{.LOG_FILE}}" 2>&1 &'
+        echo "Endurance test started. Log file: {{.LOG_FILE}}"
+
+    silent: true
+
+  status-endurance:
+    desc: "Check the status of the endurance test"
+    cmds:
+      - |
+        if [ -f endurance_test.pid ]; then
+          PID=$(cat endurance_test.pid)
+          if ps -p $PID > /dev/null; then
+            echo "Endurance test is running with PID: $PID"
+            ps -p $PID
+          else
+            echo "PID file found, but process is not running. Cleaning up."
+            rm endurance_test.pid
+          fi
+        else
+          echo "Endurance test is not running."
+        fi
+    silent: true
+
+  stop-endurance:
+    desc: "Stop the endurance test"
+    cmds:
+      - |
+        if [ -f endurance_test.pid ]; then
+          PID=$(cat endurance_test.pid)
+          echo "Stopping endurance test with PID: $PID"
+          kill $PID
+          rm endurance_test.pid
+          echo "PID file removed."
+        else
+          echo "Endurance test is not running."
+        fi
+    silent: true
