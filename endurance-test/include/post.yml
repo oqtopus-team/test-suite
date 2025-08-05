@@ -45,8 +45,8 @@ steps:
     loop:
       count: 20
       until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed" || current.res.body.status == "canceled"'
-      minInterval: 5
-      maxInterval: 10
+      minInterval: 1
+      maxInterval: 1
     req:
       /v1/jobs/{{steps.post.res.body.job_id}}:
         get:
