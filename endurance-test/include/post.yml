@@ -18,7 +18,7 @@ steps:
   post:
     desc: Post a job
     req:
-      /v1/jobs:
+      /jobs:
         post:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
@@ -48,9 +48,9 @@ steps:
       minInterval: 1
       maxInterval: 1
     req:
-      /v1/jobs/{{steps.post.res.body.job_id}}:
+      /jobs/{{steps.post.res.body.job_id}}:
         get:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
     dump:
-      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
