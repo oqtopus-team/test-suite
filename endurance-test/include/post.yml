@@ -39,7 +39,7 @@ steps:
   message:
     desc: Dump the state
     dump:
-      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"'
   wait:
     desc: Check job status
     loop:
