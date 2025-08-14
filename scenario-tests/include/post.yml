@@ -12,10 +12,6 @@ runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
 steps:
-  started:
-    desc: test started
-    dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is started"'
   post:
     desc: post a job
     req:
@@ -56,7 +52,3 @@ steps:
     dump:
       desc: job status
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
-  finished:
-    desc: test finished
-    dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is finished"'
