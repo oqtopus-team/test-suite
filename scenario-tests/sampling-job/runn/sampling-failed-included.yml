@@ -1,4 +1,4 @@
-desc: sampling job tests to be included
+desc: sampling job tests failed to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
@@ -36,11 +36,10 @@ steps:
       && wait_res_body.job_type == vars.job_type
       && len(wait_res_body.job_info?.program) == 1
       && wait_res_body.job_info?.program[0] == vars.program
-      && wait_res_body.job_info?.result?.sampling?.counts != null
-      && wait_res_body.execution_time > 0
+      && wait_res_body.job_info?.result == null
+      && wait_res_body.execution_time == null
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
-      && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
-      && date(wait_res_body.running_at) <= date(wait_res_body.ended_at)
+      && wait_res_body.running_at == null
   transpiler-info-test:
     test: |
       wait_res_body.transpiler_info?.transpiler_lib == vars.expected_transpiler_lib
