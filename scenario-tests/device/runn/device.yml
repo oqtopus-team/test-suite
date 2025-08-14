@@ -1,9 +1,9 @@
-desc: Get Devices (also for health check)
+desc: get devices (also for health check)
 runners:
   req: ${USER_API_ENDPOINT}
 steps:
   get:
-    desc: Get Devices
+    desc: get devices
     req:
       /devices:
         get:
@@ -12,6 +12,6 @@ steps:
     test: |
       current.res.status == 200
   message:
-    desc: Got Devices
+    desc: some devices are registered
     dump:
       expr: 'string(len(steps.get.res.body)) + " devices are registered"'

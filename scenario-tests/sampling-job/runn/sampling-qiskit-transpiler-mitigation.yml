@@ -1,4 +1,4 @@
-desc: Sampling job with qiskit transpiler and mitigiation
+desc: sampling job with Qiskit transpiler and mitigiation
 vars:
 steps:
   test-sampling-job-with-qiskit-and-mitigation:

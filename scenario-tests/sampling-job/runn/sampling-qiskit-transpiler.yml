@@ -1,4 +1,4 @@
-desc: Sampling Job with Qiskit transpiler
+desc: sampling job with Qiskit transpiler
 steps:
   test-sampling-job-with-qiskit-transpiler:
     desc: sampling job with qiskit transpiler

@@ -1,4 +1,4 @@
-desc: Sampling Job with mitigation without transpiler 
+desc: sampling job with mitigation without transpiler 
 vars:
 steps:
   test-no-transpiler:
