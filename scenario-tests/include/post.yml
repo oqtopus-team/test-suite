@@ -15,7 +15,7 @@ steps:
   post:
     desc: Post a job
     req:
-      /v1/jobs:
+      /jobs:
         post:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
@@ -45,7 +45,7 @@ steps:
       minInterval: 5
       maxInterval: 10
     req:
-      /v1/jobs/{{steps.post.res.body.job_id}}:
+      /jobs/{{steps.post.res.body.job_id}}:
         get:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
