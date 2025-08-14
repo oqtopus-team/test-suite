@@ -1,5 +1,9 @@
 version: '3'
 tasks:
+  runn-device:
+    desc: "get devices for also health check"
+    cmds:
+      - runn run device/runn/device.yml --env-file .env --verbose
   runn-list:
     desc: "list up runn list"
     cmds:
