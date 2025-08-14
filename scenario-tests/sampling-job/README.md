@@ -85,3 +85,4 @@ Each test follows this flow:
 | 31 | no transpiler | simulator (mock) | 16 | off | failed | | |
 | 32 | no transpiler | simulator (mock) | 16 | on | failed | | |
 | 33 | default transpiler | simulator | 16 | off | succeeded | ✅ | |
+| 34 | custom transpiler | simulator | 16 | off | succeeded | ✅ | |

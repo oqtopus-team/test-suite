@@ -1,4 +1,4 @@
-desc: Sampling Job without transpiler
+desc: sampling job without transpiler
 vars:
 steps:
   test-no-transpiler:

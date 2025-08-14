@@ -1,4 +1,4 @@
-desc: Post a job
+desc: post a job and get the status
 vars:
   user_api_endpoint: "{{ parent.vars.user_api_endpoint }}"
   q_api_token: "{{ parent.vars.q_api_token }}"
@@ -12,8 +12,12 @@ runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
 steps:
+  started:
+    desc: test started
+    dump:
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is started"'
   post:
-    desc: Post a job
+    desc: post a job
     req:
       /jobs:
         post:
@@ -34,11 +38,11 @@ steps:
     test: |
       current.res.status == 200
   message:
-    desc: Dump the state
+    desc: posted a job
     dump:
-      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"'
   wait:
-    desc: Check job status
+    desc: check job status
     loop:
       count: 20
       until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed" || current.res.body.status == "canceled"'
@@ -50,5 +54,9 @@ steps:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
     dump:
-      expr: steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status
- 
+      desc: job status
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+  finished:
+    desc: test finished
+    dump:
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is finished"'
