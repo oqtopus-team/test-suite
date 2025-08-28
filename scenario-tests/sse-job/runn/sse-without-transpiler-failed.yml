@@ -1,4 +1,4 @@
-desc: SSE job
+desc: SSE job without transpiler failed
 vars:
 steps:
   test-sse:
@@ -6,7 +6,7 @@ steps:
       path: sse-included.yml
       vars:
         device_id: "Kawasaki"
-        job_name: sse
+        job_name: sse-without-transpiler-failed
         program: >
           aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J
           reAppbXBvcnQgcGFuZGFzCmltcG9ydCB0cWRtCmltcG9ydCBzY2lweQppbXBvcnQgc2tsZWFybg
@@ -19,16 +19,16 @@ steps:
           dCBpdGVyYXRpb24ge2l9ICMjIikKICB0cnk6CiAgICBjaXJjdWl0ID0gUXVhbnR1bUNpcmN1aXQ
           oMikKICAgIGNpcmN1aXQuYWRkX0hfZ2F0ZSgwKQogICAgY2lyY3VpdC5hZGRfWF9nYXRlKDEpCi
           AgICBjaXJjdWl0LmFkZF9DTk9UX2dhdGUoMCwgMSkKICAgIGNpcmN1aXQuYWRkX1JZX2dhdGUoM
-          SwgMC4xKmkpCiAgICB0cmFuc3BpbGVyX2luZm8gPSB7fQogICAgam9iID0gT3F0b3B1c1NhbXBs
-          aW5nQmFja2VuZCgpLnNhbXBsZShjaXJjdWl0LCBzaG90cz0xMCppKzEwMCwgbmFtZT0idGVzdCB
-          jaXJjdWl0IiwgZGV2aWNlX2lkPSIiLCB0cmFuc3BpbGVyX2luZm89dHJhbnNwaWxlcl9pbmZvKQ
-          ogICAgcHJpbnQoam9iKQogICAgcmVzdWx0ID0gam9iLnJlc3VsdCgpCiAgICBwcmludCgiIyMjI
-          yBSZXN1bHQ6IikKICAgIHByaW50KHJlc3VsdC5jb3VudHMpCgogIGV4Y2VwdCBFeGNlcHRpb24g
-          YXMgZToKICAgIGltcG9ydCB0cmFjZWJhY2sKICAgIHByaW50KHRyYWNlYmFjay5mb3JtYXRfZXh
-          jKCkpCiAgICBwcmludCgiIyMjIyBGQUlMRUQiKQoKcHJpbnQoIiMjIEZpbmlzaCAjIyIpCg==
-        expected_status: "succeeded"
-        expected_transpiler_lib: qiskit
-        expected_transpiler_options:
-          optimization_level: 1
-        expected_transpiled: true
+          SwgMC4xKmkpCiAgICB0cmFuc3BpbGVyX2luZm8gPSB7CiAgICAgICJ0cmFuc3BpbGVyX2xpYiI6
+          IE5vbmUKICAgIH0KICAgIGpvYiA9IE9xdG9wdXNTYW1wbGluZ0JhY2tlbmQoKS5zYW1wbGUoY2l
+          yY3VpdCwgc2hvdHM9MTAqaSsxMDAsIG5hbWU9InRlc3QgY2lyY3VpdCIsIGRldmljZV9pZD0iIi
+          wgdHJhbnNwaWxlcl9pbmZvPXRyYW5zcGlsZXJfaW5mbykKICAgIHByaW50KGpvYikKICAgIHJlc
+          3VsdCA9IGpvYi5yZXN1bHQoKQogICAgcHJpbnQoIiMjIyMgUmVzdWx0OiIpCiAgICBwcmludChy
+          ZXN1bHQuY291bnRzKQoKICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBpbXBvcnQgdHJhY2V
+          iYWNrCiAgICBwcmludCh0cmFjZWJhY2suZm9ybWF0X2V4YygpKQogICAgcHJpbnQoIiMjIyMgRk
+          FJTEVEIikKCnByaW50KCIjIyBGaW5pc2ggIyMiKQo=
+        expected_status: "failed"
+        expected_transpiler_lib: null
+        expected_transpiler_options: null
+        expected_transpiled: false
         expected_execution_time_filled: true

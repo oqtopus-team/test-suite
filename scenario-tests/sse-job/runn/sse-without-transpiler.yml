@@ -1,4 +1,4 @@
-desc: SSE Job without transpiler
+desc: SSE job without transpiler
 vars:
 steps:
   test-sse:
@@ -30,3 +30,4 @@ steps:
         expected_transpiler_lib: null
         expected_transpiler_options: null
         expected_transpiled: false
+        expected_execution_time_filled: true
