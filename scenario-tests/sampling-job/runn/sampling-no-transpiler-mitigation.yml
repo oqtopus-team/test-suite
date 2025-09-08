@@ -7,7 +7,8 @@ steps:
       vars:
         device_id: "Kawasaki"
         job_name: sampling-job-with-mitigation-without-transpiler
-        program: >-
+        program:
+          - |
             OPENQASM 3;
             include "stdgates.inc";
             qubit[2] q;
