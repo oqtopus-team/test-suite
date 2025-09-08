@@ -8,6 +8,7 @@ vars:
   transpiler_info: "{{ parent.vars.transpiler_info }}"
   shots: "{{ parent.vars.shots }}"
   program: "{{ parent.vars.program }}"
+  operator: "{{ parent.vars.operator }}"
 runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
@@ -25,7 +26,8 @@ steps:
               device_id: "{{ vars.device_id }}"
               job_info:
                 program:
-                  - "{{ vars.program }}"
+                - "{{ vars.program }}"
+                operator: "{{ vars.operator }}"
               job_type: "{{ vars.job_type }}"
               name: "{{ vars.job_name }}"
               shots: "{{ vars.shots }}"
