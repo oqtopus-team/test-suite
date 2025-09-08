@@ -25,8 +25,7 @@ steps:
               description: "description of {{ vars.job_name }}"
               device_id: "{{ vars.device_id }}"
               job_info:
-                program:
-                - "{{ vars.program }}"
+                program: "{{ vars.program }}"
                 operator: "{{ vars.operator }}"
               job_type: "{{ vars.job_type }}"
               name: "{{ vars.job_name }}"
