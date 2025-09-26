@@ -5,7 +5,7 @@ steps:
     include:
       path: sampling-included.yml
       vars:
-        device_id: "Kawasaki"
+        device_id: ${DEVICE_ID}
         job_name: sampling-job-with-mitigation-without-transpiler
         program:
           - |
