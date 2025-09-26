@@ -31,7 +31,7 @@ Create a `.env` file in the root directory with the following content:
 ```
 USER_API_ENDPOINT="your_api_endpoint"
 Q_API_TOKEN="your_api_token"
-DEVICE_ID="your_device_id" # Optional, defaults to "Kawasaki"
+DEVICE_ID="your_device_id"
 ```
 
 ### 2. Start the endurance test

@@ -2,7 +2,7 @@ desc: multi-program job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
-  device_id: ${DEVICE_ID:- "Kawasaki"}
+  device_id: ${DEVICE_ID}
   job_name: "{{ parent.vars.job_name }}"
   job_type: multi_manual
   shots: 1000
