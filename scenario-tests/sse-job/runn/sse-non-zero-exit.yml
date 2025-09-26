@@ -5,7 +5,7 @@ steps:
     include:
       path: sse-included.yml
       vars:
-        device_id: "Kawasaki"
+        device_id: ${DEVICE_ID}
         job_name: sse-non-zero-exit-failed
         program:
           - |
