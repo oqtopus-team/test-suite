@@ -17,7 +17,7 @@ steps:
   started:
     desc: test started
     dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is started"'
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " to " + vars.device_id + " is started"'
   post:
     include: ../../include/post.yml
     bind:
