@@ -54,7 +54,7 @@ Each test follows this flow:
 |---|---|---|---|---|---|---|---|
 | 1 | qiskit | simulator | 4 | off | succeeded |  | |
 | 2 | qiskit | simulator | 4 | on | succeeded |  | |
-| 3 | qiskit | simulator | 16 | off | succeeded | | |
+| 3 | qiskit | simulator | 16 | off | succeeded | ✅ | |
 | 4 | qiskit | simulator | 16 | on | succeeded | | |
 | 5 | qiskit | QPU (real) | 4 | off | succeeded | | |
 | 6 | qiskit | QPU (real) | 4 | on | succeeded | | |
