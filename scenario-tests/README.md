@@ -1,5 +1,17 @@
 # Scenario Tests
 
+# OQTOPUS-Cloud API Scenario Test Tool
+This is a tool for operating the entire system using the OQTOPUS Cloud API and conducting integration tests based on predefined scenarios. It was developed to verify the end-to-end behavior of the system.
+
+## Execution Method and Test Characteristics
+- Test scenarios, written in YAML format, are executed using the `runn` tool.
+- It supports running multiple scenarios in parallel or sequentially, as well as selecting and running specific scenarios only.
+- Since these tests are executed from outside the OQTOPUS Cloud API, they are classified as black-box tests that verify the API's behavior rather than directly validating the system's internal operations.
+- Unlike E2E tests, these tests do not involve operations through a user interface (UI).
+- The prerequisites for each test scenario (such as the number of qubits, topology, gate set, etc.) are detailed in the `README.md` file within each respective category folder.
+
+![Scenario Tests](images/scenario-tests.svg)
+
 ## Overview
 
 This directory contains scenario tests for Oqtopus system job execution using the [runn](https://github.com/k1LoW/runn) testing framework. The tests verify that quantum jobs complete with expected statuses (`succeeded` or `failed`) across various job configurations and parameter combinations.
