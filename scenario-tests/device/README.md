@@ -8,6 +8,10 @@ The purpose of this test is to ensure that information about devices registered 
 
 ---
 
+## Prerequisites to pass the test
+
+- Number of qubits: 4 or more
+
 ## Target API Endpoints
 
 This suite covers the following API endpoint:
