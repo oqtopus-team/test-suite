@@ -53,22 +53,14 @@ Each test follows this flow:
 
 ## Test Matrix
 
-| # | Transpiler | Backend | Mitigation | Expected | Implemented |
-|---|---|---|---|---|---|
-| 1 | qiskit | simulator | off | succeeded | ✅ |
-| 2 | qiskit | simulator | on | succeeded |  |
-| 3 | qiskit | QPU (real) | off | succeeded |  |
-| 4 | qiskit | QPU (real) | on | succeeded |  |
-| 5 | qiskit | QPU (mock) | off | failed | |
-| 6 | qiskit | QPU (mock) | on | failed | |
-| 7 | qiskit | simulator (mock) | off | failed | |
-| 8 | qiskit | simulator (mock) | on | failed | |
-| 9 | no transpiler | simulator | off | succeeded | |
-| 10 | no transpiler | simulator | on | succeeded | |
-| 11 | no transpiler | QPU (real) | off | succeeded | |
-| 12 | no transpiler | QPU (real) | on | succeeded | |
-| 13 | no transpiler | QPU (mock) | off | failed | |
-| 14 | no transpiler | QPU (mock) | on | failed | |
-| 15 | no transpiler | simulator (mock) | off | failed | |
-| 16 | no transpiler | simulator (mock) | on | failed | |
-| 17 | default transpiler | simulator | off | succeeded | |
+| # | Transpiler | Mitigation | Expected | Implemented |
+|---|---|---|---|---|
+| 1 | qiskit | off | succeeded | ✅ |
+| 2 | qiskit | on | succeeded | |
+| 3 | qiskit | off | failed | |
+| 4 | qiskit | on | failed | |
+| 5 | no transpiler | off | succeeded | |
+| 6 | no transpiler | on | succeeded | |
+| 7 | no transpiler | off | failed | |
+| 8 | no transpiler | on | failed | |
+| 9 | default transpiler | off | succeeded | |

@@ -51,16 +51,16 @@ scenario-tests/
 ├── estimation-job/       # Estimation job type tests
 │   ├── README.md
 │   └── runn/
-├── mp-job/              # MP job type tests (under construction)
+├── mp-job/              # Multi-Program job type tests
 │   ├── README.md
 │   └── runn/
 ├── sampling-job/        # Sampling job type tests
 │   ├── README.md
 │   └── runn/
-├── sse-job/             # SSE job type tests (under construction)
+├── sse-job/             # SSE job type tests
 │   ├── README.md
 │   └── runn/
-└── validation/          # Validation tests (under construction)
+└── validation/          # Validation tests
     ├── README.md
     └── runn/
 ```
@@ -112,6 +112,6 @@ Located in `sampling-job/`, these tests verify sampling job execution across var
 Located in `estimation-job/`, these tests verify estimation job execution with similar parameter combinations as sampling jobs.
 
 ### Other Job Types
-- **MP Job Tests** (`mp-job/`): Under construction
-- **SSE Job Tests** (`sse-job/`): Under construction
-- **Validation Tests** (`validation/`): Under construction
+- **MP Job Tests** (`mp-job/`): Located in `mp-job/`, these tests verify MP job execution.
+- **SSE Job Tests** (`sse-job/`): Located in `sse-job/`, these tests verify SSE job execution.
+- **Validation Tests** (`validation/`): Located in `validation/`, these tests verify the validation functionality.
