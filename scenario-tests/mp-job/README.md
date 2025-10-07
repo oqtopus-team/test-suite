@@ -53,14 +53,14 @@ Each test follows this flow:
 
 ## Test Matrix
 
-| # | Transpiler | Mitigation | Expected | Implemented |
-|---|---|---|---|---|
-| 1 | qiskit | off | succeeded | ✅ |
-| 2 | qiskit | on | succeeded | |
-| 3 | qiskit | off | failed | |
-| 4 | qiskit | on | failed | |
-| 5 | no transpiler | off | succeeded | |
-| 6 | no transpiler | on | succeeded | |
-| 7 | no transpiler | off | failed | |
-| 8 | no transpiler | on | failed | |
-| 9 | default transpiler | off | succeeded | |
+| # | Transpiler | Mitigation | Expected | Implemented | memo |
+|---|---|---|---|---|---|
+| 1 | qiskit | off | succeeded | ✅ | |
+| 2 | qiskit | on | succeeded | | |
+| 3 | qiskit | off | failed | | |
+| 4 | qiskit | on | failed | | |
+| 5 | no transpiler | off | succeeded | | |
+| 6 | no transpiler | on | succeeded | | |
+| 7 | no transpiler | off | failed | | |
+| 8 | no transpiler | on | failed | | |
+| 9 | default transpiler | off | succeeded | | |
