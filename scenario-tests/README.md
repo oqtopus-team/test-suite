@@ -8,7 +8,7 @@ This is a tool for operating the entire system using the OQTOPUS Cloud API and c
 - It supports running multiple scenarios in parallel or sequentially, as well as selecting and running specific scenarios only.
 - Since these tests are executed from outside the OQTOPUS Cloud API, they are classified as black-box tests that verify the API's behavior rather than directly validating the system's internal operations.
 - Unlike E2E tests, these tests do not involve operations through a user interface (UI).
-- The prerequisites for each test scenario (such as the number of qubits, topology, gate set, etc.) are detailed in the `README.md` file within each respective category folder.
+- The prerequisites for each test scenario (such as topology, gate set, etc.) are detailed in the `README.md` file within each respective category folder.
 
 ![Scenario Tests](images/scenario-tests.svg)
 
@@ -106,7 +106,6 @@ Executes all tests concurrently with a maximum of 8 parallel processes. This is 
 Located in `sampling-job/`, these tests verify sampling job execution across various parameter combinations including:
 - Different transpilers (qiskit, no transpiler, default transpiler)
 - Different backends (simulator, QPU real/mock, simulator mock)
-- Various qubit counts (4, 16)
 - Mitigation settings (on/off)
 
 ### Estimation Job Tests
