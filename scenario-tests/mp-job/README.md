@@ -22,7 +22,6 @@ This test suite aims for **n-wise coverage** of the following parameter combinat
 
 * **Transpiler**: `qiskit`, `no transpiler`, `default transpiler`
 * **Backend**: `simulator`, `QPU (real)` (in production environment only), `QPU (mock)` (in development environment only), `simulator (mock)` (for failed cases only)
-* **Qubit Count**: `4 qubits`, `16 qubits`
 * **Mitigation**: `on`, `off`
 * **Expected Result**: `succeeded`, `failed`
 
@@ -50,38 +49,22 @@ Each test follows this flow:
 
 ## Test Matrix
 
-| # | Transpiler | Backend | Qubits | Mitigation | Expected | Implemented in Dev | Implemented in Prod |
-|---|---|---|---|---|---|---|---|
-| 1 | qiskit | simulator | 4 | off | succeeded |  | |
-| 2 | qiskit | simulator | 4 | on | succeeded |  | |
-| 3 | qiskit | simulator | 16 | off | succeeded | ✅ | |
-| 4 | qiskit | simulator | 16 | on | succeeded |  | |
-| 5 | qiskit | QPU (real) | 4 | off | succeeded |  | |
-| 6 | qiskit | QPU (real) | 4 | on | succeeded |  | |
-| 7 | qiskit | QPU (real) | 16 | off | succeeded | | |
-| 8 | qiskit | QPU (real) | 16 | on | succeeded | | |
-| 9 | qiskit | QPU (mock) | 4 | off | failed | | |
-| 10 | qiskit | QPU (mock) | 4 | on | failed | | |
-| 11 | qiskit | QPU (mock) | 16 | off | failed | | |
-| 12 | qiskit | QPU (mock) | 16 | on | failed | | |
-| 13 | qiskit | simulator (mock) | 4 | off | failed | | |
-| 14 | qiskit | simulator (mock) | 4 | on | failed | | |
-| 15 | qiskit | simulator (mock) | 16 | off | failed | | |
-| 16 | qiskit | simulator (mock) | 16 | on | failed | | |
-| 17 | no transpiler | simulator | 4 | off | succeeded |  | |
-| 18 | no transpiler | simulator | 4 | on | succeeded | | |
-| 19 | no transpiler | simulator | 16 | off | succeeded | | |
-| 20 | no transpiler | simulator | 16 | on | succeeded | | |
-| 21 | no transpiler | QPU (real) | 4 | off | succeeded | | |
-| 22 | no transpiler | QPU (real) | 4 | on | succeeded | | |
-| 23 | no transpiler | QPU (real) | 16 | off | succeeded | | |
-| 24 | no transpiler | QPU (real) | 16 | on | succeeded | | |
-| 25 | no transpiler | QPU (mock) | 4 | off | failed | | |
-| 26 | no transpiler | QPU (mock) | 4 | on | failed | | |
-| 27 | no transpiler | QPU (mock) | 16 | off | failed | | |
-| 28 | no transpiler | QPU (mock) | 16 | on | failed | | |
-| 29 | no transpiler | simulator (mock) | 4 | off | failed | | |
-| 30 | no transpiler | simulator (mock) | 4 | on | failed | | |
-| 31 | no transpiler | simulator (mock) | 16 | off | failed | | |
-| 32 | no transpiler | simulator (mock) | 16 | on | failed | | |
-| 33 | default transpiler | simulator | 4 | off | succeeded | | |
+| # | Transpiler | Backend | Mitigation | Expected | Implemented |
+|---|---|---|---|---|---|
+| 1 | qiskit | simulator | off | succeeded | ✅ |
+| 2 | qiskit | simulator | on | succeeded |  |
+| 3 | qiskit | QPU (real) | off | succeeded |  |
+| 4 | qiskit | QPU (real) | on | succeeded |  |
+| 5 | qiskit | QPU (mock) | off | failed | |
+| 6 | qiskit | QPU (mock) | on | failed | |
+| 7 | qiskit | simulator (mock) | off | failed | |
+| 8 | qiskit | simulator (mock) | on | failed | |
+| 9 | no transpiler | simulator | off | succeeded | |
+| 10 | no transpiler | simulator | on | succeeded | |
+| 11 | no transpiler | QPU (real) | off | succeeded | |
+| 12 | no transpiler | QPU (real) | on | succeeded | |
+| 13 | no transpiler | QPU (mock) | off | failed | |
+| 14 | no transpiler | QPU (mock) | on | failed | |
+| 15 | no transpiler | simulator (mock) | off | failed | |
+| 16 | no transpiler | simulator (mock) | on | failed | |
+| 17 | default transpiler | simulator | off | succeeded | |
