@@ -31,6 +31,6 @@ Each test follows this flow:
 
 ## Test Cases
 
-| # | Description | Expected Result | Implemented in Dev | Implemented in Prod |
+| # | Description | Expected Result | Implemented | memo |
 |---|---|---|---|---|
 | 1 | Retrieve the list of all devices | `succeeded` | ✅ | |
