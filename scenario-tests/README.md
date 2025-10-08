@@ -102,7 +102,6 @@ Executes all tests concurrently with a maximum of 8 parallel processes. This is 
 ### Sampling Job Tests
 Located in `sampling-job/`, these tests verify sampling job execution across various parameter combinations including:
 - Different transpilers (qiskit, no transpiler, default transpiler)
-- Different backends (simulator, QPU real/mock, simulator mock)
 - Mitigation settings (on/off)
 
 ### Estimation Job Tests

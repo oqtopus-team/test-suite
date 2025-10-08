@@ -25,7 +25,6 @@ This suite covers the following Job Types:
 This test suite aims for **n-wise coverage** of the following parameter combinations.
 
 * **Transpiler**: `qiskit`, `no transpiler`, `default transpiler`
-* **Backend**: `simulator`, `QPU (real)` (in production environment only), `QPU (mock)` (in development environment only), `simulator (mock)` (for failed cases only)
 * **Mitigation**: `on`, `off`
 * **Expected Result**: `succeeded`, `failed`
 
