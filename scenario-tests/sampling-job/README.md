@@ -53,7 +53,7 @@ Each test follows this flow:
 
 ## Test Matrix
 
-| # | Transpiler | Backend | Mitigation | Expected | Implemented |
+| # | Transpiler | Backend | Mitigation | Expected | Implemented | memo |
 |---|---|---|---|---|---|
 | 1 | qiskit | simulator | off | succeeded | ✅ |
 | 2 | qiskit | simulator | on | succeeded | ✅ |
