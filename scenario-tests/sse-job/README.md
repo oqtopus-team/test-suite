@@ -57,10 +57,10 @@ Each test follows this flow:
 |---|---|---|---|---|---|
 | 1 | qiskit | off | succeeded | ✅ | |
 | 2 | qiskit | on | succeeded | | |
-| 3 | qiskit | off | failed | | |
+| 3 | qiskit | off | failed | ✅ | Non-zero exit |
 | 4 | qiskit | on | failed | | |
 | 5 | no transpiler | off | succeeded | ✅ | |
 | 6 | no transpiler | on | succeeded | | |
-| 7 | no transpiler | off | failed | | |
+| 7 | no transpiler | off | failed | ✅ | Failed to transpile |
 | 8 | no transpiler | on | failed | | |
 | 9 | default transpiler | off | succeeded | | |
