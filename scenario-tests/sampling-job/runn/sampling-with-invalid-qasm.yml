@@ -1,11 +1,11 @@
-desc: sampling job with bad QASM
+desc: sampling job with invalid QASM
 steps:
-  test-sampling-job-with-bad-qasm:
-    desc: sampling job with bad QASM
+  test-sampling-job-with-invalid-qasm:
+    desc: sampling job with invalid QASM
     include:
       path: sampling-failed-included.yml
       vars:
-        job_name: sampling-job-with-bad-qasm
+        job_name: sampling-job-with-invalid-qasm
         program:
           - |
             OPENQASM 3;

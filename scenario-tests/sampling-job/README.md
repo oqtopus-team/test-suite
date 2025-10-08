@@ -56,7 +56,7 @@ Each test follows this flow:
 |---|---|---|---|---|---|
 | 1 | qiskit | off | succeeded | ✅ | |
 | 2 | qiskit | on | succeeded | ✅ | |
-| 3 | qiskit | off | failed | | |
+| 3 | qiskit | off | failed | ✅ | Invaid QASM |
 | 4 | qiskit | on | failed | | |
 | 5 | no transpiler | off | succeeded | ✅ | |
 | 6 | no transpiler | on | succeeded | ✅ | |
