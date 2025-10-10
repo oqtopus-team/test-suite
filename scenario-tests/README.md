@@ -31,11 +31,12 @@ Create a `.env` file in the scenario-tests directory with the following variable
 
 ```bash
 # API Configuration
-USER_API_ENDPOINT="https://<your-api-endpoint>"
+USER_API_ENDPOINT="<your-api-endpoint>"
 Q_API_TOKEN="<your-api-token>"
 ```
 
-USER_API_ENDPOINT should point to your Oqtopus Cloud User-API endpoint, and Q_API_TOKEN should be your authentication token for accessing the API.
+USER_API_ENDPOINT should point to your Oqtopus Cloud User-API endpoint, and it must be a full URL including the protocol like https or http.
+Q_API_TOKEN should be your authentication token for accessing the API.
 
 **Note**: The `.env` file should not be committed to version control as it contains sensitive information.
 
