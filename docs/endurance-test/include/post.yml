@@ -1,0 +1,56 @@
+desc: Post a job
+vars:
+  user_api_endpoint: "{{ parent.vars.user_api_endpoint }}"
+  q_api_token: "{{ parent.vars.q_api_token }}"
+  device_id: "{{ parent.vars.device_id }}"
+  job_name: "{{ parent.vars.job_name }}"
+  job_type: "{{ parent.vars.job_type }}"
+  transpiler_info: "{{ parent.vars.transpiler_info }}"
+  shots: "{{ parent.vars.shots }}"
+  program: "{{ parent.vars.program }}"
+runners:
+  req: "{{ parent.vars.user_api_endpoint }}"
+if: included
+steps:
+  device:
+    dump:
+      expr: vars.device_id + " is selected"
+  post:
+    desc: Post a job
+    req:
+      /jobs:
+        post:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
+          body:
+            application/json:
+              description: "description of {{ vars.job_name }}"
+              device_id: "{{ vars.device_id }}"
+              job_info:
+                program:
+                  - "{{ vars.program }}"
+              job_type: "{{ vars.job_type }}"
+              name: "{{ vars.job_name }}"
+              shots: "{{ vars.shots }}"
+              transpiler_info: "{{ vars.transpiler_info }}"
+              mitigation_info: "{{ parent.vars.mitigation_info }}"
+    test: |
+      current.res.status == 200
+  message:
+    desc: Dump the state
+    dump:
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"'
+  wait:
+    desc: Check job status
+    loop:
+      count: 20
+      until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed" || current.res.body.status == "canceled"'
+      minInterval: 1
+      maxInterval: 1
+    req:
+      /jobs/{{steps.post.res.body.job_id}}:
+        get:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
+    dump:
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'

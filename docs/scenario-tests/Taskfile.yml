@@ -1,0 +1,26 @@
+version: '3'
+tasks:
+  runn-device:
+    desc: "get devices for also health check"
+    cmds:
+      - runn run device/runn/device.yml --env-file .env --verbose
+  runn-list:
+    desc: "list up runn list"
+    cmds:
+      - runn list */runn/*.yml --scopes read:parent
+  runn-id:
+    desc: "runn with runnbook id"
+    cmds:
+      - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose --scopes read:parent
+  runn-id-stress:
+    desc: "runn with runnbook id (stress test)"
+    cmds:
+      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --scopes read:parent
+  runn-all:
+    desc: "runn all tests sequentially"
+    cmds:
+      - runn run */runn/*.yml --env-file .env --verbose --fail-fast --scopes read:parent
+  runn-all-con:
+    desc: "runn all tests concurrently"
+    cmds:
+      - runn run */runn/*.yml --env-file .env --concurrent 8 --scopes read:parent

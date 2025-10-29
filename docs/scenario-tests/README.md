@@ -102,3 +102,15 @@ Below is a list of available test scenarios. For detailed information about each
 -   **[Sampling Job Tests](./sampling-job/README.md)**
 -   **[SSE Job Tests](./sse-job/README.md)**
 
+
+```{toctree}
+---
+maxdepth: 1
+caption: Job Types:
+---
+estimation-job/README.md
+mp-job/README.md
+sampling-job/README.md
+sse-job/README.md
+```
+

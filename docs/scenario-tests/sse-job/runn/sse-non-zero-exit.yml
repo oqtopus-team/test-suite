@@ -1,0 +1,36 @@
+desc: SSE job non-zero exit failed
+vars:
+steps:
+  test-sse:
+    include:
+      path: sse-included.yml
+      vars:
+        device_id: ${DEVICE_ID}
+        job_name: sse-non-zero-exit-failed
+        program:
+          - |
+            aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J
+            reAppbXBvcnQgcGFuZGFzCmltcG9ydCB0cWRtCmltcG9ydCBzY2lweQppbXBvcnQgc2tsZWFybg
+            ppbXBvcnQgcXVyaV9wYXJ0cwppbXBvcnQgcWlza2l0CmltcG9ydCBxdWxhY3MKaW1wb3J0IHNrc
+            XVsYWNzCmltcG9ydCBweXF1Ym8KaW1wb3J0IG9wZW5qaWoKaW1wb3J0IGNpcnEKaW1wb3J0IHBl
+            bm55bGFuZQppbXBvcnQgb3BlbmZlcm1pb24KaW1wb3J0IHRpbWUKCiMgcmFpc2UgZXhjZXB0aW9
+            uCmltcG9ydCB1bmtub3duX21vZHVsZQoKZnJvbSBxdXJpX3BhcnRzX29xdG9wdXMuYmFja2VuZC
+            5zYW1wbGluZyBpbXBvcnQgT3F0b3B1c1NhbXBsaW5nQmFja2VuZCwgT3F0b3B1c0NvbmZpZwpmc
+            m9tIHF1cmlfcGFydHMuY2lyY3VpdCBpbXBvcnQgUXVhbnR1bUNpcmN1aXQKCmZvciBpIGluIHJh
+            bmdlKDMpOgogIHRpbWUuc2xlZXAoMSkKICBwcmludChmIiMjIFN0YXJ0IGl0ZXJhdGlvbiB7aX0
+            gIyMiKQogIHRyeToKICAgIGNpcmN1aXQgPSBRdWFudHVtQ2lyY3VpdCgyKQogICAgY2lyY3VpdC
+            5hZGRfSF9nYXRlKDApCiAgICBjaXJjdWl0LmFkZF9YX2dhdGUoMSkKICAgIGNpcmN1aXQuYWRkX
+            0NOT1RfZ2F0ZSgwLCAxKQogICAgY2lyY3VpdC5hZGRfUllfZ2F0ZSgxLCAwLjEqaSkKICAgIHRy
+            YW5zcGlsZXJfaW5mbyA9IHt9CiAgICBqb2IgPSBPcXRvcHVzU2FtcGxpbmdCYWNrZW5kKCkuc2F
+            tcGxlKGNpcmN1aXQsIHNob3RzPTEwKmkrMTAwLCBuYW1lPSJ0ZXN0IGNpcmN1aXQiLCBkZXZpY2
+            VfaWQ9IiIsIHRyYW5zcGlsZXJfaW5mbz10cmFuc3BpbGVyX2luZm8pCiAgICBwcmludChqb2IpC
+            iAgICByZXN1bHQgPSBqb2IucmVzdWx0KCkKICAgIHByaW50KCIjIyMjIFJlc3VsdDoiKQogICAg
+            cHJpbnQocmVzdWx0LmNvdW50cykKCiAgZXhjZXB0IEV4Y2VwdGlvbiBhcyBlOgogICAgaW1wb3J
+            0IHRyYWNlYmFjawogICAgcHJpbnQodHJhY2ViYWNrLmZvcm1hdF9leGMoKSkKICAgIHByaW50KC
+            IjIyMjIEZBSUxFRCIpCgpwcmludCgiIyMgRmluaXNoICMjIikK
+        expected_status: "failed"
+        expected_transpiler_lib: qiskit
+        expected_transpiler_options:
+          optimization_level: 1
+        pass_transpiler_result_check: true
+        expected_execution_time_filled: false

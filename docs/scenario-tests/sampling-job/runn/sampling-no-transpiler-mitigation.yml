@@ -1,0 +1,24 @@
+desc: sampling job with mitigation without transpiler 
+vars:
+steps:
+  test-no-transpiler:
+    include:
+      path: sampling-included.yml
+      vars:
+        device_id: ${DEVICE_ID}
+        job_name: sampling-job-with-mitigation-without-transpiler
+        program:
+          - |
+            OPENQASM 3;
+            include "stdgates.inc";
+            qubit[2] q;
+            bit[2] c;
+            cx q[0],q[1];
+            c = measure q;
+        mitigation_info:
+          ro_error_mitigation: pseudo_inverse
+        transpiler_info:
+          transpiler_lib: null
+        expected_status: "succeeded"
+        expected_transpiler_lib: null
+        expected_transpiler_options: null

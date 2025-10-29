@@ -25,8 +25,8 @@ This test suite is designed to ensure the reliability and correctness of the OQT
 
 ## Included Tests
 
-- **[scenario-tests/](scenario-tests/)**: Scenario tests for quantum job execution using the `runn` framework.
-- **[endurance-test/](endurance-test/)**: Endurance tests for the OQTOPUS platform.
+- **[scenario-tests/](scenario-tests/README.md)**: Scenario tests for quantum job execution using the `runn` framework.
+- **[endurance-test/](endurance-test/README.md)**: Endurance tests for the OQTOPUS platform.
 
 ## Prerequisites
 
@@ -56,3 +56,13 @@ We welcome contributions to the OQTOPUS Test Suite! If you would like to contrib
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
+
+```{toctree}
+---
+maxdepth: 2
+caption: Contents:
+---
+scenario-tests/README.md
+endurance-test/README.md
+```
+
