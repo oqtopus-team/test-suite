@@ -4,7 +4,7 @@ This repository contains external testing tools for the OQTOPUS quantum computin
 
 ## Contents
 
-- **[scenario-tests/](scenario-tests/)** - Scenario tests for quantum job execution using runn framework
+- **[scenario-tests/](scenario-tests/README.md)** - Scenario tests for quantum job execution using runn framework
 
 ## Quick Start
 
