@@ -8,10 +8,6 @@ The goal is to ensure that supported and stable job executions behave as expecte
 
 ---
 
-## Prerequisites to pass the test
-
-- Number of qubits: 4 or more
-
 ## Target Job Types
 
 This suite covers the following Job Types:
