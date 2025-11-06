@@ -2,6 +2,7 @@
 .env
 .venv
 /site/
+/docs/scenario-tests/images/
 
 # Python
 __pycache__/
