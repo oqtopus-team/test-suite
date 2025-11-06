@@ -1,0 +1,8 @@
+version: '3'
+
+tasks:
+  serve:
+    desc: "Copy images and serve docs"
+    cmds:
+      - cp -r scenario-tests/images docs/scenario-tests
+      - uv run mkdocs serve
