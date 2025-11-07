@@ -18,8 +18,11 @@ jobs:
 
             - name: Install runn
               run: |
-                  curl -sL https://github.com/k1LoW/runn/releases/download/v0.95.0/runn_0.95.0_linux_amd64.tar.gz | tar xz
+                  gh release download v0.95.0 --repo k1LoW/runn --pattern '*linux_amd64.tar.gz'
+                  tar xzf runn_0.95.0_linux_amd64.tar.gz
                   sudo mv runn /usr/local/bin/runn
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Install task
               run: |
