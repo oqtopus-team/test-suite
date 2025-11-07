@@ -1,3 +1,5 @@
+![OQTOPUS](asset/oqtopus-logo.png)
+
 # OQTOPUS Test Suite
 
 This repository contains external testing tools for the OQTOPUS quantum computing platform.

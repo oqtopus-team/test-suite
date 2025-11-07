@@ -10,7 +10,7 @@ This is a tool for operating the entire system using the OQTOPUS Cloud API and c
 - Unlike E2E tests, these tests do not involve operations through a user interface (UI).
 - The prerequisites for each test scenario (such as topology, gate set, etc.) are detailed in the `README.md` file within each respective category folder.
 
-![Scenario Tests](./images/scenario-tests.png)
+![Scenario Tests](./asset/scenario-tests.png)
 
 ## Overview
 
