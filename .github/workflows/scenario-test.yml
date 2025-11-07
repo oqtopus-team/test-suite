@@ -32,4 +32,4 @@ jobs:
               env:
                   USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
                   Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
-              run: task runn-all
+              run: task runn-all-wo-env
