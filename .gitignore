@@ -2,7 +2,8 @@
 .env
 .venv
 /site/
-/docs/scenario-tests/images/
+/docs/scenario-tests/asset/
+/docs/asset/
 
 # Python
 __pycache__/

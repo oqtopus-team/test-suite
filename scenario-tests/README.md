@@ -100,6 +100,12 @@ Executes all tests concurrently with a maximum of 8 parallel processes. This is 
 
 ## Test Categories
 
+- [Device](./device/README.md)
+- [Estimation Job](./estimation-job/README.md)
+- [MP Job](./mp-job/README.md)
+- [Sampling Job](./sampling-job/README.md)
+- [SSE Job](./sse-job/README.md)
+
 ### Sampling Job Tests
 Located in `sampling-job/`, these tests verify sampling job execution across various parameter combinations including:
 - Different transpilers (qiskit, no transpiler, default transpiler)

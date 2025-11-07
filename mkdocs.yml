@@ -1,4 +1,4 @@
-site_name: test-suite Documentation
+site_name: Test-Suite Documentation
 theme:
   name: material
 plugins:
