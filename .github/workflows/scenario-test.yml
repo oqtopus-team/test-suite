@@ -3,7 +3,7 @@ name: Scenario Test
 on:
     workflow_dispatch:
     schedule:
-        - cron: "*/10 * * * *"
+        - cron: "* * * * *"
     pull_request:
 
 jobs:
