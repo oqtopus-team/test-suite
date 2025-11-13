@@ -47,16 +47,18 @@ Each test follows this flow:
 ---
 
 ## Test Matrix
-`sse-non-zero-exit.yml` and `sse-without-transpiler-failed.yml` are excluded from this table.
 
 | # | Transpiler | Mitigation | Expected | Implemented | memo |
 |---|---|---|---|---|---|
 | 1 | qiskit | off | succeeded | ✅ | |
 | 2 | qiskit | on | succeeded | | |
-| 3 | qiskit | off | failed | ✅ | Non-zero exit |
+| 3 | qiskit | off | failed | ✅ | A user program terminated with a non-zero exit code |
 | 4 | qiskit | on | failed | | |
 | 5 | no transpiler | off | succeeded | ✅ | |
 | 6 | no transpiler | on | succeeded | | |
-| 7 | no transpiler | off | failed | ✅ | Failed to transpile |
+| 7 | no transpiler | off | failed | ✅ | Unsupported gate |
 | 8 | no transpiler | on | failed | | |
 | 9 | default transpiler | off | succeeded | | |
+
+## Tools
+Tools are available in `tools` for base64 encoding/decoding of python files.
