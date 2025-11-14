@@ -32,4 +32,5 @@ jobs:
               env:
                   USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
                   Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
+                  DEVICE_ID: ${{ secrets.DEVICE_ID }}
               run: task runn-all-wo-env
