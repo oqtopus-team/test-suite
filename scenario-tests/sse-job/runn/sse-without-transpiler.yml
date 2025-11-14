@@ -1,32 +1,34 @@
-desc: SSE Job without transpiler
+desc: SSE job without transpiler
 vars:
 steps:
   test-sse:
     include:
       path: sse-included.yml
       vars:
-        device_id: "Kawasaki"
+        device_id: ${DEVICE_ID}
         job_name: sse
-        program: >
-          aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J
-          reAppbXBvcnQgcGFuZGFzCmltcG9ydCB0cWRtCmltcG9ydCBzY2lweQppbXBvcnQgc2tsZWFybg
-          ppbXBvcnQgcXVyaV9wYXJ0cwppbXBvcnQgcWlza2l0CmltcG9ydCBxdWxhY3MKaW1wb3J0IHNrc
-          XVsYWNzCmltcG9ydCBweXF1Ym8KaW1wb3J0IG9wZW5qaWoKaW1wb3J0IGNpcnEKaW1wb3J0IHBl
-          bm55bGFuZQppbXBvcnQgb3BlbmZlcm1pb24KaW1wb3J0IHRpbWUKCmZyb20gcXVyaV9wYXJ0c19
-          vcXRvcHVzLmJhY2tlbmQuc2FtcGxpbmcgaW1wb3J0IE9xdG9wdXNTYW1wbGluZ0JhY2tlbmQsIE
-          9xdG9wdXNDb25maWcKZnJvbSBxdXJpX3BhcnRzLmNpcmN1aXQgaW1wb3J0IFF1YW50dW1DaXJjd
-          Wl0Cgpmb3IgaSBpbiByYW5nZSgzKToKICB0aW1lLnNsZWVwKDEpCiAgcHJpbnQoZiIjIyBTdGFy
-          dCBpdGVyYXRpb24ge2l9ICMjIikKICB0cnk6CiAgICBjaXJjdWl0ID0gUXVhbnR1bUNpcmN1aXQ
-          oMikKICAgIGNpcmN1aXQuYWRkX1hfZ2F0ZSgwKQogICAgY2lyY3VpdC5hZGRfQ05PVF9nYXRlKD
-          AsIDEpCiAgICB0cmFuc3BpbGVyX2luZm8gPSB7CiAgICAgICJ0cmFuc3BpbGVyX2xpYiI6IE5vb
-          mUKICAgIH0KICAgIGpvYiA9IE9xdG9wdXNTYW1wbGluZ0JhY2tlbmQoKS5zYW1wbGUoY2lyY3Vp
-          dCwgc2hvdHM9MTAqaSsxMDAsIG5hbWU9InRlc3QgY2lyY3VpdCIsIGRldmljZV9pZD0iIiwgdHJ
-          hbnNwaWxlcl9pbmZvPXRyYW5zcGlsZXJfaW5mbykKICAgIHByaW50KGpvYikKICAgIHJlc3VsdC
-          A9IGpvYi5yZXN1bHQoKQogICAgcHJpbnQoIiMjIyMgUmVzdWx0OiIpCiAgICBwcmludChyZXN1b
-          HQuY291bnRzKQoKICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBpbXBvcnQgdHJhY2ViYWNr
-          CiAgICBwcmludCh0cmFjZWJhY2suZm9ybWF0X2V4YygpKQogICAgcHJpbnQoIiMjIyMgRkFJTEV
-          EIikKCnByaW50KCIjIyBGaW5pc2ggIyMiKQo=
+        program:
+          - |
+            aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J
+            reAppbXBvcnQgcGFuZGFzCmltcG9ydCB0cWRtCmltcG9ydCBzY2lweQppbXBvcnQgc2tsZWFybg
+            ppbXBvcnQgcXVyaV9wYXJ0cwppbXBvcnQgcWlza2l0CmltcG9ydCBxdWxhY3MKaW1wb3J0IHNrc
+            XVsYWNzCmltcG9ydCBweXF1Ym8KaW1wb3J0IG9wZW5qaWoKaW1wb3J0IGNpcnEKaW1wb3J0IHBl
+            bm55bGFuZQppbXBvcnQgb3BlbmZlcm1pb24KaW1wb3J0IHRpbWUKCmZyb20gcXVyaV9wYXJ0c19
+            vcXRvcHVzLmJhY2tlbmQuc2FtcGxpbmcgaW1wb3J0IE9xdG9wdXNTYW1wbGluZ0JhY2tlbmQsIE
+            9xdG9wdXNDb25maWcKZnJvbSBxdXJpX3BhcnRzLmNpcmN1aXQgaW1wb3J0IFF1YW50dW1DaXJjd
+            Wl0Cgpmb3IgaSBpbiByYW5nZSgzKToKICB0aW1lLnNsZWVwKDEpCiAgcHJpbnQoZiIjIyBTdGFy
+            dCBpdGVyYXRpb24ge2l9ICMjIikKICB0cnk6CiAgICBjaXJjdWl0ID0gUXVhbnR1bUNpcmN1aXQ
+            oMikKICAgIGNpcmN1aXQuYWRkX1hfZ2F0ZSgwKQogICAgY2lyY3VpdC5hZGRfQ05PVF9nYXRlKD
+            AsIDEpCiAgICB0cmFuc3BpbGVyX2luZm8gPSB7CiAgICAgICJ0cmFuc3BpbGVyX2xpYiI6IE5vb
+            mUKICAgIH0KICAgIGpvYiA9IE9xdG9wdXNTYW1wbGluZ0JhY2tlbmQoKS5zYW1wbGUoY2lyY3Vp
+            dCwgc2hvdHM9MTAqaSsxMDAsIG5hbWU9InRlc3QgY2lyY3VpdCIsIGRldmljZV9pZD0iIiwgdHJ
+            hbnNwaWxlcl9pbmZvPXRyYW5zcGlsZXJfaW5mbykKICAgIHByaW50KGpvYikKICAgIHJlc3VsdC
+            A9IGpvYi5yZXN1bHQoKQogICAgcHJpbnQoIiMjIyMgUmVzdWx0OiIpCiAgICBwcmludChyZXN1b
+            HQuY291bnRzKQoKICBleGNlcHQgRXhjZXB0aW9uIGFzIGU6CiAgICBpbXBvcnQgdHJhY2ViYWNr
+            CiAgICBwcmludCh0cmFjZWJhY2suZm9ybWF0X2V4YygpKQogICAgcHJpbnQoIiMjIyMgRkFJTEV
+            EIikKCnByaW50KCIjIyBGaW5pc2ggIyMiKQo=
         expected_status: "succeeded"
         expected_transpiler_lib: null
         expected_transpiler_options: null
         expected_transpiled: false
+        expected_execution_time_filled: true

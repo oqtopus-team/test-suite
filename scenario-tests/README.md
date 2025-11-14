@@ -1,5 +1,17 @@
 # Scenario Tests
 
+# OQTOPUS-Cloud API Scenario Test Tool
+This is a tool for operating the entire system using the OQTOPUS Cloud API and conducting integration tests based on predefined scenarios. It was developed to verify the end-to-end behavior of the system.
+
+## Execution Method and Test Characteristics
+- Test scenarios, written in YAML format, are executed using the `runn` tool.
+- It supports running multiple scenarios in parallel or sequentially, as well as selecting and running specific scenarios only.
+- Since these tests are executed from outside the OQTOPUS Cloud API, they are classified as black-box tests that verify the API's behavior rather than directly validating the system's internal operations.
+- Unlike E2E tests, these tests do not involve operations through a user interface (UI).
+- The prerequisites for each test scenario (such as topology, gate set, etc.) are detailed in the `README.md` file within each respective category folder.
+
+![Scenario Tests](./asset/scenario-tests.png)
+
 ## Overview
 
 This directory contains scenario tests for Oqtopus system job execution using the [runn](https://github.com/k1LoW/runn) testing framework. The tests verify that quantum jobs complete with expected statuses (`succeeded` or `failed`) across various job configurations and parameter combinations.
@@ -19,11 +31,12 @@ Create a `.env` file in the scenario-tests directory with the following variable
 
 ```bash
 # API Configuration
-USER_API_ENDPOINT="https://<your-api-endpoint>"
+USER_API_ENDPOINT="<your-api-endpoint>"
 Q_API_TOKEN="<your-api-token>"
 ```
 
-USER_API_ENDPOINT should point to your Oqtopus Cloud User-API endpoint, and Q_API_TOKEN should be your authentication token for accessing the API.
+USER_API_ENDPOINT should point to your Oqtopus Cloud User-API endpoint, and it must be a full URL including the protocol like https or http.
+Q_API_TOKEN should be your authentication token for accessing the API.
 
 **Note**: The `.env` file should not be committed to version control as it contains sensitive information.
 
@@ -39,16 +52,13 @@ scenario-tests/
 ├── estimation-job/       # Estimation job type tests
 │   ├── README.md
 │   └── runn/
-├── mp-job/              # MP job type tests (under construction)
+├── mp-job/              # Multi-Program job type tests
 │   ├── README.md
 │   └── runn/
 ├── sampling-job/        # Sampling job type tests
 │   ├── README.md
 │   └── runn/
-├── sse-job/             # SSE job type tests (under construction)
-│   ├── README.md
-│   └── runn/
-└── validation/          # Validation tests (under construction)
+└── sse-job/             # SSE job type tests
     ├── README.md
     └── runn/
 ```
@@ -90,17 +100,20 @@ Executes all tests concurrently with a maximum of 8 parallel processes. This is 
 
 ## Test Categories
 
+- [Device](./device/README.md)
+- [Estimation Job](./estimation-job/README.md)
+- [MP Job](./mp-job/README.md)
+- [Sampling Job](./sampling-job/README.md)
+- [SSE Job](./sse-job/README.md)
+
 ### Sampling Job Tests
 Located in `sampling-job/`, these tests verify sampling job execution across various parameter combinations including:
 - Different transpilers (qiskit, no transpiler, default transpiler)
-- Different backends (simulator, QPU real/mock, simulator mock)
-- Various qubit counts (4, 16)
 - Mitigation settings (on/off)
 
 ### Estimation Job Tests
 Located in `estimation-job/`, these tests verify estimation job execution with similar parameter combinations as sampling jobs.
 
 ### Other Job Types
-- **MP Job Tests** (`mp-job/`): Under construction
-- **SSE Job Tests** (`sse-job/`): Under construction
-- **Validation Tests** (`validation/`): Under construction
+- **MP Job Tests** (`mp-job/`): Located in `mp-job/`, these tests verify MP job execution.
+- **SSE Job Tests** (`sse-job/`): Located in `sse-job/`, these tests verify SSE job execution.

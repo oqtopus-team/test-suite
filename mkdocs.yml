@@ -1,0 +1,15 @@
+site_name: Test-Suite Documentation
+theme:
+  name: material
+plugins:
+  - include-markdown
+nav:
+  - Home: index.md
+  - Endurance Test: endurance-test/README.md
+  - Scenario Tests:
+    - Overview: scenario-tests/README.md
+    - Device: scenario-tests/device/README.md
+    - Estimation Job: scenario-tests/estimation-job/README.md
+    - MP Job: scenario-tests/mp-job/README.md
+    - Sampling Job: scenario-tests/sampling-job/README.md
+    - SSE Job: scenario-tests/sse-job/README.md

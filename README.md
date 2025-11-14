@@ -1,10 +1,13 @@
+![OQTOPUS](asset/oqtopus-logo.png)
+
 # OQTOPUS Test Suite
 
 This repository contains external testing tools for the OQTOPUS quantum computing platform.
 
 ## Contents
 
-- **[scenario-tests/](scenario-tests/)** - Scenario tests for quantum job execution using runn framework
+- **[scenario-tests/](scenario-tests/README.md)** - Scenario tests for quantum job execution using runn framework
+- **[endurance-test/](endurance-test/README.md)** - Endurance tests for long-term stability of the OQTOPUS platform
 
 ## Quick Start
 
