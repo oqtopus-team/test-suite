@@ -27,10 +27,10 @@ jobs:
         run: docker run --rm -v $(pwd):/work -w /work -e USER_API_ENDPOINT -e Q_API_TOKEN -e DEVICE_ID ghcr.io/k1low/runn:v1.0.0 run */runn/*.yml --verbose --fail-fast --scopes read:parent
 
       - name: Slack Notification
-        if: failure() && github.event_name == 'schedule'
+        if: always() && github.event_name == 'schedule'
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_COLOR: "danger"
-          SLACK_TITLE: "Scenario Test Failed"
-          SLACK_MESSAGE: "The scheduled scenario test has failed."
+          SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
+          SLACK_TITLE: Scenario Test ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}
+          SLACK_MESSAGE: The scheduled scenario test has ${{ job.status == 'success' && 'succeeded' || 'failed' }}
