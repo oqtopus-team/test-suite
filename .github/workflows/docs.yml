@@ -30,6 +30,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --extra dev
 
+      - name: Copy assets
+        run: cp -r asset docs/
+
       - name: Build
         run: uv run mkdocs build
 
