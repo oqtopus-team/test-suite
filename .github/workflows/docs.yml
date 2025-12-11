@@ -48,8 +48,12 @@ jobs:
 
       - name: Deploy to AWS Amplify
         run: |
+          # 0. Ensure branch exists
+          aws amplify get-branch --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name dev > /dev/null 2>&1 || \
+          aws amplify create-branch --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name dev
+
           # 1. Create a new deployment and get the upload URL and Job ID
-          DEPLOYMENT_INFO=$(aws amplify create-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main)
+          DEPLOYMENT_INFO=$(aws amplify create-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name dev)
           JOB_ID=$(echo $DEPLOYMENT_INFO | jq -r '.jobId')
           UPLOAD_URL=$(echo $DEPLOYMENT_INFO | jq -r '.zipUploadUrl')
 
@@ -59,4 +63,4 @@ jobs:
           curl -X PUT -T "site.zip" "$UPLOAD_URL"
 
           # 3. Start the deployment
-          aws amplify start-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main --job-id $JOB_ID
+          aws amplify start-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name dev --job-id $JOB_ID
