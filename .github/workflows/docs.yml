@@ -37,7 +37,7 @@ jobs:
         run: uv run mkdocs build
 
       - name: Zip artifact
-        run: zip -r site.zip site
+        run: cd site && zip -r ../site.zip .
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
