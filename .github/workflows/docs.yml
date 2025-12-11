@@ -36,11 +36,27 @@ jobs:
       - name: Build
         run: uv run mkdocs build
 
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
+      - name: Zip artifact
+        run: zip -r site.zip site
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: test-suite-docs-rvj4o5j
-          directory: site
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-1
+
+      - name: Deploy to AWS Amplify
+        run: |
+          # 1. Create a new deployment and get the upload URL and Job ID
+          DEPLOYMENT_INFO=$(aws amplify create-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main)
+          JOB_ID=$(echo $DEPLOYMENT_INFO | jq -r '.jobId')
+          UPLOAD_URL=$(echo $DEPLOYMENT_INFO | jq -r '.zipUploadUrl')
+
+          echo "Job ID: $JOB_ID"
+
+          # 2. Upload the zip file
+          curl -X PUT -T "site.zip" "$UPLOAD_URL"
+
+          # 3. Start the deployment
+          aws amplify start-deployment --app-id ${{ secrets.AMPLIFY_APP_ID }} --branch-name main --job-id $JOB_ID
