@@ -32,5 +32,5 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status == 'success' && 'good' || 'danger' }}
-          SLACK_TITLE: Scenario Test ${{ job.status == 'success' && 'Succeeded' || 'Failed' }}
+          SLACK_TITLE: Scenario Test ${{ job.status == 'success' && 'succeeded' || 'failed' }}
           SLACK_MESSAGE: The scheduled scenario test has ${{ job.status == 'success' && 'succeeded' || 'failed' }}
