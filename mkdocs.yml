@@ -1,7 +1,10 @@
 site_name: Test-Suite Documentation
+repo_url: https://github.com/qiqb-osaka/test-suite
+repo_name: GitHub
 theme:
   name: material
 plugins:
+  - search
   - include-markdown
 nav:
   - Home: index.md
