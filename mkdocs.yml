@@ -1,8 +1,15 @@
-site_name: Test-Suite Documentation
+site_name: Test-Suite
 repo_url: https://github.com/qiqb-osaka/test-suite
 repo_name: GitHub
 theme:
   name: material
+  palette:
+    primary: indigo
+    accent: indigo
+
+extra_css:
+  - https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css
+  - css/custom.css
 plugins:
   - search
   - include-markdown
