@@ -1,0 +1,25 @@
+desc: custom job
+vars:
+steps:
+  test-bell:
+    include:
+      path: ../../sampling-job/runn/sampling-included.yml
+      vars:
+        job_name: custom-job
+        program:
+          - |
+            OPENQASM 3;
+            include "stdgates.inc";
+
+            qubit[2] q;
+
+            gate bell a, b {
+                h a;
+                cx a, b;
+            }
+
+            bell q[0], q[1];
+        expected_status: succeeded
+        expected_transpiler_lib: qiskit
+        expected_transpiler_options:
+          optimization_level: 1
