@@ -12,6 +12,7 @@ steps:
             include "stdgates.inc";
 
             qubit[2] q;
+            bit[2] c;
 
             gate bell a, b {
                 h a;
@@ -19,6 +20,7 @@ steps:
             }
 
             bell q[0], q[1];
+            c = measure q;
         expected_status: succeeded
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
