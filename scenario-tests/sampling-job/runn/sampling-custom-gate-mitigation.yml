@@ -1,11 +1,11 @@
-desc: custom job
+desc: custom job with mitigation
 vars:
 steps:
-  test-bell:
+  test-bell-mitigation:
     include:
-      path: ../../sampling-job/runn/sampling-included.yml
+      path: sampling-included.yml
       vars:
-        job_name: custom-job
+        job_name: custom-job-mitigation
         program:
           - |
             OPENQASM 3;
@@ -21,6 +21,8 @@ steps:
 
             bell q[0], q[1];
             c = measure q;
+        mitigation_info:
+          ro_error_mitigation: pseudo_inverse
         expected_status: succeeded
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
