@@ -68,5 +68,10 @@ steps:
     dump:
       desc: job status
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
-    test: |
-      current.res.status == 200
+  confirm:
+    desc: confirm job status
+    req:
+      /jobs/{{steps.post.res.body.job_id}}:
+        get:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
