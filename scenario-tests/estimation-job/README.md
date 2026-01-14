@@ -38,11 +38,11 @@ The following constraints currently apply to this test suite:
 
 Each test follows this flow:
 
-1.  Submit a job via **`POST /jobs`** with the specified parameters.
-2.  Verify that the response contains a valid job ID.
-3.  Poll the job status using **`GET /jobs/{job_id}`** every 5 seconds.
-4.  Confirm that the job status becomes either **`succeeded` or `failed`**.
-5.  Verify that the returned Job information matches the expected output.
+1. Submit a job via **`POST /jobs`** with the specified parameters.
+2. Verify that the response contains a valid job ID.
+3. Poll the job status using **`GET /jobs/{job_id}`** every 5 seconds.
+4. Confirm that the job status becomes either **`succeeded` or `failed`**.
+5. Verify that the returned Job information matches the expected output.
 
 ---
 
@@ -59,3 +59,4 @@ Each test follows this flow:
 | 7 | no transpiler | off | failed | | |
 | 8 | no transpiler | on | failed | | |
 | 9 | default transpiler | off | succeeded | | |
+| 10 | qiskit | off | succeeded | ✅ | with custom gate |
