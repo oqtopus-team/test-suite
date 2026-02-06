@@ -69,4 +69,4 @@ steps:
   ## must be null if no mitigation is used. Cloud is in fixing this issue.
   simulator-info-test:
     test: |
-      wait_res_body.simulator_info == null
+      wait_res_body.simulator_info == {}

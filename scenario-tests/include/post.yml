@@ -10,6 +10,7 @@ vars:
   program: "{{ parent.vars.program }}"
   operator: "{{ parent.vars.operator }}"
   mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+  simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
   post_request_body:
     description: "description of {{ parent.vars.job_name }}"
@@ -22,6 +23,7 @@ vars:
     shots: "{{ parent.vars.shots }}"
     transpiler_info: "{{ parent.vars.transpiler_info }}"
     mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+    simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
 
 runners:
   req: "{{ parent.vars.user_api_endpoint }}"
