@@ -10,10 +10,27 @@ vars:
   program: "{{ parent.vars.program }}"
   operator: "{{ parent.vars.operator }}"
   mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+  dump_request: "{{ parent.vars.dump_request ?? false }}"
+  post_request_body:
+    description: "description of {{ parent.vars.job_name }}"
+    device_id: "{{ parent.vars.device_id }}"
+    job_info:
+      program: "{{ parent.vars.program }}"
+      operator: "{{ parent.vars.operator }}"
+    job_type: "{{ parent.vars.job_type }}"
+    name: "{{ parent.vars.job_name }}"
+    shots: "{{ parent.vars.shots }}"
+    transpiler_info: "{{ parent.vars.transpiler_info }}"
+    mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+
 runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
 steps:
+  dump_post_request_body:
+    if: vars.dump_request == 'true' || vars.dump_request == true
+    dump:
+      expr: vars.post_request_body
   post:
     desc: post a job
     req:
@@ -22,17 +39,7 @@ steps:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
           body:
-            application/json:
-              description: "description of {{ vars.job_name }}"
-              device_id: "{{ vars.device_id }}"
-              job_info:
-                program: "{{ vars.program }}"
-                operator: "{{ vars.operator }}"
-              job_type: "{{ vars.job_type }}"
-              name: "{{ vars.job_name }}"
-              shots: "{{ vars.shots }}"
-              transpiler_info: "{{ vars.transpiler_info }}"
-              mitigation_info: "{{ vars.mitigation_info }}"
+            application/json: "{{ vars.post_request_body }}"
     test: |
       current.res.status == 200
   message:
