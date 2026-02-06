@@ -30,6 +30,6 @@ steps:
         expected_status: "succeeded"
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
-          optimization_level: 1
+          optimization_level: 2
         expected_transpiled: true
         expected_execution_time_filled: true

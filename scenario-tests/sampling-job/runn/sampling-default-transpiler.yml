@@ -18,4 +18,4 @@ steps:
         expected_status: "succeeded"
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
-          optimization_level: 1
+          optimization_level: 2

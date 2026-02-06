@@ -8,7 +8,7 @@ vars:
   shots: 1000
   program: "{{ parent.vars.program }}"
   operator: "{{ parent.vars.operator }}"
-  transpiler_info: "{{ parent.vars.transpiler_info }}"
+  transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   mitigation_info: "{{ parent.vars.mitigation_info }}"
   expected_status: "{{ parent.vars.expected_status }}"
   expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
