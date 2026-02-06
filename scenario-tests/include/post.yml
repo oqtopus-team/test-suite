@@ -9,6 +9,7 @@ vars:
   shots: "{{ parent.vars.shots }}"
   program: "{{ parent.vars.program }}"
   operator: "{{ parent.vars.operator }}"
+  mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
 runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
@@ -31,7 +32,7 @@ steps:
               name: "{{ vars.job_name }}"
               shots: "{{ vars.shots }}"
               transpiler_info: "{{ vars.transpiler_info }}"
-              mitigation_info: "{{ parent.vars.mitigation_info }}"
+              mitigation_info: "{{ vars.mitigation_info }}"
     test: |
       current.res.status == 200
   message:
