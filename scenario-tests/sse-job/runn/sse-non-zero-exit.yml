@@ -29,8 +29,7 @@ steps:
             0IHRyYWNlYmFjawogICAgcHJpbnQodHJhY2ViYWNrLmZvcm1hdF9leGMoKSkKICAgIHByaW50KC
             IjIyMjIEZBSUxFRCIpCgpwcmludCgiIyMgRmluaXNoICMjIikK
         expected_status: "failed"
-        expected_transpiler_lib: qiskit
-        expected_transpiler_options:
-          optimization_level: 2
+        expected_transpiler_lib: null
+        expected_transpiler_options: null
         pass_transpiler_result_check: true
         expected_execution_time_filled: false
