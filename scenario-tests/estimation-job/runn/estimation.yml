@@ -1,6 +1,6 @@
 desc: estimation job
 steps:
-  test-sampling-job-with-qiskit-transpiler:
+  test-estimation-job-with-qiskit-transpiler:
     desc: estimation job
     include:
       path: estimation-included.yml
@@ -16,8 +16,8 @@ steps:
             cx q[0],q[1];
             c = measure q;
         operator:
-          - { "pauli": "X 0 X 1", "coeff": 1.5}
-          - { "pauli": "Y 0 Z 1", "coeff": 1.2}
+          - { "pauli": "X 0 X 1", "coeff": 1.5 }
+          - { "pauli": "Y 0 Z 1", "coeff": 1.2 }
         expected_status: "succeeded"
         expected_transpiler_lib: qiskit
         expected_transpiler_options:

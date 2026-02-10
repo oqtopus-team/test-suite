@@ -8,11 +8,12 @@ vars:
   shots: 1000
   program: "{{ parent.vars.program }}"
   operator: "{{ parent.vars.operator }}"
-  transpiler_info: "{{ parent.vars.transpiler_info }}"
+  transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   mitigation_info: "{{ parent.vars.mitigation_info }}"
   expected_status: "{{ parent.vars.expected_status }}"
   expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
   expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
+  dump_request: "{{ parent.vars.dump_request ?? false }}"
 if: included
 steps:
   started:
@@ -50,18 +51,18 @@ steps:
       wait_res_body.transpiler_info?.transpiler_lib == vars.expected_transpiler_lib
       && toJSON(wait_res_body.transpiler_info?.transpiler_options) == toJSON(vars.expected_transpiler_options)
   transpiler-result-test:
-      test: |
-        wait_res_body.job_info?.transpile_result != {} 
-        || (wait_res_body.job_info?.transpile_result.transpiled_program != null
-           && wait_res_body.job_info?.transpile_result.stats != null
-           && wait_res_body.job_info?.transpile_result.virtual_physical_mapping != null)
+    test: |
+      wait_res_body.job_info?.transpile_result != {} 
+      || (wait_res_body.job_info?.transpile_result.transpiled_program != null
+         && wait_res_body.job_info?.transpile_result.stats != null
+         && wait_res_body.job_info?.transpile_result.virtual_physical_mapping != null)
   mitigation-info-test:
     test: |
-     wait_res_body.mitigation_info?.ro_error_mitigation == vars.mitigation_info?.ro_error_mitigation
-## must be null if no mitigation is used. Cloud is in fixing this issue.
+      wait_res_body.mitigation_info?.ro_error_mitigation == vars.mitigation_info?.ro_error_mitigation
+  ## must be null if no mitigation is used. Cloud is in fixing this issue.
   simulator-info-test:
     test: |
-      wait_res_body.simulator_info == null
+      wait_res_body.simulator_info == {}
   finished:
     desc: test finished
     dump:

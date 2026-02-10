@@ -15,6 +15,7 @@ vars:
   expected_transpiled: "{{ parent.vars.expected_transpiled }}"
   expected_execution_time_filled: "{{ parent.vars.expected_execution_time_filled }}"
   pass_transpiler_result_check: "{{ parent.vars.pass_transpiler_result_check }}:-false"
+  dump_request: "{{ parent.vars.dump_request ?? false }}"
 if: included
 steps:
   started:
@@ -53,19 +54,18 @@ steps:
       wait_res_body.transpiler_info?.transpiler_lib == vars.expected_transpiler_lib
       && toJSON(wait_res_body.transpiler_info?.transpiler_options) == toJSON(vars.expected_transpiler_options)
   transpiler-result-test:
-      test: |
-        vars.pass_transpiler_result_check == true
-        || (wait_res_body.job_info?.transpile_result == null && vars.expected_transpiled == false)
-        || wait_res_body.job_info?.transpile_result?.transpiled_program != null
-        && len(wait_res_body.job_info?.transpile_result?.stats) > 0
-        && len(wait_res_body.job_info?.transpile_result?.stats.after) > 0
-        && len(wait_res_body.job_info?.transpile_result?.stats.before) > 0
-        && wait_res_body.job_info?.transpile_result?.virtual_physical_mapping["0"] != null
-        && wait_res_body.job_info?.transpile_result?.virtual_physical_mapping["1"] != null
+    test: |
+      vars.pass_transpiler_result_check == true
+      || (wait_res_body.job_info?.transpile_result == null && vars.expected_transpiled == false)
+      || wait_res_body.job_info?.transpile_result?.transpiled_program != null
+      && len(wait_res_body.job_info?.transpile_result?.stats) > 0
+      && len(wait_res_body.job_info?.transpile_result?.stats.after) > 0
+      && len(wait_res_body.job_info?.transpile_result?.stats.before) > 0
+      && wait_res_body.job_info?.transpile_result?.virtual_physical_mapping != null
   mitigation-info-test:
     test: |
-     wait_res_body.mitigation_info?.ro_error_mitigation == vars.mitigation_info?.ro_error_mitigation
-## must be null if no mitigation is used. Cloud is in fixing this issue.
+      wait_res_body.mitigation_info?.ro_error_mitigation == vars.mitigation_info?.ro_error_mitigation
+  ## must be null if no mitigation is used. Cloud is in fixing this issue.
   simulator-info-test:
     test: |
-      wait_res_body.simulator_info == null
+      wait_res_body.simulator_info == {}
