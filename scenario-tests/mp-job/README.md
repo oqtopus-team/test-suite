@@ -1,8 +1,8 @@
-# Scenario Test: Multi-Program Job Execution Succeeded/Failed Cases
+# Scenario Test: Multi-Programming Job Execution Succeeded/Failed Cases
 
 ## Overview
 
-This test suite **verifies that quantum jobs complete with a `succeeded` or `failed` status** across various basic job configurations. It focuses on the **`multi-program` job type** and covers common parameter combinations.
+This test suite **verifies that quantum jobs complete with a `succeeded` or `failed` status** across various basic job configurations. It focuses on the **`multi-programming` job type** and covers common parameter combinations.
 
 The goal is to ensure that supported and stable job executions behave as expected under normal operating conditions.
 
@@ -38,11 +38,11 @@ The following constraints currently apply to this test suite:
 
 Each test follows this flow:
 
-1.  Submit a job via **`POST /jobs`** with the specified parameters.
-2.  Verify that the response contains a valid job ID.
-3.  Poll the job status using **`GET /jobs/{job_id}`** every 5 seconds.
-4.  Confirm that the job status becomes either **`succeeded` or `failed`**.
-5.  Verify that the returned Job information matches the expected output.
+1. Submit a job via **`POST /jobs`** with the specified parameters.
+2. Verify that the response contains a valid job ID.
+3. Poll the job status using **`GET /jobs/{job_id}`** every 5 seconds.
+4. Confirm that the job status becomes either **`succeeded` or `failed`**.
+5. Verify that the returned Job information matches the expected output.
 
 ---
 

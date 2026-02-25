@@ -1,15 +1,25 @@
-site_name: Test-Suite Documentation
+site_name: Test-Suite
+repo_url: https://github.com/qiqb-osaka/test-suite
+repo_name: GitHub
 theme:
   name: material
+  palette:
+    primary: indigo
+    accent: indigo
+
+extra_css:
+  - https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css
+  - css/custom.css
 plugins:
+  - search
   - include-markdown
 nav:
   - Home: index.md
   - Endurance Test: endurance-test/README.md
   - Scenario Tests:
-    - Overview: scenario-tests/README.md
-    - Device: scenario-tests/device/README.md
-    - Estimation Job: scenario-tests/estimation-job/README.md
-    - MP Job: scenario-tests/mp-job/README.md
-    - Sampling Job: scenario-tests/sampling-job/README.md
-    - SSE Job: scenario-tests/sse-job/README.md
+      - Overview: scenario-tests/README.md
+      - Device: scenario-tests/device/README.md
+      - Estimation Job: scenario-tests/estimation-job/README.md
+      - Multi-Programming (MP) Job: scenario-tests/mp-job/README.md
+      - Sampling Job: scenario-tests/sampling-job/README.md
+      - SSE Job: scenario-tests/sse-job/README.md
