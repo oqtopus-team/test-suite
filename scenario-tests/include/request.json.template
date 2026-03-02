@@ -1,5 +1,5 @@
 {
-  "description": "hoge description",
+  "description": "a scenario test of {{.vars.job_name}}",
   "device_id": "{{.vars.device_id}}",
   "job_info":
     {
@@ -8,10 +8,10 @@
           "OPENQASM 3;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nh q[0];\ncx q[0],q[1];\nc = measure q;\n"
         ]
     },
-  "job_type": "sampling",
+  "job_type": "{{.vars.job_type}}",
   "mitigation_info": {},
-  "name": "hogehoge",
-  "shots": 1000,
+  "name": "{{.vars.job_name}}",
+  "shots": {{.vars.shots}},
   "simulator_info": {},
   "transpiler_info":
     {
