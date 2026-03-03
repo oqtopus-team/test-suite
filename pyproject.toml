@@ -2,7 +2,7 @@
 name = "test-suite-docs"
 version = "0.1.0"
 description = "Documentation for test-suite"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 
 [project.optional-dependencies]
 dev = [
