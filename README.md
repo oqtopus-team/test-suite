@@ -9,6 +9,12 @@ This repository contains external testing tools for the OQTOPUS quantum computin
 - **[scenario-tests/](scenario-tests/README.md)** - Scenario tests for quantum job execution using runn framework
 - **[endurance-test/](endurance-test/README.md)** - Endurance tests for long-term stability of the OQTOPUS platform
 
+## Developer Guidelines
+
+- [Setup Development Environment](developer_guidelines/setup.md)
+- [Development Flow](developer_guidelines/development_flow.md)
+- [Adding New Tests](developer_guidelines/adding_new_tests.md)
+
 ## Quick Start
 
 1. Navigate to the test directory you want to run
