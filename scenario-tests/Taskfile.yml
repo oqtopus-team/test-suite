@@ -6,6 +6,12 @@ tasks:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
       - runn run device/runn/device.yml --env-file .env --verbose --var dump_request:{{.DUMP}}
+  runn-sampling:
+    desc: "run sampling job tests"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    cmds:
+      - runn run sampling-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-list:
     desc: "list up runn list"
     cmds:
