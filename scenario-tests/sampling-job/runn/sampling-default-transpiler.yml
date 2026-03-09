@@ -6,6 +6,7 @@ steps:
       path: sampling-included.yml
       vars:
         job_name: sampling-job-with-default-transpiler
+        template_file: sampling-default-transpiler.json.template
         program:
           - |
             OPENQASM 3;

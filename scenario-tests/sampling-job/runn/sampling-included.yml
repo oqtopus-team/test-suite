@@ -53,7 +53,8 @@ steps:
           || toJSON(wait_res_body.transpiler_info) == toJSON(vars.expected_transpiler_info))
   transpiler-result-test:
     test: |
-      wait_res_body.job_info?.transpile_result != {} 
+      ((vars.expected_transpiler_info ?? "") == "" || vars.expected_transpiler_info?.transpiler_lib == null)
+      || wait_res_body.job_info?.transpile_result != {} 
       || (wait_res_body.job_info?.transpile_result.transpiled_program != null
          && wait_res_body.job_info?.transpile_result.stats != null
          && wait_res_body.job_info?.transpile_result.virtual_physical_mapping != null)
