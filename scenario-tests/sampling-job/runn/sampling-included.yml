@@ -13,6 +13,7 @@ vars:
   mitigation_info: "{{ parent.vars.mitigation_info }}"
   expected_status: "{{ parent.vars.expected_status }}"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
+  template_file: "{{ parent.vars.template_file ?? 'sampling-qiskit-transpiler.json.template' }}"
 if: included
 steps:
   started:
@@ -23,7 +24,7 @@ steps:
     include:
       path: ../../include/post.yml
       vars:
-        request_body: "json://../sampling-job/template/sampling-qiskit-transpiler.json.template"
+        request_body: "json://../sampling-job/template/{{ vars.template_file }}"
     bind:
       post_res_job_id: steps.post.steps.post.res.body.job_id
       wait_res_body: steps.post.steps.wait.res.body
