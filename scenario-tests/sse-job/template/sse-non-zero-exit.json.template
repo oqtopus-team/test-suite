@@ -1,0 +1,16 @@
+{
+  "description": "description of {{.vars.job_name}}",
+  "device_id": "{{.vars.device_id}}",
+  "job_info":
+    {
+      "program":
+        [
+          "{{ (index .vars.program 0) }}"
+        ]
+    },
+  "job_type": "{{.vars.job_type}}",
+  "mitigation_info": {},
+  "name": "{{.vars.job_name}}",
+  "shots": {{.vars.shots}},
+  "simulator_info": {}
+}

@@ -7,6 +7,7 @@ steps:
       vars:
         device_id: ${DEVICE_ID}
         job_name: sse-non-zero-exit-failed
+        template_file: sse-non-zero-exit.json.template
         program:
           - |
             aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J

@@ -18,6 +18,12 @@ tasks:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
       - runn run estimation-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+  runn-sse:
+    desc: "run sse job tests"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    cmds:
+      - runn run sse-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-list:
     desc: "list up runn list"
     cmds:

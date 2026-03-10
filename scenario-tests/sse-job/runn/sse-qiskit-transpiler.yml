@@ -6,7 +6,8 @@ steps:
       path: sse-included.yml
       vars:
         device_id: ${DEVICE_ID}
-        job_name: sse
+        job_name: sse-job-with-qiskit-transpiler
+        template_file: sse-qiskit-transpiler.json.template
         program:
           - |
             aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J
