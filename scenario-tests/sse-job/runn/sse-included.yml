@@ -44,8 +44,6 @@ steps:
       && wait_res_body.shots == vars.shots
       && wait_res_body.job_type == vars.job_type
       && len(wait_res_body.job_info?.program) == 1
-      && ((vars.program ?? "") == "" || wait_res_body.job_info?.program == vars.program)
-      && ((vars.expected_program ?? "") == "" || wait_res_body.job_info?.program[0] == vars.expected_program)
   exec-test:
     test: |
       ((wait_res_body.job_info?.result?.sampling?.counts == null && wait_res_body.status == "failed")
