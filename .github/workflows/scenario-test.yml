@@ -24,4 +24,5 @@ jobs:
           USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
           Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
           DEVICE_ID: ${{ secrets.DEVICE_ID }}
-        run: docker run --rm -v $(pwd):/work -w /work -e USER_API_ENDPOINT -e Q_API_TOKEN -e DEVICE_ID ghcr.io/k1low/runn:v1.0.0 run */runn/*.yml --verbose --fail-fast --scopes read:parent
+          DUMP: "true"
+        run: docker run --rm -v $(pwd):/work -w /work -e USER_API_ENDPOINT -e Q_API_TOKEN -e DEVICE_ID -e DUMP ghcr.io/k1low/runn:v1.0.0 run */runn/*.yml --verbose --fail-fast --scopes read:parent
