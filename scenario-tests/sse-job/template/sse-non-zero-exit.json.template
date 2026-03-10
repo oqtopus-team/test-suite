@@ -12,5 +12,6 @@
   "mitigation_info": {},
   "name": "{{.vars.job_name}}",
   "shots": {{.vars.shots}},
-  "simulator_info": {}
+  "simulator_info": {},
+  "transpiler_info": {}
 }
