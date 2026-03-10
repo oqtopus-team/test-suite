@@ -14,6 +14,9 @@ This repository contains external testing tools for the OQTOPUS quantum computin
 - [Setup Development Environment](developer_guidelines/setup.md)
 - [Development Flow](developer_guidelines/development_flow.md)
 - [Adding New Tests](developer_guidelines/adding_new_tests.md)
+- [How to Contribute](CONTRIBUTING.md)
+- [Code of Conduct](https://github.com/oqtopus-team/.github/blob/main/CODE_OF_CONDUCT.md)
+- [Security](https://github.com/oqtopus-team/.github/blob/main/SECURITY.md)
 
 ## Quick Start
 
