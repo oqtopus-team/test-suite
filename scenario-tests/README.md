@@ -1,6 +1,4 @@
-# Scenario Tests
-
-# OQTOPUS-Cloud API Scenario Test Tool
+# Scenario Test Suite
 
 This is a tool for operating the entire system using the OQTOPUS Cloud API and conducting integration tests based on predefined scenarios. It was developed to verify the end-to-end behavior of the system.
 
@@ -43,7 +41,7 @@ Q_API_TOKEN should be your authentication token for accessing the API.
 
 ## Project Structure
 
-```
+```text
 scenario-tests/
 ├── Taskfile.yml           # Task runner configuration
 ├── .env                   # Environment variables (not tracked in git)

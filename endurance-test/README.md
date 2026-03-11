@@ -10,9 +10,9 @@ The main test script, `run_endurance_test.sh`, executes the `endr.yml` test scen
 
 ## Prerequisites
 
-- `runn` (https://github.com/k1LoW/runn)
-- `task` (https://taskfile.dev/)
-- A `.env` file with the necessary environment variables (`USER_API_ENDPOINT`, `Q_API_TOKEN`, etc.).
+- [runn](https://github.com/k1LoW/runn) installed
+- [Task](https://taskfile.dev/) installed (for running Taskfile.yml commands)
+- A `.env` file in the scenario-tests directory with required environment variables
 
 ## Test Structure
 
@@ -28,10 +28,10 @@ The main test script, `run_endurance_test.sh`, executes the `endr.yml` test scen
 
 Create a `.env` file in the root directory with the following content:
 
-```
-USER_API_ENDPOINT="your_api_endpoint"
-Q_API_TOKEN="your_api_token"
-DEVICE_ID="your_device_id"
+```bash
+USER_API_ENDPOINT="<your-api-endpoint>"
+Q_API_TOKEN="<your-api-token>"
+DEVICE_ID=<your_device_id>
 ```
 
 ### 2. Start the endurance test
@@ -43,6 +43,7 @@ task start-endr
 ```
 
 This will:
+
 - Create a `results` directory if it doesn't exist.
 - Start the `run_endurance_test.sh` script in the background using `nohup`.
 - Redirect all output to a log file in the `results` directory (e.g., `results/endurance_test_2023_1027_1530_00.log`).
