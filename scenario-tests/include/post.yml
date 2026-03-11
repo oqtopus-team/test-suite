@@ -44,6 +44,11 @@ steps:
             application/json: "{{ vars.post_request_body }}"
     test: |
       current.res.status == 200
+  dump_post_response:
+    if: vars.dump_request == 'true' || vars.dump_request == true
+    desc: dump post response
+    dump:
+      expr: '{body: steps.post.res.body, rawBody: steps.post.res.rawBody, status: steps.post.res.status}'
   message:
     desc: posted a job
     dump:
