@@ -48,7 +48,7 @@ steps:
     if: vars.dump_request == 'true' || vars.dump_request == true
     desc: dump post response
     dump:
-      expr: steps.post.res
+      expr: '{body: steps.post.res.body, rawBody: steps.post.res.rawBody, status: steps.post.res.status}'
   message:
     desc: posted a job
     dump:
