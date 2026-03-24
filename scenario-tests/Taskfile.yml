@@ -25,7 +25,7 @@ tasks:
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --verbose --fail-fast --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-all-con:
     desc: "runn all tests concurrently"
     vars:
