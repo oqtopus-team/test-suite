@@ -6,6 +6,7 @@ steps:
       path: sampling-included.yml
       vars:
         job_name: sampling-job-with-default-transpiler
+        input_payload_path: payloads/sampling-qiskit-transpiler.zip
         program:
           - |
             OPENQASM 3;
@@ -19,3 +20,4 @@ steps:
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
           optimization_level: 1
+        expected_transpile_result_present: true

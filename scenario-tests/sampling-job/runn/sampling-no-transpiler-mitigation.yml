@@ -7,6 +7,7 @@ steps:
       vars:
         device_id: ${DEVICE_ID}
         job_name: sampling-job-with-mitigation-without-transpiler
+        input_payload_path: payloads/sampling-no-transpiler.zip
         program:
           - |
             OPENQASM 3;
@@ -16,9 +17,12 @@ steps:
             cx q[0],q[1];
             c = measure q;
         mitigation_info:
-          ro_error_mitigation: pseudo_inverse
+          readout:
+            method: pseudo_inverse
+            params: {}
         transpiler_info:
           transpiler_lib: null
         expected_status: "succeeded"
         expected_transpiler_lib: null
         expected_transpiler_options: null
+        expected_transpile_result_present: false

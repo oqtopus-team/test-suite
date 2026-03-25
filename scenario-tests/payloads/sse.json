@@ -1,0 +1,4 @@
+{
+  "program": [],
+  "sse_program": "import sse_sampler\n\nQASM = \"\"\"OPENQASM 3.0;\ninclude \\\"stdgates.inc\\\";\nqubit[2] q;\nbit[2] c;\nh q[0];\nx q[1];\ncx q[0], q[1];\nry(0.2) q[1];\nc = measure q;\n\"\"\"\n\nfor i in range(3):\n    shots = 100 + i * 10\n    print(f\"## iteration {i}: shots={shots} ##\")\n    job = sse_sampler.req_transpile_and_exec([QASM], shots, {})\n    print(job.status)\n\nprint(\"## finish ##\")\n"
+}

@@ -6,6 +6,7 @@ steps:
       path: sampling-included.yml
       vars:
         job_name: sampling-job-without-transpiler
+        input_payload_path: payloads/sampling-no-transpiler.zip
         program:
           - |
             OPENQASM 3;
@@ -19,4 +20,4 @@ steps:
         expected_status: "succeeded"
         expected_transpiler_lib: null
         expected_transpiler_options: null
-
+        expected_transpile_result_present: false

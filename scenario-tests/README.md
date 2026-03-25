@@ -46,7 +46,8 @@ scenario-tests/
 ├── Taskfile.yml           # Task runner configuration
 ├── .env                   # Environment variables (not tracked in git)
 ├── include/
-│   └── post.yml          # Common test steps for job submission and polling
+│   └── post.yml          # Common test steps for job register/upload/submit and polling
+├── payloads/             # ZIP payloads uploaded to presigned input URLs
 ├── estimation-job/       # Estimation job type tests
 │   ├── README.md
 │   └── runn/
@@ -128,3 +129,12 @@ Located in `estimation-job/`, these tests verify estimation job execution with s
 
 - **MP Job Tests** (`mp-job/`): Located in `mp-job/`, these tests verify MP job execution.
 - **SSE Job Tests** (`sse-job/`): Located in `sse-job/`, these tests verify SSE job execution.
+
+## Current User API Flow
+
+Current job scenarios follow the User API register/upload/submit flow:
+
+1. `POST /jobs` to register a job and receive `job_id` plus `presigned_url`
+2. Upload `input.zip` to the returned presigned URL
+3. `POST /jobs/{job_id}/submit` with metadata such as `device_id`, `job_type`, and `transpiler_info`
+4. Poll `GET /jobs/{job_id}` until the job reaches a terminal status

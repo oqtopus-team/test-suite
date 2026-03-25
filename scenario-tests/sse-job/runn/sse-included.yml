@@ -6,14 +6,17 @@ vars:
   job_name: "{{ parent.vars.job_name }}"
   job_type: sse
   shots: 1000
+  input_payload_path: "{{ parent.vars.input_payload_path }}"
   program: "{{ parent.vars.program }}"
-  transpiler_info: "{{ parent.vars.transpiler_info }}"
-  mitigation_info: "{{ parent.vars.mitigation_info }}"
+  transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
+  mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
   expected_status: "{{ parent.vars.expected_status }}"
   expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
   expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
   expected_transpiled: "{{ parent.vars.expected_transpiled }}"
   expected_execution_time_filled: "{{ parent.vars.expected_execution_time_filled }}"
+  expected_result_present: "{{ parent.vars.expected_result_present ?? true }}"
+  expected_sse_log_present: "{{ parent.vars.expected_sse_log_present ?? true }}"
   pass_transpiler_result_check: "{{ parent.vars.pass_transpiler_result_check }}:-false"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
 if: included
@@ -25,7 +28,7 @@ steps:
   post:
     include: ../../include/post.yml
     bind:
-      post_res_job_id: steps.post.steps.post.res.body.job_id
+      post_res_job_id: steps.post.steps.register.res.body.job_id
       wait_res_body: steps.post.steps.wait.res.body
   status-test:
     test: |
@@ -38,13 +41,15 @@ steps:
       && wait_res_body.device_id == vars.device_id
       && wait_res_body.shots == vars.shots
       && wait_res_body.job_type == vars.job_type
-      && len(wait_res_body.job_info?.program) == 1
-      && wait_res_body.job_info?.program == vars.program
+      && wait_res_body.job_info?.input != null
+      && ((vars.expected_result_present && wait_res_body.job_info?.result != null)
+        || (!vars.expected_result_present && wait_res_body.job_info?.result == null))
+      && ((vars.expected_sse_log_present && wait_res_body.job_info?.sse_log != null)
+        || (!vars.expected_sse_log_present && wait_res_body.job_info?.sse_log == null))
+      && wait_res_body.job_info?.combined_program == null
   exec-test:
     test: |
-      ((wait_res_body.job_info?.result?.sampling?.counts == null && wait_res_body.status == "failed")
-        || wait_res_body.job_info?.result?.sampling?.counts != null )
-      && (( vars.expected_execution_time_filled && wait_res_body.execution_time > 0 )
+      (( vars.expected_execution_time_filled && wait_res_body.execution_time > 0 )
         || (!vars.expected_execution_time_filled && wait_res_body.execution_time == null))
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
       && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
@@ -57,15 +62,10 @@ steps:
     test: |
       vars.pass_transpiler_result_check == true
       || (wait_res_body.job_info?.transpile_result == null && vars.expected_transpiled == false)
-      || wait_res_body.job_info?.transpile_result?.transpiled_program != null
-      && len(wait_res_body.job_info?.transpile_result?.stats) > 0
-      && len(wait_res_body.job_info?.transpile_result?.stats.after) > 0
-      && len(wait_res_body.job_info?.transpile_result?.stats.before) > 0
-      && wait_res_body.job_info?.transpile_result?.virtual_physical_mapping != null
+      || (wait_res_body.job_info?.transpile_result != null && vars.expected_transpiled == true)
   mitigation-info-test:
     test: |
-      wait_res_body.mitigation_info?.ro_error_mitigation == vars.mitigation_info?.ro_error_mitigation
-  ## must be null if no mitigation is used. Cloud is in fixing this issue.
+      toJSON(wait_res_body.mitigation_info) == toJSON(vars.mitigation_info)
   simulator-info-test:
     test: |
       wait_res_body.simulator_info == {}

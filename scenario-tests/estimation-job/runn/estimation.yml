@@ -6,6 +6,7 @@ steps:
       path: estimation-included.yml
       vars:
         job_name: estimation-job
+        input_payload_path: payloads/estimation.zip
         program:
           - |
             OPENQASM 3;
@@ -22,3 +23,4 @@ steps:
         expected_transpiler_lib: qiskit
         expected_transpiler_options:
           optimization_level: 1
+        expected_transpile_result_present: true
