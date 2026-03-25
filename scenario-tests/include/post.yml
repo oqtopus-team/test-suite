@@ -48,7 +48,7 @@ steps:
     if: vars.dump_request == 'true' || vars.dump_request == true
     desc: dump post response
     dump:
-      expr: '{body: steps.post.res.body, rawBody: steps.post.res.rawBody, status: steps.post.res.status}'
+      expr: "{body: steps.post.res.body, rawBody: steps.post.res.rawBody, status: steps.post.res.status}"
   message:
     desc: posted a job
     dump:
@@ -57,9 +57,9 @@ steps:
     desc: check job status
     loop:
       count: 20
-      until: 'current.res.status != 200 || current.res.body.status == "succeeded" || current.res.body.status == "failed" || current.res.body.status == "canceled"'
-      minInterval: 5
-      maxInterval: 10
+      until: 'current.res?.body?.status == "succeeded" || current.res?.body?.status == "failed" || current.res?.body?.status == "canceled"'
+      minInterval: 10
+      maxInterval: 20
     req:
       /jobs/{{steps.post.res.body.job_id}}:
         get:
@@ -68,5 +68,10 @@ steps:
     dump:
       desc: job status
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
-    test: |
-      current.res.status == 200
+  confirm:
+    desc: confirm job status
+    req:
+      /jobs/{{steps.post.res.body.job_id}}:
+        get:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
