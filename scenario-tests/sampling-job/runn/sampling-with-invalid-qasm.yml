@@ -6,6 +6,7 @@ steps:
       path: sampling-failed-included.yml
       vars:
         job_name: sampling-job-with-invalid-qasm
+        template_file: sampling-with-invalid-qasm.json.template
         program:
           - |
             OPENQASM 3;

@@ -1,4 +1,4 @@
-desc: sampling job with mitigation without transpiler 
+desc: sampling job with mitigation without transpiler
 vars:
 steps:
   test-no-transpiler:
@@ -7,6 +7,7 @@ steps:
       vars:
         device_id: ${DEVICE_ID}
         job_name: sampling-job-with-mitigation-without-transpiler
+        template_file: sampling-no-transpiler-mitigation.json.template
         program:
           - |
             OPENQASM 3;

@@ -5,7 +5,8 @@ steps:
     include:
       path: estimation-included.yml
       vars:
-        job_name: estimation-job
+        job_name: estimation-job-with-qiskit-transpiler
+        template_file: estimation-qiskit-transpiler.json.template
         program:
           - |
             OPENQASM 3;

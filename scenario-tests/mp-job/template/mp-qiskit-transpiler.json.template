@@ -1,0 +1,22 @@
+{
+  "description": "description of {{.vars.job_name}}",
+  "device_id": "{{.vars.device_id}}",
+  "job_info":
+    {
+      "program":
+        [
+          "OPENQASM 3;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nx q[1];\nc = measure q;\n",
+          "OPENQASM 3;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nh q[1];\nc = measure q;\n"
+        ]
+    },
+  "job_type": "{{.vars.job_type}}",
+  "mitigation_info": {},
+  "name": "{{.vars.job_name}}",
+  "shots": {{.vars.shots}},
+  "simulator_info": {},
+  "transpiler_info":
+    {
+      "transpiler_lib": "qiskit",
+      "transpiler_options": { "optimization_level": 1 }
+    }
+}

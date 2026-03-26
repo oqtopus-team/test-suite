@@ -6,6 +6,7 @@ steps:
       path: sampling-included.yml
       vars:
         job_name: sampling-job-without-transpiler
+        template_file: sampling-no-transpiler.json.template
         program:
           - |
             OPENQASM 3;
@@ -19,4 +20,3 @@ steps:
         expected_status: "succeeded"
         expected_transpiler_lib: null
         expected_transpiler_options: null
-

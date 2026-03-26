@@ -6,6 +6,7 @@ steps:
       path: mp-included.yml
       vars:
         job_name: multi-program-job
+        template_file: mp-qiskit-transpiler.json.template
         program:
           - |
             OPENQASM 3;
