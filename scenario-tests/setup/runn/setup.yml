@@ -1,8 +1,8 @@
-desc: get devices (also for health check)
+desc: setup before all the scenario tests
 runners:
   req: ${USER_API_ENDPOINT}
 steps:
-  get:
+  get_devices:
     desc: get devices
     req:
       /devices:
