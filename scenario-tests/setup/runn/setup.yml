@@ -14,4 +14,4 @@ steps:
   message:
     desc: some devices are registered
     dump:
-      expr: 'string(len(steps.get.res.body)) + " devices are registered"'
+      expr: 'string(len(steps.get_devices.res.body)) + " devices are registered"'
