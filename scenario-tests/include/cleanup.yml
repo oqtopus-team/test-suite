@@ -1,0 +1,11 @@
+desc: cleanup temporary directory
+if: included
+steps:
+  cleanup_temp:
+    desc: cleanup temporary directory
+    exec:
+      command: |
+        rm -rf .tmp_info
+        mkdir -p .tmp_info
+    test: |
+      current.exit_code == 0
