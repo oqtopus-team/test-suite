@@ -1,11 +1,11 @@
 version: "3"
 tasks:
-  runn-device:
-    desc: "get devices for also health check"
+  runn-setup:
+    desc: "run setup before all the scenario tests"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run device/runn/device.yml --env-file .env --verbose --var dump_request:{{.DUMP}}
+      - runn run setup/runn/setup.yml --env-file .env --verbose --fail-fast --var dump_request:{{.DUMP}}
   runn-sampling:
     desc: "run sampling job tests"
     vars:
