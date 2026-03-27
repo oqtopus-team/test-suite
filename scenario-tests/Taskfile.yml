@@ -5,7 +5,7 @@ tasks:
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run setup/runn/setup.yml --env-file .env --verbose --fail-fast --var dump_request:{{.DUMP}}
+      - runn run setup/runn/setup.yml --env-file .env --verbose --fail-fast --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-sampling:
     desc: "run sampling job tests"
     vars:
