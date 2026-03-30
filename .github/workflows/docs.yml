@@ -32,7 +32,6 @@ jobs:
 
       - name: Copy assets
         run: |
-          cp -r asset docs/
           mkdir -p docs/scenario-tests/asset
           cp -r scenario-tests/asset/* docs/scenario-tests/asset/
 
