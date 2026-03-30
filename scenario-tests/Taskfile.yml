@@ -5,7 +5,7 @@ tasks:
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run device/runn/device.yml --env-file .env --verbose --var dump_request:{{.DUMP}}
+      - runn run device/runn/device.yml --env-file .env --verbose --scopes run:exec --var dump_request:{{.DUMP}}
   runn-list:
     desc: "list up runn list"
     cmds:
@@ -15,20 +15,20 @@ tasks:
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose --scopes read:parent,run:exec --var dump_request:{{.DUMP}}
   runn-id-stress:
     desc: "runn with runnbook id (stress test)"
     cmds:
-      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --scopes read:parent
+      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --scopes read:parent,run:exec
   runn-all:
     desc: "runn all tests sequentially"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --verbose --fail-fast --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --env-file .env --verbose --fail-fast --scopes read:parent,run:exec --var dump_request:{{.DUMP}}
   runn-all-con:
     desc: "runn all tests concurrently"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --concurrent 8 --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --env-file .env --concurrent 8 --scopes read:parent,run:exec --var dump_request:{{.DUMP}}
