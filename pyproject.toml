@@ -1,8 +1,8 @@
 [project]
-name = "test-suite-docs"
+name = "test-suite"
 version = "0.1.0"
-description = "Documentation for test-suite"
-requires-python = ">=3.8"
+description = "test-suite for OQTOPUS"
+requires-python = ">=3.9"
 
 [project.optional-dependencies]
 dev = [
