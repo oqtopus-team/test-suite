@@ -3,7 +3,6 @@
 .venv
 /site/
 /docs/scenario-tests/asset/
-/docs/asset/
 
 # Python
 __pycache__/
