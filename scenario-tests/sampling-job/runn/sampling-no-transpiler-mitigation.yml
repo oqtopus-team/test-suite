@@ -17,9 +17,7 @@ steps:
             cx q[0],q[1];
             c = measure q;
         mitigation_info:
-          readout:
-            method: pseudo_inverse
-            params: {}
+          ro_error_mitigation: pseudo_inverse
         transpiler_info:
           transpiler_lib: null
         expected_status: "succeeded"
