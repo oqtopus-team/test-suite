@@ -544,7 +544,7 @@ wheels = [
 ]
 
 [[package]]
-name = "test-suite"
+name = "test-suite-docs"
 version = "0.1.0"
 source = { virtual = "." }
 

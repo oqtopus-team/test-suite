@@ -1,0 +1,3 @@
+{
+  "sse_program": "import sse_sampler\n\nQASM = \"\"\"OPENQASM 3.0;\ninclude \\\"stdgates.inc\\\";\nqubit[2] q;\nbit[2] c;\nh q[0];\nx q[1];\ncx q[0], q[1];\nc = measure q;\n\"\"\"\n\njob = sse_sampler.req_transpile_and_exec([QASM], 100, {})\nprint(job.status)\nraise SystemExit(1)\n"
+}

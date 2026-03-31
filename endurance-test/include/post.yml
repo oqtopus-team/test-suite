@@ -1,13 +1,24 @@
-desc: Post a job
+desc: register, upload, submit a job
 vars:
   user_api_endpoint: "{{ parent.vars.user_api_endpoint }}"
   q_api_token: "{{ parent.vars.q_api_token }}"
   device_id: "{{ parent.vars.device_id }}"
   job_name: "{{ parent.vars.job_name }}"
   job_type: "{{ parent.vars.job_type }}"
-  transpiler_info: "{{ parent.vars.transpiler_info }}"
+  transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   shots: "{{ parent.vars.shots }}"
-  program: "{{ parent.vars.program }}"
+  input_payload_path: "{{ parent.vars.input_payload_path }}"
+  mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+  simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
+  submit_request_body:
+    description: "description of {{ parent.vars.job_name }}"
+    device_id: "{{ parent.vars.device_id }}"
+    job_type: "{{ parent.vars.job_type }}"
+    name: "{{ parent.vars.job_name }}"
+    shots: "{{ parent.vars.shots }}"
+    transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
+    mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+    simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
 runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
@@ -15,42 +26,66 @@ steps:
   device:
     dump:
       expr: vars.device_id + " is selected"
-  post:
-    desc: Post a job
+  register:
+    desc: register a job
     req:
       /jobs:
         post:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
           body:
-            application/json:
-              description: "description of {{ vars.job_name }}"
-              device_id: "{{ vars.device_id }}"
-              job_info:
-                program:
-                  - "{{ vars.program }}"
-              job_type: "{{ vars.job_type }}"
-              name: "{{ vars.job_name }}"
-              shots: "{{ vars.shots }}"
-              transpiler_info: "{{ vars.transpiler_info }}"
-              mitigation_info: "{{ parent.vars.mitigation_info }}"
+            application/json: {}
     test: |
       current.res.status == 200
+      && current.res.body.job_id != ""
+      && current.res.body.presigned_url.url != ""
+      && current.res.body.presigned_url.fields.key != ""
+  upload:
+    desc: upload input.zip
+    exec:
+      command: |
+        set -eu
+        curl_args='-sS -o /dev/null -w %{http_code} -X POST'
+        curl_args="$curl_args -F key={{ steps.register.res.body.presigned_url.fields.key }}"
+        curl_args="$curl_args -F AWSAccessKeyId={{ steps.register.res.body.presigned_url.fields.AWSAccessKeyId }}"
+        curl_args="$curl_args -F policy={{ steps.register.res.body.presigned_url.fields.policy }}"
+        curl_args="$curl_args -F signature={{ steps.register.res.body.presigned_url.fields.signature }}"
+        curl_args="$curl_args -F x-amz-security-token={{ steps.register.res.body.presigned_url.fields['x-amz-security-token'] }}"
+        curl_args="$curl_args -F file=@{{ vars.input_payload_path }}"
+        # Some environments issue STS-backed presigned POSTs, which require x-amz-security-token.
+        eval "curl $curl_args '{{ steps.register.res.body.presigned_url.url }}'"
+    test: |
+      current.exit_code == 0
+      && (current.stdout == "200" || current.stdout == "201" || current.stdout == "204")
+  submit:
+    desc: submit a job
+    req:
+      /jobs/{{ steps.register.res.body.job_id }}/submit:
+        post:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
+          body:
+            application/json: "{{ vars.submit_request_body }}"
+    test: |
+      current.res.status == 200
+      && current.res.body.message == "job submitted"
   message:
-    desc: Dump the state
+    desc: registered and submitted a job
     dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"'
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.register.res.body.job_id + "(" + vars.job_name + ") is submitted"'
   wait:
-    desc: Check job status
+    desc: check job status
     loop:
       count: 20
-      until: 'current.res.body.status  == "succeeded" || current.res.body.status  == "failed" || current.res.body.status == "canceled"'
-      minInterval: 1
-      maxInterval: 1
+      until: 'current.res.status != 200 || current.res.body.status == "succeeded" || current.res.body.status == "failed" || current.res.body.status == "cancelled"'
+      minInterval: 5
+      maxInterval: 10
     req:
-      /jobs/{{steps.post.res.body.job_id}}:
+      /jobs/{{steps.register.res.body.job_id}}:
         get:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
     dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.register.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+    test: |
+      current.res.status == 200
