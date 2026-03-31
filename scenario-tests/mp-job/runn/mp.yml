@@ -1,0 +1,28 @@
+desc: multi-program job
+steps:
+  test-mp-job:
+    desc: multi-program job
+    include:
+      path: mp-included.yml
+      vars:
+        job_name: multi-program-job
+        template_file: mp-qiskit-transpiler.json.template
+        program:
+          - |
+            OPENQASM 3;
+            include "stdgates.inc";
+            qubit[2] q;
+            bit[2] c;
+            x q[1];
+            c = measure q;
+          - |
+            OPENQASM 3;
+            include "stdgates.inc";
+            qubit[2] q;
+            bit[2] c;
+            h q[1];
+            c = measure q;
+        expected_status: "succeeded"
+        expected_transpiler_lib: qiskit
+        expected_transpiler_options:
+          optimization_level: 1

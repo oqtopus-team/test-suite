@@ -1,0 +1,12 @@
+[project]
+name = "test-suite"
+version = "0.1.0"
+description = "test-suite for OQTOPUS"
+requires-python = ">=3.9"
+
+[project.optional-dependencies]
+dev = [
+    "mkdocs>=1.6.0",
+    "mkdocs-material>=9.5.0",
+    "mkdocs-include-markdown-plugin>=6.0.0",
+]

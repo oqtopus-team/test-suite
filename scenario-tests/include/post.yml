@@ -1,0 +1,65 @@
+desc: post a job and get the status
+vars:
+  user_api_endpoint: "{{ parent.vars.user_api_endpoint }}"
+  q_api_token: "{{ parent.vars.q_api_token }}"
+  device_id: "{{ parent.vars.device_id }}"
+  job_name: "{{ parent.vars.job_name }}"
+  job_type: "{{ parent.vars.job_type }}"
+  transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
+  shots: "{{ parent.vars.shots }}"
+  program: "{{ parent.vars.program }}"
+  operator: "{{ parent.vars.operator }}"
+  mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+  simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
+  dump_request: "{{ parent.vars.dump_request ?? false }}"
+
+runners:
+  req: "{{ parent.vars.user_api_endpoint }}"
+if: included
+steps:
+  dump_request_body:
+    if: vars.dump_request == 'true' || vars.dump_request == true
+    dump:
+      expr: vars.request_body
+  post:
+    desc: post a job
+    req:
+      /jobs:
+        post:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
+          body:
+            application/json: "{{ vars.request_body }}"
+    test: |
+      current.res.status == 200
+  dump_post_response:
+    if: vars.dump_request == 'true' || vars.dump_request == true
+    desc: dump post response
+    dump:
+      expr: "{body: steps.post.res.body, rawBody: steps.post.res.rawBody, status: steps.post.res.status}"
+  message:
+    desc: posted a job
+    dump:
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"'
+  wait:
+    desc: check job status
+    loop:
+      count: 20
+      until: 'current.res?.body?.status == "succeeded" || current.res?.body?.status == "failed" || current.res?.body?.status == "canceled"'
+      minInterval: 10
+      maxInterval: 20
+    req:
+      /jobs/{{steps.post.res.body.job_id}}:
+        get:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
+    dump:
+      desc: job status
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+  confirm:
+    desc: confirm job status
+    req:
+      /jobs/{{steps.post.res.body.job_id}}:
+        get:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
