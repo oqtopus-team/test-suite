@@ -1,5 +1,24 @@
 version: "3"
 tasks:
+  payload-zip:
+    desc: "build one payload zip from payloads/<name>.json"
+    requires:
+      vars: [PAYLOAD]
+    cmds:
+      - |
+        set -eu
+        cd payloads
+        test -f "{{.PAYLOAD}}.json"
+        zip -jq "{{.PAYLOAD}}.zip" "{{.PAYLOAD}}.json"
+  payload-zip-all:
+    desc: "build all payload zips from payloads/*.json"
+    cmds:
+      - |
+        set -eu
+        cd payloads
+        for f in *.json; do
+          zip -jq "${f%.json}.zip" "$f"
+        done
   runn-device:
     desc: "get devices for also health check"
     vars:
