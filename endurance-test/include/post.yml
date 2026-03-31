@@ -50,9 +50,7 @@ steps:
         curl_args="$curl_args -F AWSAccessKeyId={{ steps.register.res.body.presigned_url.fields.AWSAccessKeyId }}"
         curl_args="$curl_args -F policy={{ steps.register.res.body.presigned_url.fields.policy }}"
         curl_args="$curl_args -F signature={{ steps.register.res.body.presigned_url.fields.signature }}"
-        if [ '{{ steps.register.res.body.presigned_url.fields["x-amz-security-token"] ?? "" }}' != '' ]; then
-          curl_args="$curl_args -F x-amz-security-token={{ steps.register.res.body.presigned_url.fields['x-amz-security-token'] }}"
-        fi
+        curl_args="$curl_args -F x-amz-security-token={{ steps.register.res.body.presigned_url.fields['x-amz-security-token'] }}"
         curl_args="$curl_args -F file=@{{ vars.input_payload_path }}"
         # Some environments issue STS-backed presigned POSTs, which require x-amz-security-token.
         eval "curl $curl_args '{{ steps.register.res.body.presigned_url.url }}'"
