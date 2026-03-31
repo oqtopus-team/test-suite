@@ -1,0 +1,18 @@
+desc: SSE job
+vars:
+steps:
+  test-sse:
+    include:
+      path: sse-included.yml
+      vars:
+        device_id: ${DEVICE_ID}
+        job_name: sse
+        input_payload_path: payloads/sse.zip
+        expected_status: "succeeded"
+        expected_transpiler_lib: qiskit
+        expected_transpiler_options:
+          optimization_level: 1
+        expected_transpiled: false
+        expected_execution_time_filled: true
+        expected_result_present: true
+        expected_sse_log_present: true

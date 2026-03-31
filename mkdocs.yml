@@ -23,3 +23,7 @@ nav:
       - Multi-Programming (MP) Job: scenario-tests/mp-job/README.md
       - Sampling Job: scenario-tests/sampling-job/README.md
       - SSE Job: scenario-tests/sse-job/README.md
+  - Developer Guidelines:
+      - Setup Development Environment: developer_guidelines/setup.md
+      - Development Flow: developer_guidelines/development_flow.md
+      - Adding New Tests: developer_guidelines/adding_new_tests.md
