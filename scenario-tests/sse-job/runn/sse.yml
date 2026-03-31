@@ -8,9 +8,6 @@ steps:
         device_id: ${DEVICE_ID}
         job_name: sse
         input_payload_path: payloads/sse.zip
-        program:
-          - |
-            aW1wb3J0IHNzZV9zYW1wbGVyCgpRQVNNID0gIiIiT1BFTlFBU00gMy4wOwppbmNsdWRlIFwic3RkZ2F0ZXMuaW5jXCI7CnF1Yml0WzJdIHE7CmJpdFsyXSBjOwpoIHFbMF07CnggcVsxXTsKY3ggcVswXSwgcVsxXTsKcnkoMC4yKSBxWzFdOwpjID0gbWVhc3VyZSBxOwoiIiIKCmZvciBpIGluIHJhbmdlKDMpOgogICAgc2hvdHMgPSAxMDAgKyBpICogMTAKICAgIHByaW50KGYiIyMgaXRlcmF0aW9uIHtpfTogc2hvdHM9e3Nob3RzfSAjIyIpCiAgICBqb2IgPSBzc2Vfc2FtcGxlci5yZXFfdHJhbnNwaWxlX2FuZF9leGVjKFtRQVNNXSwgc2hvdHMsIHt9KQogICAgcHJpbnQoam9iLnN0YXR1cykKCnByaW50KCIjIyBmaW5pc2ggIyMiKQo=
         expected_status: "succeeded"
         expected_transpiler_lib: qiskit
         expected_transpiler_options:

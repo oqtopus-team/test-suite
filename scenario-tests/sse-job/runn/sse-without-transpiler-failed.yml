@@ -8,9 +8,6 @@ steps:
         device_id: ${DEVICE_ID}
         job_name: sse-without-transpiler-failed
         input_payload_path: payloads/sse-without-transpiler-failed.zip
-        program:
-          - |
-            aW1wb3J0IHNzZV9zYW1wbGVyCgpRQVNNID0gIiIiT1BFTlFBU00gMy4wOwppbmNsdWRlIFwic3RkZ2F0ZXMuaW5jXCI7CnF1Yml0WzJdIHE7CmJpdFsyXSBjOwp4IHFbMF07CmN4IHFbMF0sIHFbMV07CmMgPSBtZWFzdXJlIHE7CiIiIgoKam9iID0gc3NlX3NhbXBsZXIucmVxX3RyYW5zcGlsZV9hbmRfZXhlYyhbUUFTTV0sIDEwMCwgeyJ0cmFuc3BpbGVyX2xpYiI6IE5vbmV9KQpwcmludChqb2Iuc3RhdHVzKQpyYWlzZSBTeXN0ZW1FeGl0KDEpCg==
         expected_status: "failed"
         expected_transpiler_lib: null
         expected_transpiler_options: null

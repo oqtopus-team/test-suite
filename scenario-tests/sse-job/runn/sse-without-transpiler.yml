@@ -8,9 +8,6 @@ steps:
         device_id: ${DEVICE_ID}
         job_name: sse
         input_payload_path: payloads/sse-without-transpiler.zip
-        program:
-          - |
-            aW1wb3J0IHNzZV9zYW1wbGVyCgpRQVNNID0gIiIiT1BFTlFBU00gMy4wOwppbmNsdWRlIFwic3RkZ2F0ZXMuaW5jXCI7CnF1Yml0WzJdIHE7CmJpdFsyXSBjOwp4IHFbMF07CmN4IHFbMF0sIHFbMV07CmMgPSBtZWFzdXJlIHE7CiIiIgoKZm9yIGkgaW4gcmFuZ2UoMyk6CiAgICBzaG90cyA9IDEwMCArIGkgKiAxMAogICAgcHJpbnQoZiIjIyBpdGVyYXRpb24ge2l9OiBzaG90cz17c2hvdHN9ICMjIikKICAgIGpvYiA9IHNzZV9zYW1wbGVyLnJlcV90cmFuc3BpbGVfYW5kX2V4ZWMoW1FBU01dLCBzaG90cywgeyJ0cmFuc3BpbGVyX2xpYiI6IE5vbmV9KQogICAgcHJpbnQoam9iLnN0YXR1cykKCnByaW50KCIjIyBmaW5pc2ggIyMiKQo=
         expected_status: "succeeded"
         expected_transpiler_lib: null
         expected_transpiler_options: null

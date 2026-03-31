@@ -7,7 +7,6 @@ vars:
   job_type: sse
   shots: 1000
   input_payload_path: "{{ parent.vars.input_payload_path }}"
-  program: "{{ parent.vars.program }}"
   transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
   expected_status: "{{ parent.vars.expected_status }}"
