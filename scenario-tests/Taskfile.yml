@@ -9,6 +9,7 @@ tasks:
         set -eu
         cd payloads
         test -f "{{.PAYLOAD}}.json"
+        rm -f "{{.PAYLOAD}}.zip"
         zip -jq "{{.PAYLOAD}}.zip" "{{.PAYLOAD}}.json"
   payload-zip-all:
     desc: "build all payload zips from payloads/*.json"
@@ -17,6 +18,7 @@ tasks:
         set -eu
         cd payloads
         for f in *.json; do
+          rm -f "${f%.json}.zip"
           zip -jq "${f%.json}.zip" "$f"
         done
   runn-device:
