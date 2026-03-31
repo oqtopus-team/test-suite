@@ -1,4 +1,4 @@
-desc: post a job and get the status
+desc: register, upload, submit a job and get the status
 vars:
   user_api_endpoint: "{{ parent.vars.user_api_endpoint }}"
   q_api_token: "{{ parent.vars.q_api_token }}"
@@ -7,59 +7,94 @@ vars:
   job_type: "{{ parent.vars.job_type }}"
   transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   shots: "{{ parent.vars.shots }}"
-  program: "{{ parent.vars.program }}"
-  operator: "{{ parent.vars.operator }}"
+  input_payload_path: "{{ parent.vars.input_payload_path }}"
   mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
   simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
+  submit_request_body:
+    description: "description of {{ parent.vars.job_name }}"
+    device_id: "{{ parent.vars.device_id }}"
+    job_type: "{{ parent.vars.job_type }}"
+    name: "{{ parent.vars.job_name }}"
+    shots: "{{ parent.vars.shots }}"
+    transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
+    mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
+    simulator_info: "{{ parent.vars.simulator_info ?? {} }}"
 
 runners:
   req: "{{ parent.vars.user_api_endpoint }}"
 if: included
 steps:
-  dump_request_body:
+  dump_submit_request_body:
     if: vars.dump_request == 'true' || vars.dump_request == true
     dump:
-      expr: vars.request_body
-  post:
-    desc: post a job
+      expr: vars.submit_request_body
+  register:
+    desc: register a job
     req:
       /jobs:
         post:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
           body:
-            application/json: "{{ vars.request_body }}"
+            application/json: {}
     test: |
       current.res.status == 200
-  dump_post_response:
+      && current.res.body.job_id != ""
+      && current.res.body.presigned_url.url != ""
+      && current.res.body.presigned_url.fields.key != ""
+  upload:
+    desc: upload input.zip
+    exec:
+      command: |
+        set -eu
+        curl_args='-sS -o /dev/null -w %{http_code} -X POST'
+        curl_args="$curl_args -F key={{ steps.register.res.body.presigned_url.fields.key }}"
+        curl_args="$curl_args -F AWSAccessKeyId={{ steps.register.res.body.presigned_url.fields.AWSAccessKeyId }}"
+        curl_args="$curl_args -F policy={{ steps.register.res.body.presigned_url.fields.policy }}"
+        curl_args="$curl_args -F signature={{ steps.register.res.body.presigned_url.fields.signature }}"
+        curl_args="$curl_args -F x-amz-security-token={{ steps.register.res.body.presigned_url.fields['x-amz-security-token'] }}"
+        curl_args="$curl_args -F file=@{{ vars.input_payload_path }}"
+        # Some environments issue STS-backed presigned POSTs, which require x-amz-security-token.
+        eval "curl $curl_args '{{ steps.register.res.body.presigned_url.url }}'"
+    test: |
+      current.exit_code == 0
+      && (current.stdout == "200" || current.stdout == "201" || current.stdout == "204")
+  submit:
+    desc: submit a job
+    req:
+      /jobs/{{ steps.register.res.body.job_id }}/submit:
+        post:
+          headers:
+            q-api-token: "{{ vars.q_api_token }}"
+          body:
+            application/json: "{{ vars.submit_request_body }}"
+    test: |
+      current.res.status == 200
+      && current.res.body.message == "job submitted"
+  dump_register_response:
     if: vars.dump_request == 'true' || vars.dump_request == true
-    desc: dump post response
+    desc: dump register response
     dump:
-      expr: "{body: steps.post.res.body, rawBody: steps.post.res.rawBody, status: steps.post.res.status}"
+      expr: '{body: steps.register.res.body, rawBody: steps.register.res.rawBody, status: steps.register.res.status}'
   message:
-    desc: posted a job
+    desc: registered and submitted a job
     dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is posted"'
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.register.res.body.job_id + "(" + vars.job_name + ") is submitted"'
   wait:
     desc: check job status
     loop:
       count: 20
-      until: 'current.res?.body?.status == "succeeded" || current.res?.body?.status == "failed" || current.res?.body?.status == "canceled"'
-      minInterval: 10
-      maxInterval: 20
+      until: 'current.res.status != 200 || current.res.body.status == "succeeded" || current.res.body.status == "failed" || current.res.body.status == "cancelled"'
+      minInterval: 5
+      maxInterval: 10
     req:
-      /jobs/{{steps.post.res.body.job_id}}:
+      /jobs/{{ steps.register.res.body.job_id }}:
         get:
           headers:
             q-api-token: "{{ vars.q_api_token }}"
     dump:
       desc: job status
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
-  confirm:
-    desc: confirm job status
-    req:
-      /jobs/{{steps.post.res.body.job_id}}:
-        get:
-          headers:
-            q-api-token: "{{ vars.q_api_token }}"
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.register.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+    test: |
+      current.res.status == 200

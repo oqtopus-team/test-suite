@@ -6,16 +6,22 @@ steps:
       path: sampling-included.yml
       vars:
         job_name: sampling-job-with-qiskit-transpiler
-        expected_program: |
-          OPENQASM 3;
-          include "stdgates.inc";
-          qubit[2] q;
-          bit[2] c;
-          h q[0];
-          cx q[0],q[1];
-          c = measure q;
-        expected_transpiler_info:
+        input_payload_path: payloads/sampling-qiskit-transpiler.zip
+        program:
+          - |
+            OPENQASM 3;
+            include "stdgates.inc";
+            qubit[2] q;
+            bit[2] c;
+            h q[0];
+            cx q[0],q[1];
+            c = measure q;
+        transpiler_info:
           transpiler_lib: qiskit
           transpiler_options:
             optimization_level: 1
         expected_status: "succeeded"
+        expected_transpiler_lib: qiskit
+        expected_transpiler_options:
+          optimization_level: 1
+        expected_transpile_result_present: true
