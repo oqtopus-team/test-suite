@@ -1,4 +1,4 @@
-![OQTOPUS](asset/oqtopus-logo.png)
+![OQTOPUS](docs/asset/oqtopus-logo.png)
 
 # OQTOPUS Test Suite
 
