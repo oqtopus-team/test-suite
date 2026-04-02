@@ -1,6 +1,14 @@
 desc: SSE job without transpiler
 vars:
+  used_qubits:
+    - 0
+    - 1
 steps:
+  check_qubits:
+    include:
+      path: ../../include/check_qubits.yml
+      vars:
+        used_qubits: "{{vars.used_qubits}}"
   test-sse:
     include:
       path: sse-included.yml
