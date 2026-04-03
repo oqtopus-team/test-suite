@@ -14,7 +14,7 @@ steps:
       path: sampling-included.yml
       vars:
         device_id: ${DEVICE_ID}
-        job_name: sampling-job-with-mitigation-without-transpiler
+        job_name: sampling-job-with-mitigation-no-transpiler
         template_file: sampling-no-transpiler-mitigation.json.template
         program:
           - |

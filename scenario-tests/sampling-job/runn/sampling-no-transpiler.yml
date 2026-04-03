@@ -13,7 +13,7 @@ steps:
     include:
       path: sampling-included.yml
       vars:
-        job_name: sampling-job-without-transpiler
+        job_name: sampling-job-no-transpiler
         template_file: sampling-no-transpiler.json.template
         program:
           - |
