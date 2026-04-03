@@ -20,7 +20,7 @@ nav:
   - Endurance Test: endurance-test/README.md
   - Scenario Tests:
       - Overview: scenario-tests/README.md
-      - Device: scenario-tests/device/README.md
+      - Setup: scenario-tests/setup/README.md
       - Estimation Job: scenario-tests/estimation-job/README.md
       - Multi-Programming (MP) Job: scenario-tests/mp-job/README.md
       - Sampling Job: scenario-tests/sampling-job/README.md
