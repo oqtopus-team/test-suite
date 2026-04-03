@@ -35,4 +35,4 @@ jobs:
             run */runn/*.yml \
             --var dump_request:true \
             --verbose \
-            --scopes read:parent
+            --scopes run:exec,read:parent
