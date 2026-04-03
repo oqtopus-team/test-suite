@@ -1,22 +1,43 @@
 # Development Flow
 
-This guide lists the typical workflow for developing and maintaining the OQTOPUS Test Suite.
+## Branch Strategy
 
-## 1. Branching Strategy
+As shown in the diagram below, the feature branches (`feature/xxx`) are created from the `main` branch for development. The `main` branch is the release branch.
 
-Follow standard Git flow conventions for repository branching:
-
-- `main`: The default branch for the latest stable release.
-- `develop`: The active development branch.
-- Feature branches (e.g., `feature/add-new-test`, `fix/update-test-case`): Branch off of `develop` to add new test scenarios or implement bug fixes.
-
-```bash
-git checkout develop
-git pull origin develop
-git checkout -b feature/your-feature-name
+```mermaid
+gitGraph LR:
+  commit tag:"release-v1.0.0"
+  branch feature/xxx
+  commit
+  commit
+  checkout main
+  branch feature/yyy
+  commit
+  checkout main
+  merge feature/yyy
+  checkout feature/xxx
+  commit
+  checkout main
+  merge feature/xxx
+  commit tag:"release-v1.1.0"
+  checkout main
+  branch hotfix/zzz
+  commit
+  commit
+  checkout main
+  merge hotfix/zzz
+  commit tag:"release-v1.2.0"
 ```
 
-## 2. Writing and Modifying Tests
+### Branch Naming
+
+While there are no strict rules, the following naming conventions are recommended:
+
+- `feature/xxx`: (xxx represents the feature being added)
+- `bugfix/xxx`: (xxx represents the bug being fixed)
+- `hotfix/xxx`: (xxx represents the urgent fix)
+
+## Writing and Modifying Tests
 
 Testing files are written in YAML format with the properties expected by [runn](https://github.com/k1LoW/runn).
 
@@ -28,7 +49,7 @@ To add a new scenario test:
 
 See [Adding New Tests](adding_new_tests.md) for more detailed instructions on creating tests.
 
-## 3. Running Tests Locally
+## Running Tests Locally
 
 Before submitting your changes, verify that the tests are working locally.
 
@@ -54,17 +75,57 @@ Run all tests if you modified shared includes:
 task runn-all
 ```
 
-## 4. Committing Changes
+## Conventional Commits
 
-After confirming your tests pass against your local or dedicated testing environment, stage and commit your changes.
+Commit messages should follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification.
+
+### Commit Message Format
 
 ```bash
-git add .
-# We recommend using the provided `gcommit` prompt or conventional commits
-git commit -m "feat(scenario-tests): add new edge case test for sampling job"
+git commit
+# Overview (Uncomment one of the following templates)
+#feat:
+# └  A new feature
+#fix:
+# └  A bug fix
+#docs:
+# └  Documentation only changes
+#style:
+# └  Changes that do not affect the meaning of the code
+#    (white-space, formatting, missing semi-colons, etc)
+#refactor:
+# └  A code change that neither fixes a bug nor adds a feature
+#test:
+# └  Adding missing or correcting existing tests
+#ci:
+# └  Changes to our CI configuration files and scripts
+#chore:
+# └  Updating grunt tasks etc; no production code change
 ```
 
-## 5. Submitting a Pull Request
+Select the appropriate prefix and write your commit message:
 
-Push your feature branch and create a Pull Request against the `develop` branch.
-Wait for CI/CD checks to complete, and request review from the maintainers. Once approved, the changes will be merged into `develop`.
+```bash
+docs: Update README.md
+```
+
+## Correspondence between Commit Messages and Labels
+
+When a pull request is opened, labels are automatically assigned based on the commit message prefix.
+Below is the correspondence between prefixes and labels:
+
+| Prefix | Label | Description |
+|---|---|---|
+|feat: | `feature` | Adding a new feature |
+|fix: | `bugfix` | Bug fixes |
+|docs: | `documentation` | Documentation only changes |
+|style: | `style` | Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc) |
+|refactor: | `refactor` | Code changes that neither fix a bug nor add a feature |
+|test: | `test` | Adding or correcting existing tests |
+|ci: | `ci` | Adding or updating CI configuration and scripts |
+|chore: | `chore` | Minor changes or maintenance tasks |
+
+## Submitting a Pull Request
+
+Push your feature branch and create a Pull Request against the `main` branch.
+Wait for CI/CD checks to complete, and request review from the maintainers. Once approved, the changes will be merged into `main`.
