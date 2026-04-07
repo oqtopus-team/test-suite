@@ -1,1 +1,3 @@
 *.env
+profiles/*.env
+!profiles/example.env
