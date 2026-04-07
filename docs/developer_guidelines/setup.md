@@ -4,28 +4,25 @@ This guide explains how to set up your local environment for developing and runn
 
 ## Prerequisites
 
-Before you begin, ensure you have the following tools installed on your system:
+Install the following tools before starting development.
 
-### 1. Homebrew (macOS/Linux)
+| Tool | Version | Description |
+| ---- | ------- | ----------- |
+| [runn](https://github.com/k1LoW/runn) | latest | Core testing framework for scenario tests |
+| [Task](https://taskfile.dev/) | latest | Task runner for simplifying test commands |
+| [Python](https://www.python.org/downloads/) | >=3.12 | Required for documentation generation |
+| [uv](https://docs.astral.sh/uv/) | >=0.10 | Python package and project manager (for docs) |
 
-If you are on macOS or Linux, we recommend using [Homebrew](https://brew.sh/) to install dependencies.
+Clone the repository:
 
-### 2. Python & uv
-
-The documentation generation uses Python and [uv](https://docs.astral.sh/uv/) for dependency management.
-
-```bash
-# Install uv using curl (macOS/Linux)
-curl -LsSf https://astral.sh/uv/install.sh | sh
+```shell
+git clone https://github.com/oqtopus-team/test-suite.git
+cd test-suite
 ```
 
-*Note: If you only intend to run the `runn` tests and not build the documentation, this step is optional.*
+### Installing runn
 
-### 3. runn
-
-[runn](https://github.com/k1LoW/runn) is the core testing framework used for writing and executing scenario tests.
-
-```bash
+```shell
 # macOS
 brew install k1LoW/tap/runn
 
@@ -33,45 +30,94 @@ brew install k1LoW/tap/runn
 go install github.com/k1LoW/runn/cmd/runn@latest
 ```
 
-### 4. Task
+### Installing Task
 
-[Task](https://taskfile.dev/) is used as a task runner to simplify executing test commands.
-
-```bash
+```shell
 # macOS
 brew install go-task
 ```
 
+### Installing Python and uv (for documentation only)
+
+```shell
+# Install uv using curl (macOS/Linux)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+!!! note
+    If you only intend to run the `runn` tests and not build the documentation, Python and uv are optional.
+
+## Project Structure
+
+The repository is organized as follows:
+
+```text
+test-suite/
+├─ scenario-tests/      # Scenario tests for quantum job execution
+│  ├─ estimation-job/   # Estimation job tests
+│  ├─ mp-job/           # Multi-programming job tests
+│  ├─ sampling-job/     # Sampling job tests
+│  ├─ sse-job/          # SSE job tests
+│  ├─ setup/            # Setup tests
+│  └─ include/          # Shared test includes
+├─ endurance-test/      # Endurance tests for long-term stability
+├─ docs/                # Documentation sources (MkDocs)
+├─ .github/             # GitHub workflows and repository settings
+├─ mkdocs.yml           # MkDocs configuration
+└─ README.md            # Project overview
+```
+
 ## Environment Configuration
 
-To run the tests against the OQTOPUS Cloud API, you need to configure your environment variables.
+To run the tests against the OQTOPUS Cloud API, configure your environment variables.
 
 1. Navigate to the `scenario-tests` directory:
 
-   ```bash
+   ```shell
    cd scenario-tests
    ```
 
 2. Create a `.env` file based on the required variables:
 
-   ```bash
+   ```shell
    touch .env
    ```
 
-3. Populate the `.env` file with your specific API credentials:
+3. Populate the `.env` file with your API credentials:
 
-   ```bash
+   ```shell
    # API Configuration
    USER_API_ENDPOINT="<your-api-endpoint>"
    Q_API_TOKEN="<your-api-token>"
    ```
 
-   - `USER_API_ENDPOINT`: The full URL to your target Oqtopus Cloud User-API endpoint (e.g., `https://api.example.com`).
+   - `USER_API_ENDPOINT`: The full URL to your target OQTOPUS Cloud User-API endpoint (e.g., `https://api.example.com`).
    - `Q_API_TOKEN`: Your authentication token for the API.
 
-> [!WARNING]
-> Do not commit the `.env` file to version control. It is already added to `.gitignore` to prevent secret leakage.
+!!! warning
+    Do not commit the `.env` file to version control. It is already added to `.gitignore` to prevent secret leakage.
+
+## Documentation
+
+### Build Documentation
+
+Build the documentation:
+
+```shell
+uv run mkdocs build
+```
+
+### Start the Documentation Server
+
+This project uses [MkDocs](https://www.mkdocs.org/) to generate the HTML documentation.
+Start the documentation server with:
+
+```shell
+uv run mkdocs serve
+```
+
+Open the documentation in your browser at [http://localhost:8000](http://localhost:8000).
 
 ## Next Steps
 
-Once your environment is set up, you can refer to the [Development Flow](development_flow.md) to learn how to run tests and make changes.
+Once your environment is set up, refer to the [Development Flow](development_flow.md) to learn how to run tests and contribute changes.
