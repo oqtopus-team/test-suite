@@ -46,28 +46,25 @@ brew install go-task
 
 To run the tests against the OQTOPUS Cloud API, you need to configure your environment variables.
 
+### Using `.env`
+
 1. Navigate to the `scenario-tests` directory:
 
    ```bash
    cd scenario-tests
    ```
 
-2. Create a `.env` file based on the required variables:
+2. Create a `.env` file with your API credentials:
 
    ```bash
-   touch .env
-   ```
-
-3. Populate the `.env` file with your specific API credentials:
-
-   ```bash
-   # API Configuration
    USER_API_ENDPOINT="<your-api-endpoint>"
    Q_API_TOKEN="<your-api-token>"
+   DEVICE_ID="<your-device-id>"
    ```
 
-   - `USER_API_ENDPOINT`: The full URL to your target Oqtopus Cloud User-API endpoint (e.g., `https://api.example.com`).
+   - `USER_API_ENDPOINT`: The full URL to your OQTOPUS Cloud User-API endpoint (e.g., `https://api.example.com`).
    - `Q_API_TOKEN`: Your authentication token for the API.
+   - `DEVICE_ID`: The target device identifier (e.g., `qulacs`).
 
 !!! warning
     Do not commit the `.env` file to version control. It is already added to `.gitignore` to prevent secret leakage.
@@ -78,13 +75,13 @@ Profiles let you switch between multiple environments (e.g., staging, production
 
 1. Create a profile file under `scenario-tests/profiles/`:
 
-   ```shell
+   ```bash
    cp scenario-tests/profiles/example.env scenario-tests/profiles/<profile-name>.env
    ```
 
 2. Edit the new profile file with the target environment's credentials:
 
-   ```shell
+   ```bash
    USER_API_ENDPOINT="https://your-target-endpoint"
    Q_API_TOKEN="your-api-token"
    DEVICE_ID="your-device-id"
@@ -92,18 +89,17 @@ Profiles let you switch between multiple environments (e.g., staging, production
 
 3. Specify the profile when running a task:
 
-   ```shell
-   cd scenario-tests
+   ```bash
    PROFILE=<profile-name> task runn-all
    ```
 
    For example, if you created `profiles/staging.env`:
 
-   ```shell
+   ```bash
    PROFILE=staging task runn-all
    ```
 
-When `PROFILE` is set, `profiles/<profile-name>.env` is loaded first. The `.env` file is loaded afterward as a fallback for any variables not defined in the profile.
+The profile file takes precedence over `.env`. Variables not defined in the profile fall back to `.env`.
 
 ## Documentation
 
@@ -111,7 +107,7 @@ When `PROFILE` is set, `profiles/<profile-name>.env` is loaded first. The `.env`
 
 Build the documentation:
 
-```shell
+```bash
 uv run mkdocs build
 ```
 
@@ -120,7 +116,7 @@ uv run mkdocs build
 This project uses [MkDocs](https://www.mkdocs.org/) to generate the HTML documentation.
 Start the documentation server with:
 
-```shell
+```bash
 uv run mkdocs serve
 ```
 
@@ -128,4 +124,4 @@ Open the documentation in your browser at [http://localhost:8000](http://localho
 
 ## Next Steps
 
-Once your environment is set up, you can refer to the [Development Flow](development_flow.md) to learn how to run tests and make changes.
+Once your environment is set up, refer to the [Development Flow](development_flow.md) to learn how to run tests and contribute changes.
