@@ -31,8 +31,6 @@ jobs:
             -e USER_API_ENDPOINT \
             -e Q_API_TOKEN \
             -e DEVICE_ID \
+            --entrypoint sh \
             ghcr.io/k1low/runn:v1.0.0 \
-            run */runn/*.yml \
-            --var dump_request:true \
-            --verbose \
-            --scopes run:exec,read:parent
+            -c "apt-get update -qq && apt-get install -y -qq jq && runn run */runn/*.yml --var dump_request:true --verbose --scopes run:exec,read:parent"
