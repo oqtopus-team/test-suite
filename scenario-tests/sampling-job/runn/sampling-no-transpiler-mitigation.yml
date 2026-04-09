@@ -1,8 +1,6 @@
 desc: sampling job with mitigation without transpiler
 vars:
-  used_qubits:
-    - 0
-    - 1
+  used_qubits: "0 1"
 steps:
   check_qubits:
     include:
