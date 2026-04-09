@@ -7,9 +7,8 @@ steps:
     desc: verify required qubits are available using jq
     exec:
       command: |
-        used=$(echo '{{vars.used_qubits}}' | sed 's/ /,/g')
-        jq -e --argjson used "$used" \
-          '.qubit_ids as $ids | $used | all(. as $q | $ids | any(. == $q))' \
-          .tmp_info/available_qubits.json
+        for q in {{vars.used_qubits}}; do
+          grep -qx "$q" .tmp_info/available_qubits.txt || exit 1
+        done
     test: |
       current.exit_code == 0

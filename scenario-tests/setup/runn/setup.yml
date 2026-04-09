@@ -31,11 +31,11 @@ steps:
     test: |
       current.exit_code == 0
   save_qubit_ids:
-    desc: save available qubit IDs to temp JSON file
+    desc: save available qubit IDs to temp text file
     exec:
       command: |
-        jq '{qubit_ids: [.qubits[].id]}' .tmp_info/device_info.json > .tmp_info/available_qubits.json
-        cat .tmp_info/available_qubits.json
+        jq -r '.qubits[].id' .tmp_info/device_info.json > .tmp_info/available_qubits.txt
+        cat .tmp_info/available_qubits.txt
         rm .tmp_info/device_info.json
     test: |
       current.exit_code == 0

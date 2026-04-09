@@ -1,8 +1,6 @@
 desc: SSE job without transpiler failed
 vars:
-  used_qubits:
-    - 0
-    - 1
+  used_qubits: "0 1"
 steps:
   check_qubits:
     include:
