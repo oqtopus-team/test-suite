@@ -8,7 +8,7 @@ tasks:
   runn-setup:
     desc: "run setup before all the scenario tests"
     cmds:
-      - runn run setup/runn/setup.yml --env-file .env --verbose --fail-fast --scopes run:exec,read:parent
+      - runn run setup/runn/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
   runn-sampling:
     desc: "run sampling job tests"
     vars:
@@ -16,7 +16,7 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run sampling-job/runn/*.yml --env-file .env --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run sampling-job/runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-estimation:
     desc: "run estimation job tests"
     vars:
@@ -32,7 +32,7 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run sse-job/runn/*.yml --env-file .env --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run sse-job/runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-mp:
     desc: "run multi-program job tests"
     vars:
@@ -52,13 +52,13 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --id {{.CLI_ARGS}} --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-id-stress:
     desc: "runn with runnbook id (stress test)"
     deps:
       - runn-setup
     cmds:
-      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --scopes run:exec,read:parent
+      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --id {{.CLI_ARGS}} --scopes run:exec,read:parent
   runn-all:
     desc: "runn all tests sequentially"
     vars:
@@ -66,7 +66,7 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run */runn/*.yml --env-file .env --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-all-con:
     desc: "runn all tests concurrently"
     vars:
@@ -74,4 +74,4 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run */runn/*.yml --env-file .env --concurrent 8 --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --concurrent 8 --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
