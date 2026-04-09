@@ -16,8 +16,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Pull runn image
-        run: docker pull ghcr.io/k1low/runn:v1.0.0
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.49.1
+
+      - name: Install runn
+        uses: k1LoW/gh-setup@v1
+        with:
+           repo: k1LoW/runn
+           version: v1.8.2
 
       - name: Run all scenario tests
         env:
@@ -25,12 +33,4 @@ jobs:
           Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
           DEVICE_ID: ${{ secrets.DEVICE_ID }}
         run: |
-          docker run --rm \
-            -v $(pwd):/work \
-            -w /work \
-            -e USER_API_ENDPOINT \
-            -e Q_API_TOKEN \
-            -e DEVICE_ID \
-            --entrypoint sh \
-            ghcr.io/k1low/runn:v1.0.0 \
-            -c "apt-get update -qq && apt-get install -y -qq jq && runn run */runn/*.yml --var dump_request:true --verbose --scopes run:exec,read:parent"
+          task runn-all
