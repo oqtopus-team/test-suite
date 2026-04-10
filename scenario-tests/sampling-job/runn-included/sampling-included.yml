@@ -1,4 +1,4 @@
-desc: sampling job tests failed to be included
+desc: sampling job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
@@ -7,11 +7,11 @@ vars:
   job_type: sampling
   shots: 1000
   program: "{{ parent.vars.program }}"
+  expected_program: "{{ parent.vars.expected_program }}"
   transpiler_info: "{{ parent.vars.transpiler_info }}"
+  expected_transpiler_info: "{{ parent.vars.expected_transpiler_info }}"
   mitigation_info: "{{ parent.vars.mitigation_info }}"
   expected_status: "{{ parent.vars.expected_status }}"
-  expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
-  expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
   template_file: "{{ parent.vars.template_file ?? 'sampling-qiskit-transpiler.json.template' }}"
 if: included
@@ -19,10 +19,10 @@ steps:
   started:
     desc: test started
     dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is started"'
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " to " + vars.device_id + " is started"'
   post:
     include:
-      path: ../../include/post.yml
+      path: ../../runn-included/post.yml
       vars:
         request_body: "json://../sampling-job/template/{{ vars.template_file }}"
     bind:
@@ -35,23 +35,26 @@ steps:
     test: |
       wait_res_body.job_id == post_res_job_id
       && wait_res_body.name == vars.job_name
-      && wait_res_body.description == "description of " + vars.job_name
+      && wait_res_body.description == "The scenario test of " + vars.job_name
       && wait_res_body.device_id == vars.device_id
       && wait_res_body.shots == vars.shots
       && wait_res_body.job_type == vars.job_type
       && len(wait_res_body.job_info?.program) == 1
-      && wait_res_body.job_info?.program == vars.program
-      && wait_res_body.job_info?.result == null
-      && wait_res_body.execution_time == null
+      && ((vars.program ?? "") == "" || wait_res_body.job_info?.program == vars.program)
+      && ((vars.expected_program ?? "") == "" || wait_res_body.job_info?.program[0] == vars.expected_program)
+      && wait_res_body.job_info?.result?.sampling?.counts != null
+      && wait_res_body.execution_time > 0
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
-      && wait_res_body.running_at == null
+      && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
+      && date(wait_res_body.running_at) <= date(wait_res_body.ended_at)
   transpiler-info-test:
     test: |
-      wait_res_body.transpiler_info?.transpiler_lib == vars.expected_transpiler_lib
-      && toJSON(wait_res_body.transpiler_info?.transpiler_options) == toJSON(vars.expected_transpiler_options)
+      ((vars.expected_transpiler_info ?? "") == "" 
+          || toJSON(wait_res_body.transpiler_info) == toJSON(vars.expected_transpiler_info))
   transpiler-result-test:
     test: |
-      wait_res_body.job_info?.transpile_result != {} 
+      ((vars.expected_transpiler_info ?? "") == "" || vars.expected_transpiler_info?.transpiler_lib == null)
+      || wait_res_body.job_info?.transpile_result != {} 
       || (wait_res_body.job_info?.transpile_result.transpiled_program != null
          && wait_res_body.job_info?.transpile_result.stats != null
          && wait_res_body.job_info?.transpile_result.virtual_physical_mapping != null)

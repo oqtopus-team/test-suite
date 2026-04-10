@@ -4,7 +4,7 @@ runners:
 steps:
   cleanup:
     include:
-      path: ../../include/cleanup.yml
+      path: ../../runn-included/cleanup.yml
   get_devices:
     desc: get devices
     req:

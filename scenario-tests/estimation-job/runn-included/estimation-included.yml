@@ -1,19 +1,21 @@
-desc: multi-program job tests to be included
+desc: estimation job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
   device_id: ${DEVICE_ID}
   job_name: "{{ parent.vars.job_name }}"
-  job_type: multi_manual
+  job_type: estimation
   shots: 1000
   program: "{{ parent.vars.program }}"
+  operator: "{{ parent.vars.operator }}"
   transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   mitigation_info: "{{ parent.vars.mitigation_info }}"
   expected_status: "{{ parent.vars.expected_status }}"
   expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
   expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
-  template_file: "{{ parent.vars.template_file ?? 'mp-qiskit-transpiler.json.template' }}"
+  template_file: "{{ parent.vars.template_file ?? 'estimation-qiskit-transpiler.json.template' }}"
+  expected_program: "{{ parent.vars.expected_program }}"
 if: included
 steps:
   started:
@@ -22,9 +24,9 @@ steps:
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " to " + vars.device_id + " is started"'
   post:
     include:
-      path: ../../include/post.yml
+      path: ../../runn-included/post.yml
       vars:
-        request_body: "json://../mp-job/template/{{ vars.template_file }}"
+        request_body: "json://../estimation-job/template/{{ vars.template_file }}"
     bind:
       post_res_job_id: steps.post.steps.post.res.body.job_id
       wait_res_body: steps.post.steps.confirm.res.body
@@ -39,9 +41,13 @@ steps:
       && wait_res_body.device_id == vars.device_id
       && wait_res_body.shots == vars.shots
       && wait_res_body.job_type == vars.job_type
-      && len(wait_res_body.job_info?.program) == 2
-      && wait_res_body.job_info?.program == vars.program
-      && wait_res_body.job_info?.result?.sampling?.counts != null
+      && len(wait_res_body.job_info?.program) == 1
+      && ((vars.program ?? "") == "" || wait_res_body.job_info?.program == vars.program)
+      && ((vars.expected_program ?? "") == "" || wait_res_body.job_info?.program[0] == vars.expected_program)
+      && wait_res_body.job_info?.result?.sampling == null
+      && wait_res_body.job_info?.result?.estimation != null
+      && wait_res_body.job_info?.result?.estimation.exp_value != null
+      && wait_res_body.job_info?.result?.estimation.stds != null
       && wait_res_body.execution_time > 0
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
       && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
