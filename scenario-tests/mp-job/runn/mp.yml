@@ -3,7 +3,7 @@ steps:
   test-mp-job:
     desc: multi-program job
     include:
-      path: mp-included.yml
+      path: ../runn-included/mp-included.yml
       vars:
         job_name: multi-program-job
         template_file: mp-qiskit-transpiler.json.template
