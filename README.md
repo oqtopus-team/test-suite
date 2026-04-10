@@ -20,7 +20,27 @@ This repository contains external testing tools for the OQTOPUS quantum computin
 
 ## Quick Start
 
-1. Navigate to the test directory you want to run
-2. Follow the instructions in the respective README.md file
+**1. Install dependencies**
 
-For detailed usage instructions, see the README.md in each test directory.
+- [Task](https://taskfile.dev/installation/) — task runner
+- [runn](https://github.com/k1LoW/runn#install) — test framework
+
+**2. Configure environment variables**
+
+```bash
+cd scenario-tests
+cp profiles/example.env .env
+# Edit .env and fill in your values:
+#   USER_API_ENDPOINT, Q_API_TOKEN, DEVICE_ID
+```
+
+**3. Run all tests**
+
+```bash
+task runn-all
+```
+
+> Alternatively, use profiles to switch between environments without modifying `.env`:
+> ```bash
+> PROFILE=<profile-name> task runn-all
+> ```

@@ -1,35 +1,40 @@
 version: "3"
+
+dotenv:
+  - 'profiles/{{.PROFILE}}.env'
+  - '.env'
+
 tasks:
   runn-device:
     desc: "get devices for also health check"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run device/runn/device.yml --env-file .env --verbose --var dump_request:{{.DUMP}}
+      - runn run device/runn/device.yml --verbose --var dump_request:{{.DUMP}}
   runn-sampling:
     desc: "run sampling job tests"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run sampling-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run sampling-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-estimation:
     desc: "run estimation job tests"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run estimation-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run estimation-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-sse:
     desc: "run sse job tests"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run sse-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run sse-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-mp:
     desc: "run multi-program job tests"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run mp-job/runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run mp-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-list:
     desc: "list up runn list"
     cmds:
@@ -39,20 +44,20 @@ tasks:
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --id {{.CLI_ARGS}} --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-id-stress:
     desc: "runn with runnbook id (stress test)"
     cmds:
-      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --env-file .env --id {{.CLI_ARGS}} --scopes read:parent
+      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --id {{.CLI_ARGS}} --scopes read:parent
   runn-all:
     desc: "runn all tests sequentially"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
   runn-all-con:
     desc: "runn all tests concurrently"
     vars:
       DUMP: '{{default "false" .DUMP}}'
     cmds:
-      - runn run */runn/*.yml --env-file .env --concurrent 8 --scopes read:parent --var dump_request:{{.DUMP}}
+      - runn run */runn/*.yml --concurrent 8 --scopes read:parent --var dump_request:{{.DUMP}}
