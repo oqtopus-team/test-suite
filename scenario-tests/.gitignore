@@ -2,3 +2,4 @@
 .tmp_info
 profiles/*.env
 !profiles/example.env
+Taskfile.local.yml
