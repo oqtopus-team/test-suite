@@ -3,7 +3,7 @@ vars:
 steps:
   test-sse:
     include:
-      path: sse-included.yml
+      path: ../runn-included/sse-included.yml
       vars:
         device_id: ${DEVICE_ID}
         job_name: sse-job-with-qiskit-transpiler
