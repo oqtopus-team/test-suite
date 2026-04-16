@@ -1,13 +1,19 @@
 desc: SSE job without transpiler
 vars:
+  used_qubits: "0 1"
 steps:
+  check_qubits:
+    include:
+      path: ../../include/check_qubits.yml
+      vars:
+        used_qubits: "{{vars.used_qubits}}"
   test-sse:
     include:
       path: sse-included.yml
       vars:
         device_id: ${DEVICE_ID}
-        job_name: sse-without-transpiler
-        template_file: sse-without-transpiler.json.template
+        job_name: sse-no-transpiler
+        template_file: sse-no-transpiler.json.template
         program:
           - |
             aW1wb3J0IG1hdHBsb3RsaWIKaW1wb3J0IG51bXB5CmltcG9ydCB5YW1sCmltcG9ydCBuZXR3b3J
