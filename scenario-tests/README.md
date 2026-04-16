@@ -110,6 +110,42 @@ task runn-all-con
 
 Executes all tests concurrently with a maximum of 8 parallel processes. This is faster but may put more load on the target system.
 
+## Local Task Customization
+
+You can define environment-specific tasks in `Taskfile.local.yml`, which is gitignored and loaded automatically by `Taskfile.yml`.
+
+### Setup
+
+Copy the example file and edit it:
+
+```bash
+cp Taskfile.local.example.yml Taskfile.local.yml
+```
+
+Then add your custom tasks to `Taskfile.local.yml`. Tasks defined in `Taskfile.common.yml` can be used as dependencies via the `common:` namespace.
+
+### Example
+
+```yaml
+version: "3"
+
+tasks:
+  runn-my-device:
+    desc: "run all tests against my device"
+    deps:
+      - common:runn-setup
+    cmds:
+      - echo "custom task"
+```
+
+Run your custom task from within the `scenario-tests` directory:
+
+```bash
+task runn-my-device
+```
+
+> **Note**: `Taskfile.local.yml` is gitignored and will not be committed. Use `Taskfile.local.example.yml` as a reference template.
+
 ## Test Categories
 
 - [Estimation Job](./estimation-job/README.md): Verifies estimation job execution across various parameter combinations.
