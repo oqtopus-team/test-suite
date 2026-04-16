@@ -1,11 +1,17 @@
 desc: sampling job without transpiler
 vars:
+  used_qubits: "0 1"
 steps:
+  check_qubits:
+    include:
+      path: ../../include/check_qubits.yml
+      vars:
+        used_qubits: "{{vars.used_qubits}}"
   test-no-transpiler:
     include:
       path: sampling-included.yml
       vars:
-        job_name: sampling-job-without-transpiler
+        job_name: sampling-job-no-transpiler
         template_file: sampling-no-transpiler.json.template
         program:
           - |

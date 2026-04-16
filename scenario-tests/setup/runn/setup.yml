@@ -1,0 +1,41 @@
+desc: setup before all the scenario tests
+runners:
+  req: ${USER_API_ENDPOINT}
+steps:
+  cleanup:
+    include:
+      path: ../../include/cleanup.yml
+  get_devices:
+    desc: get devices
+    req:
+      /devices:
+        get:
+          headers:
+            q-api-token: ${Q_API_TOKEN}
+    test: |
+      current.res.status == 200
+    bind:
+      device_info_json: steps.get_devices.res.body[0].device_info
+  message:
+    desc: some devices are registered
+    dump:
+      expr: 'string(len(steps.get_devices.res.body)) + " devices are registered"'
+  write_temp_device_info:
+    desc: write device_info to temp file
+    exec:
+      command: |
+        mkdir -p .tmp_info
+        cat > .tmp_info/device_info.json << 'EOF'
+        {{ device_info_json }}
+        EOF
+    test: |
+      current.exit_code == 0
+  save_qubit_ids:
+    desc: save available qubit IDs to temp text file
+    exec:
+      command: |
+        jq -r '.qubits[].id' .tmp_info/device_info.json > .tmp_info/available_qubits.txt
+        cat .tmp_info/available_qubits.txt
+        rm .tmp_info/device_info.json
+    test: |
+      current.exit_code == 0

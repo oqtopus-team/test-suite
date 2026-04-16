@@ -1,0 +1,14 @@
+desc: check required qubits are available in device
+vars:
+  used_qubits: "{{ parent.vars.used_qubits }}"
+if: included
+steps:
+  check:
+    desc: verify required qubits are available using jq
+    exec:
+      command: |
+        for q in {{vars.used_qubits}}; do
+          grep -qx "$q" .tmp_info/available_qubits.txt || exit 1
+        done
+    test: |
+      current.exit_code == 0
