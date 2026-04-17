@@ -1,9 +1,5 @@
 version: "3"
 
-dotenv:
-  - 'profiles/{{.PROFILE}}.env'
-  - '.env'
-
 tasks:
   runn-setup:
     desc: "run setup before all the scenario tests"
