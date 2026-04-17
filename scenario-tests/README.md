@@ -113,27 +113,11 @@ Executes all tests concurrently with a maximum of 8 parallel processes. This is 
 
 ## Test Categories
 
-- [Device](./device/README.md)
-- [Estimation Job](./estimation-job/README.md)
-- [Multi-Programming (MP) Job](./mp-job/README.md)
-- [Sampling Job](./sampling-job/README.md)
-- [SSE Job](./sse-job/README.md)
-
-### Sampling Job Tests
-
-Located in `sampling-job/`, these tests verify sampling job execution across various parameter combinations including:
-
-- Different transpilers (qiskit, no transpiler, default transpiler)
-- Mitigation settings (on/off)
-
-### Estimation Job Tests
-
-Located in `estimation-job/`, these tests verify estimation job execution with similar parameter combinations as sampling jobs.
-
-### Other Job Types
-
-- **MP Job Tests** (`mp-job/`): Located in `mp-job/`, these tests verify MP job execution.
-- **SSE Job Tests** (`sse-job/`): Located in `sse-job/`, these tests verify SSE job execution.
+- [Setup](./setup/README.md): Prepares device/qubit state before running scenario tests.
+- [Estimation Job](./estimation-job/README.md): Verifies estimation job execution across various parameter combinations.
+- [Multi-Programming (MP) Job](./mp-job/README.md): Verifies MP job execution.
+- [Sampling Job](./sampling-job/README.md): Verifies sampling job execution with different transpilers (qiskit, no transpiler, default transpiler) and mitigation settings (on/off).
+- [SSE Job](./sse-job/README.md): Verifies SSE job execution.
 
 ## Current User API Flow
 

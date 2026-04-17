@@ -1,12 +1,18 @@
 desc: SSE job without transpiler
 vars:
+  used_qubits: "0 1"
 steps:
+  check_qubits:
+    include:
+      path: ../../include/check_qubits.yml
+      vars:
+        used_qubits: "{{vars.used_qubits}}"
   test-sse:
     include:
       path: sse-included.yml
       vars:
         device_id: ${DEVICE_ID}
-        job_name: sse
+        job_name: sse-no-transpiler
         input_payload_path: payloads/sse-without-transpiler.zip
         expected_status: "succeeded"
         expected_transpiler_lib: null

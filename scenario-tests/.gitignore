@@ -1,3 +1,4 @@
 *.env
+.tmp_info
 profiles/*.env
 !profiles/example.env
