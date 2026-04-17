@@ -1,0 +1,73 @@
+version: "3"
+
+tasks:
+  runn-setup:
+    desc: "run setup before all the scenario tests"
+    cmds:
+      - runn run setup/runn/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
+  runn-sampling:
+    desc: "run sampling job tests"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run sampling-job/runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+  runn-estimation:
+    desc: "run estimation job tests"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run estimation-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+  runn-sse:
+    desc: "run sse job tests"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run sse-job/runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+  runn-mp:
+    desc: "run multi-program job tests"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run mp-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+  runn-list:
+    desc: "list up runn list"
+    cmds:
+      - runn list */runn/*.yml --scopes read:parent
+  runn-id:
+    desc: "runn with runnbook id"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run */runn/*.yml --id {{.CLI_ARGS}} --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+  runn-id-stress:
+    desc: "runn with runnbook id (stress test)"
+    deps:
+      - runn-setup
+    cmds:
+      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --id {{.CLI_ARGS}} --scopes run:exec,read:parent
+  runn-all:
+    desc: "runn all tests sequentially"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run */runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+  runn-all-con:
+    desc: "runn all tests concurrently"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - runn run */runn/*.yml --concurrent 8 --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
