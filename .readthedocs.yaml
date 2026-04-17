@@ -10,5 +10,7 @@ build:
     # Copy assets
     - mkdir -p docs/scenario-tests/asset
     - cp -r scenario-tests/asset/* docs/scenario-tests/asset/
+    # Verify logo exists
+    - ls -la docs/asset/oqtopus-logo.png
     # Build documentation
-    - mkdocs build --site-dir $READTHEDOCS_OUTPUT/html
+    - mkdocs build --site-dir $READTHEDOCS_OUTPUT/html --verbose

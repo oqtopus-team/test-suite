@@ -1,8 +1,10 @@
 site_name: Test-Suite
-repo_url: https://github.com/qiqb-osaka/test-suite
+repo_url: https://github.com/oqtopus-team/test-suite
 repo_name: GitHub
 theme:
   name: material
+  logo: asset/oqtopus-logo.png
+  favicon: asset/oqtopus-logo.png
   palette:
     primary: indigo
     accent: indigo
