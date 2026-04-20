@@ -5,6 +5,15 @@ steps:
   cleanup:
     include:
       path: ../../runn-included/cleanup.yml
+  check_api_token:
+    desc: check if Q_API_TOKEN is valid
+    req:
+      /devices:
+        get:
+          headers:
+            q-api-token: ${Q_API_TOKEN}
+    test: |
+      current.res.status != 401 && current.res.status != 403
   get_devices:
     desc: get devices
     req:
