@@ -53,25 +53,25 @@ See [Adding New Tests](adding_new_tests.md) for more detailed instructions on cr
 
 Before submitting your changes, verify that the tests are working locally.
 
-```bash
+```shell
 cd scenario-tests
 ```
 
 List all available tests:
 
-```bash
+```shell
 task runn-list
 ```
 
 Run a specific test to verify execution (replace `<test-id>` with the desired ID):
 
-```bash
+```shell
 task runn-id -- <test-id>
 ```
 
 Run all tests if you modified shared includes:
 
-```bash
+```shell
 task runn-all
 ```
 
@@ -81,7 +81,7 @@ Commit messages should follow the [Conventional Commits](https://www.conventiona
 
 ### Commit Message Format
 
-```bash
+```shell
 git commit
 # Overview (Uncomment one of the following templates)
 #feat:
@@ -105,7 +105,7 @@ git commit
 
 Select the appropriate prefix and write your commit message:
 
-```bash
+```shell
 docs: Update README.md
 ```
 
@@ -125,7 +125,26 @@ Below is the correspondence between prefixes and labels:
 |ci: | `ci` | Adding or updating CI configuration and scripts |
 |chore: | `chore` | Minor changes or maintenance tasks |
 
+## CI
+
+This project uses GitHub Actions to automate checks and repository management.
+
+### Automated Checks
+
+On pull requests, the following checks are automatically executed:
+
+- scenario tests (runn)
+- documentation build (mkdocs)
+
+Ensure that all checks pass before merging.
+
+### Labeling
+
+Labels are automatically assigned to pull requests targeting the default
+branch based on the commit message prefix (see [Conventional Commits](#conventional-commits)).
+
 ## Submitting a Pull Request
 
 Push your feature branch and create a Pull Request against the `main` branch.
-Wait for CI/CD checks to complete, and request review from the maintainers. Once approved, the changes will be merged into `main`.
+Wait for CI checks to complete, and request review from the maintainers. Once
+approved, the changes will be merged into `main`.

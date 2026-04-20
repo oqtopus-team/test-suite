@@ -59,7 +59,7 @@ test-suite/
 │  ├─ sampling-job/     # Sampling job tests
 │  ├─ sse-job/          # SSE job tests
 │  ├─ setup/            # Setup tests
-│  └─ include/          # Shared test includes
+│  └─ runn-included/    # Shared test includes
 ├─ endurance-test/      # Endurance tests for long-term stability
 ├─ docs/                # Documentation sources (MkDocs)
 ├─ .github/             # GitHub workflows and repository settings
