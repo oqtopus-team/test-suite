@@ -8,7 +8,7 @@ tasks:
   runn-setup:
     desc: "run setup before all the scenario tests"
     cmds:
-      - runn run setup/runn/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
+      - runn run setup/runn_setup/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
   runn-sampling:
     desc: "run sampling job tests"
     vars:
