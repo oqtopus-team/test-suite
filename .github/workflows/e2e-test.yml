@@ -32,6 +32,18 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
+      - name: Verify required secrets
+        env:
+          E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+          E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+          E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+          E2E_TOTP_SECRET: ${{ secrets.E2E_TOTP_SECRET }}
+        run: |
+          : "${E2E_BASE_URL:?E2E_BASE_URL is not set}"
+          : "${E2E_EMAIL:?E2E_EMAIL is not set}"
+          : "${E2E_PASSWORD:?E2E_PASSWORD is not set}"
+          : "${E2E_TOTP_SECRET:?E2E_TOTP_SECRET is not set}"
+
       - name: Run Playwright tests
         env:
           E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
