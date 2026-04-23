@@ -1,0 +1,18 @@
+version: "3"
+
+# This file defines tasks specific to each local environment.
+# Copy this file to Taskfile.local.yml and customize it as needed.
+# Taskfile.local.yml is gitignored and will not be committed.
+#
+# You can use tasks defined in Taskfile.common.yml as dependencies.
+#
+# Example:
+# tasks:
+#   my-task:
+#     desc: "my custom task"
+#     deps:
+#       - common:runn-setup
+#     cmds:
+#       - echo "custom task"
+
+tasks: {}
