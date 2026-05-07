@@ -6,12 +6,15 @@ This guide explains how to set up your local environment for developing and runn
 
 Install the following tools before starting development.
 
-| Tool | Version | Description |
-| ---- | ------- | ----------- |
-| [runn](https://github.com/k1LoW/runn) | latest | Core testing framework for scenario tests |
-| [Task](https://taskfile.dev/) | latest | Task runner for simplifying test commands |
-| [Python](https://www.python.org/downloads/) | >=3.12 | Required for documentation generation |
-| [uv](https://docs.astral.sh/uv/) | >=0.10 | Python package and project manager (for docs) |
+| Tool | Version | Description | Install Guide |
+| ---- | ------- | ----------- | ------------- |
+| [runn](https://github.com/k1LoW/runn) | latest | Core testing framework for scenario tests | <https://github.com/k1LoW/runn#install> |
+| [Task](https://taskfile.dev/) | latest | Task runner for simplifying test commands | <https://taskfile.dev/installation/> |
+| [Python](https://www.python.org/) | >=3.12 | Required for documentation generation | <https://www.python.org/downloads/> |
+| [uv](https://docs.astral.sh/uv/) | >=0.10 | Python package and project manager (for docs) | <https://docs.astral.sh/uv/getting-started/installation/> |
+
+!!! note
+    If you only intend to run the `runn` tests and not build the documentation, Python and uv are optional.
 
 Clone the repository:
 
@@ -19,33 +22,6 @@ Clone the repository:
 git clone https://github.com/oqtopus-team/test-suite.git
 cd test-suite
 ```
-
-### Installing runn
-
-```shell
-# macOS
-brew install k1LoW/tap/runn
-
-# Go
-go install github.com/k1LoW/runn/cmd/runn@latest
-```
-
-### Installing Task
-
-```shell
-# macOS
-brew install go-task
-```
-
-### Installing Python and uv (for documentation only)
-
-```shell
-# Install uv using curl (macOS/Linux)
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-!!! note
-    If you only intend to run the `runn` tests and not build the documentation, Python and uv are optional.
 
 ## Project Structure
 
