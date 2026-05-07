@@ -113,10 +113,22 @@ The profile file takes precedence over `.env`. Variables not defined in the prof
 
 ### Build Documentation
 
+Install documentation dependencies:
+
+```shell
+make install
+```
+
 Build the documentation:
 
 ```shell
-uv run mkdocs build
+make docs-build
+```
+
+Lint markdown files:
+
+```shell
+make docs-lint
 ```
 
 ### Start the Documentation Server
@@ -125,7 +137,7 @@ This project uses [MkDocs](https://www.mkdocs.org/) to generate the HTML documen
 Start the documentation server with:
 
 ```shell
-uv run mkdocs serve
+make docs-serve
 ```
 
 Open the documentation in your browser at [http://localhost:8000](http://localhost:8000).

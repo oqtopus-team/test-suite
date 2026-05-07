@@ -25,15 +25,10 @@ jobs:
           python-version-file: "pyproject.toml"
 
       - name: Install dependencies
-        run: uv sync --group docs
+        run: make install
 
       - name: Lint markdown
-        run: uv run pymarkdown scan docs
-
-      - name: Copy assets
-        run: |
-          mkdir -p docs/scenario-tests/asset
-          cp -r scenario-tests/asset/* docs/scenario-tests/asset/
+        run: make docs-lint
 
       - name: Build documentation
-        run: uv run mkdocs build
+        run: make docs-build
