@@ -6,3 +6,8 @@ tasks:
     cmds:
       - cp -r scenario-tests/asset docs/scenario-tests
       - uv run mkdocs serve
+
+  docs-lint:
+    desc: "Lint markdown files under docs/"
+    cmds:
+      - uv run pymarkdown scan docs

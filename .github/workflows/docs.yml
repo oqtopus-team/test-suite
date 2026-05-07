@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: uv sync --group docs
 
+      - name: Lint markdown
+        run: uv run pymarkdown scan docs
+
       - name: Copy assets
         run: |
           mkdir -p docs/scenario-tests/asset
