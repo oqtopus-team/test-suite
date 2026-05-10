@@ -20,7 +20,7 @@ import time
 # raise exception
 import unknown_module
 
-from quri_parts_oqtopus.backend.sampling import OqtopusSamplingBackend, OqtopusConfig
+from quri_parts_oqtopus.backend import OqtopusSamplingBackend, OqtopusConfig
 from quri_parts.circuit import QuantumCircuit
 
 for i in range(3):
