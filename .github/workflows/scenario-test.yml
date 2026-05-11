@@ -5,6 +5,14 @@ on:
   schedule:
     - cron: "0 15 * * *"
   pull_request:
+  workflow_call:
+    secrets:
+      USER_API_ENDPOINT:
+        required: true
+      Q_API_TOKEN:
+        required: true
+      DEVICE_ID:
+        required: true
 
 jobs:
   run-scenario-test:
