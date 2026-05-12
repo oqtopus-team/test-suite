@@ -8,7 +8,7 @@ authors = [{ name = "oqtopus-team", email = "oqtopus-team@googlegroups.com" }]
 requires-python = ">=3.10"
 
 [project.urls]
-documentation = "https://test-suite.readthedocs.io/"
+documentation = "https://oqtopus-test-suite.readthedocs.io/"
 repository = "https://github.com/oqtopus-team/test-suite"
 
 [dependency-groups]
