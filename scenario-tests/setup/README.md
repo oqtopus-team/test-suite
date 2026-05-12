@@ -12,7 +12,7 @@ The purpose of this test is to ensure that information about devices registered 
 
 This suite covers the following API endpoint:
 
-*   **`GET /devices`**
+* **`GET /devices`**
 
 ---
 
@@ -20,8 +20,8 @@ This suite covers the following API endpoint:
 
 Each test follows this flow:
 
-1.  Call **`GET /devices`** to retrieve the list of devices.
-2.  Verify that the response status code is `200` and that the number of returned devices matches the expected value.
+1. Call **`GET /devices`** to retrieve the list of devices.
+2. Verify that the response status code is `200` and that the number of returned devices matches the expected value.
 
 ---
 
