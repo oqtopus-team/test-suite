@@ -1,4 +1,4 @@
-site_name: "Test-Suite"
+site_name: "OQTOPUS Test Suite"
 site_description: "External testing tools for the OQTOPUS quantum computing platform"
 repo_name: test-suite
 repo_url: "https://github.com/oqtopus-team/test-suite"
