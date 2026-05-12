@@ -1,6 +1,6 @@
 [project]
 name = "test-suite"
-version = "0.1.0"
+version = "1.0.0"
 description = "External testing tools for the OQTOPUS quantum computing platform"
 readme = "README.md"
 license = "Apache-2.0"
