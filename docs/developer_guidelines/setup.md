@@ -128,7 +128,7 @@ make docs-build
 Lint markdown files:
 
 ```shell
-make docs-lint
+make md-lint
 ```
 
 ### Start the Documentation Server

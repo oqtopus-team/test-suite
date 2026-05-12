@@ -2,7 +2,7 @@ SHELL := bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := help
 
-.PHONY: install docs-assets docs-lint docs-build docs-serve help
+.PHONY: install docs-assets md-lint docs-build docs-serve help
 
 install: ## Install dependencies
 	@uv sync --group docs
@@ -12,8 +12,8 @@ docs-assets: ## Copy scenario-tests assets into docs/
 	@mkdir -p docs/scenario-tests/asset
 	@cp -r scenario-tests/asset/* docs/scenario-tests/asset/
 
-docs-lint: ## Lint markdown files under docs/
-	@uv run pymarkdown scan docs
+md-lint: ## Lint all markdown files tracked by git
+	@uv run pymarkdown scan $$(git ls-files '*.md')
 
 docs-build: docs-assets ## Build documentation
 	@uv run mkdocs build

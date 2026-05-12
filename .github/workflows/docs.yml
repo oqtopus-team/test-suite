@@ -28,7 +28,7 @@ jobs:
         run: make install
 
       - name: Lint markdown
-        run: make docs-lint
+        run: make md-lint
 
       - name: Build documentation
         run: make docs-build
