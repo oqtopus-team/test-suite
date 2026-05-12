@@ -6,6 +6,11 @@ on:
     - cron: "0 15 * * *"
   pull_request:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        description: "Git ref of oqtopus-team/test-suite to check out (defaults to the SHA of the triggering event)"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -23,6 +28,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          repository: oqtopus-team/test-suite
+          ref: ${{ inputs.ref || github.sha }}
 
       - name: Install Task
         uses: arduino/setup-task@v2
