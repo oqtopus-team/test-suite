@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    # If you are using a develop branch, include it here (e.g., [main, develop]).
+    branches: [main]
+  pull_request:
+    # If you are using a develop branch, include it here as well.
+    branches: [main]
+
+# Cancel outdated workflows for the same PR or branch
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "**/uv.lock"
+          cache-python: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Install dependencies
+        run: uv sync --frozen --all-groups
+
+      - name: Detect changed markdown files
+        id: changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            md:
+              - "**/*.md"
+
+      - name: Markdown Lint
+        if: steps.changes.outputs.md == 'true'
+        run: make md-lint
+
+      - name: Build documentation
+        run: make docs-build
