@@ -26,5 +26,8 @@ test('GET /devices returns a non-empty device list', async ({ request }) => {
   expect(body.length).toBeGreaterThan(0);
   expect(body[0]).toHaveProperty('device_info');
 
-  console.log(`${body.length} devices are registered`);
+  test.info().annotations.push({
+    type: 'info',
+    description: `${body.length} devices are registered`,
+  });
 });
