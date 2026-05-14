@@ -1,4 +1,4 @@
-import { Page, test } from '@playwright/test';
+import { Page } from '@playwright/test';
 import { generateSync } from 'otplib';
 
 const TOTP_STEP_MS = 30_000;
@@ -21,28 +21,32 @@ async function freshTotp(secret: string): Promise<string> {
   return generateSync({ secret, strategy: 'totp' });
 }
 
+export interface LoginCredentials {
+  email: string;
+  password: string;
+  totpSecret: string;
+}
+
 /**
- * Log in to OQTOPUS Playground using credentials and TOTP secret from .env.
- * Skips the calling test if required environment variables are missing.
+ * Log in to OQTOPUS Playground using credentials and TOTP secret.
+ * Callers are responsible for providing valid credentials (e.g., the
+ * `authedPage` fixture validates env vars before calling this helper).
  */
-export async function loginWithMfa(page: Page): Promise<void> {
-  const { E2E_BASE_URL, E2E_EMAIL, E2E_PASSWORD, E2E_TOTP_SECRET } = process.env;
-
-  test.skip(!E2E_BASE_URL, 'E2E_BASE_URL is not set');
-  test.skip(!E2E_EMAIL || !E2E_PASSWORD, 'E2E_EMAIL or E2E_PASSWORD is not set');
-  test.skip(!E2E_TOTP_SECRET, 'E2E_TOTP_SECRET is not set');
-
+export async function loginWithMfa(
+  page: Page,
+  { email, password, totpSecret }: LoginCredentials,
+): Promise<void> {
   await page.goto('/login');
 
   await page
     .getByRole('textbox', { name: 'Enter Email' })
-    .pressSequentially(E2E_EMAIL!, { delay: 20 });
+    .pressSequentially(email, { delay: 20 });
   await page
     .getByRole('textbox', { name: 'Enter Password' })
-    .pressSequentially(E2E_PASSWORD!, { delay: 20 });
+    .pressSequentially(password, { delay: 20 });
   await page.getByRole('button', { name: 'サインイン' }).click();
 
-  const code = await freshTotp(E2E_TOTP_SECRET!);
+  const code = await freshTotp(totpSecret);
   await page
     .getByRole('textbox', { name: 'Enter TOTP Code (6 digits)' })
     .pressSequentially(code, { delay: 20 });
