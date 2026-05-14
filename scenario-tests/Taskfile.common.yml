@@ -37,6 +37,16 @@ tasks:
       - runn-setup
     cmds:
       - runn run mp-job/runn/*.yml --verbose --scopes read:parent --var dump_request:{{.DUMP}}
+  runn-non-sse:
+    desc: "run all scenario tests except sse"
+    vars:
+      DUMP: '{{default "false" .DUMP}}'
+    deps:
+      - runn-setup
+    cmds:
+      - task: runn-sampling
+      - task: runn-estimation
+      - task: runn-mp
   runn-list:
     desc: "list up runn list"
     cmds:
