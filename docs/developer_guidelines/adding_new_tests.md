@@ -13,7 +13,7 @@ The test suite is functionally categorized into two general groups:
 
 1. **Locate the Job Category:**
    Identify the category your test falls under within the `scenario-tests/` directory:
-   - `device/`
+   - `setup/`
    - `estimation-job/`
    - `mp-job/`
    - `sampling-job/`
@@ -25,7 +25,7 @@ The test suite is functionally categorized into two general groups:
 3. **Writing the Test Definition:**
    Use the `runn` framework's syntax to define the API request scenario.
    - Every scenario should include a clear `desc` property indicating what the test verifies.
-   - In most cases, you will need to authenticate and submit a job. We highly recommend using the existing logic in `include/post.yml` to trigger the backend API if applicable.
+   - In most cases, you will need to authenticate and submit a job. We highly recommend using the existing logic in `runn-included/post.yml` to trigger the backend API if applicable.
    - For variables, inject them natively utilizing the configuration available in `.env` (`{{ vars.USER_API_ENDPOINT }}`, `{{ vars.Q_API_TOKEN }}`).
 
 Example test structure:
@@ -70,7 +70,7 @@ After authoring your test:
 1. Load up specific variables in `.env` if changes imply new mocked secrets.
 2. Run your specific test via `Task`:
 
-   ```bash
+   ```shell
    cd scenario-tests
    task runn-list # Find your test
    task runn-id -- <your-test-id>

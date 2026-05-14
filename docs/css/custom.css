@@ -20,35 +20,6 @@
   border-bottom: 1px solid hsla(0, 0%, 92.5%, .5);
 }
 
-.md-typeset > ::before {
-  font-family: "FontAwesome";
-  /* font-family: "Font Awesome 5 Free"; */
-  margin-right: .3em;
-  display:inline-block !important;
-}
-
-.md-typeset h1::before {
-  content:"\f02d" !important;
-}
-
-.md-typeset h2::before {
-  content:"\f0a9" !important;
-}
-
-.md-typeset h3::before {
-  content:"\f061" !important;
-}
-
-.md-typeset h4::before {
-  content:"\f0da" !important;
-}
-
-.md-typeset a:not([class])::before {
-  font-family: "FontAwesome";
-  margin-right: .2em;
-  content: "\f14c";
-}
-
 .md-typeset a:not([class]) {
   border-bottom: 1px dotted #757575;
 }
