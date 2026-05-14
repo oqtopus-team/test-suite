@@ -8,6 +8,7 @@ This repository contains external testing tools for the OQTOPUS quantum computin
 
 - **[scenario-tests/](scenario-tests/README.md)** - Scenario tests for quantum job execution using runn framework
 - **[endurance-test/](endurance-test/README.md)** - Endurance tests for long-term stability of the OQTOPUS platform
+- **[e2e/](e2e/README.md)** - Browser-based end-to-end tests for the OQTOPUS frontend using Playwright
 
 ## Developer Guidelines
 
@@ -64,3 +65,42 @@ task runn-all
 > ```bash
 > PROFILE=<profile-name> task runn-all
 > ```
+
+## Running E2E Tests
+
+Browser-based end-to-end tests live under [`e2e/`](e2e/README.md) and are powered by [Playwright](https://playwright.dev/).
+
+**1. Install dependencies (first time only)**
+
+```bash
+cd e2e
+npm install
+npx playwright install --with-deps
+```
+
+**2. Configure environment variables**
+
+Create `e2e/.env` (excluded by `.gitignore`) and set the following values:
+
+```
+E2E_BASE_URL=https://<frontend-under-test>
+E2E_EMAIL=<test-user-email>
+E2E_PASSWORD=<test-user-password>
+E2E_TOTP_SECRET=<totp-seed-for-mfa>
+USER_API_ENDPOINT=https://<user-api>
+Q_API_TOKEN=<q-api-token>
+```
+
+> Use a dedicated test account. Do not put production credentials in `.env` or CI Secrets.
+
+**3. Run the tests**
+
+```bash
+cd e2e
+npx playwright test                  # run all tests
+npx playwright test --headed         # show the browser
+npx playwright test --ui             # Playwright UI mode
+npx playwright show-report           # open the last HTML report
+```
+
+See [`e2e/README.md`](e2e/README.md) for details on the directory layout, debugging, and troubleshooting.
