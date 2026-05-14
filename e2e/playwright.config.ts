@@ -3,7 +3,9 @@ import 'dotenv/config';
 
 export default defineConfig({
   testDir: './tests',
-  fullyParallel: false,
+  // Single worker so the `authedPage` worker-scoped fixture can reuse one
+  // browser context across all tests (the app's auth token does not survive
+  // a new context). With workers: 1, fullyParallel has no effect.
   workers: 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
