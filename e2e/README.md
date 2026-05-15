@@ -49,12 +49,19 @@ npx playwright test -g "login"   # filter by title substring
 
 ## Test Catalog
 
+### GUI tests (browser-driven)
+
 | # | Spec | Test Title | What it verifies |
 | --- | --- | --- | --- |
 | 00 | `tests/00-smoke.spec.ts` | base URL is reachable | The frontend at `E2E_BASE_URL` returns a 2xx response on `/` |
 | 01 | `tests/01-logo.spec.ts` | logo is rendered in light/dark mode | The OQTOPUS Playground logo is visible and has `naturalWidth > 0` in both light and dark color schemes |
 | 02 | `tests/02-login.spec.ts` | user is signed in after MFA and lands on the authenticated area | Login + TOTP MFA flow with `.env` credentials leaves the user on a non-login URL with the logo visible |
 | 03 | `tests/03-device-list.spec.ts` | device list shows qulacs after opening the devices page | After login, the `デバイス` page shows a `qulacs` row within 60s |
+
+### API tests (HTTP-driven)
+
+| # | Spec | Test Title | What it verifies |
+| --- | --- | --- | --- |
 | 04 | `tests/04-device-list-api.spec.ts` | GET /devices returns a non-empty device list | The User-API `/devices` endpoint returns 200 with a non-empty array whose first item has `device_info` (auth via `Q_API_TOKEN`) |
 
 ## Environment Variables
