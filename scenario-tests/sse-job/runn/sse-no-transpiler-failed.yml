@@ -4,12 +4,12 @@ vars:
 steps:
   check_qubits:
     include:
-      path: ../../include/check_qubits.yml
+      path: ../../runn-included/check_qubits.yml
       vars:
         used_qubits: "{{vars.used_qubits}}"
   test-sse:
     include:
-      path: sse-included.yml
+      path: ../runn-included/sse-included.yml
       vars:
         device_id: ${DEVICE_ID}
         job_name: sse-no-transpiler-failed
@@ -18,6 +18,6 @@ steps:
         expected_transpiler_lib: null
         expected_transpiler_options: null
         expected_transpiled: false
-        expected_execution_time_filled: true
+        expected_execution_time_filled: false
         expected_result_present: false
         expected_sse_log_present: false

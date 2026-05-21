@@ -48,23 +48,25 @@ The profile file takes precedence over `.env`. Variables not defined in the prof
 
 ```text
 scenario-tests/
-├── Taskfile.yml           # Task runner configuration
-├── .env                   # Environment variables (not tracked in git)
-├── profiles/              # Environment profiles
-│   └── example.env        # Reference profile template
-├── include/
-│   └── post.yml          # Common test steps for job register/upload/submit and polling
-├── payloads/             # ZIP payloads uploaded to presigned input URLs
-├── estimation-job/       # Estimation job type tests
+├── Taskfile.yml              # Task runner entrypoint
+├── Taskfile.common.yml       # Shared task definitions
+├── Taskfile.local.example.yml # Local task customization example
+├── .env                      # Environment variables (not tracked in git)
+├── profiles/                 # Environment profiles
+│   └── example.env           # Reference profile template
+├── payloads/                 # ZIP payloads uploaded to presigned input URLs
+├── runn-included/            # Common runn steps for setup, submission, and shared checks
+├── setup/                    # Device/qubit setup checks run before scenario tests
+├── estimation-job/           # Estimation job type tests
 │   ├── README.md
 │   └── runn/
-├── mp-job/                # Multi-Programming job type tests
+├── mp-job/                   # Multi-Programming job type tests
 │   ├── README.md
 │   └── runn/
-├── sampling-job/          # Sampling job type tests
+├── sampling-job/             # Sampling job type tests
 │   ├── README.md
 │   └── runn/
-└── sse-job/               # SSE job type tests
+└── sse-job/                  # SSE job type tests
     ├── README.md
     └── runn/
 ```
@@ -110,6 +112,42 @@ task runn-all-con
 ```
 
 Executes all tests concurrently with a maximum of 8 parallel processes. This is faster but may put more load on the target system.
+
+## Local Task Customization
+
+You can define environment-specific tasks in `Taskfile.local.yml`, which is gitignored and loaded automatically by `Taskfile.yml`.
+
+### Setup
+
+Copy the example file and edit it:
+
+```bash
+cp Taskfile.local.example.yml Taskfile.local.yml
+```
+
+Then add your custom tasks to `Taskfile.local.yml`. Tasks defined in `Taskfile.common.yml` can be used as dependencies via the `common:` namespace.
+
+### Example
+
+```yaml
+version: "3"
+
+tasks:
+  runn-my-device:
+    desc: "run all tests against my device"
+    deps:
+      - common:runn-setup
+    cmds:
+      - echo "custom task"
+```
+
+Run your custom task from within the `scenario-tests` directory:
+
+```bash
+task runn-my-device
+```
+
+> **Note**: `Taskfile.local.yml` is gitignored and will not be committed. Use `Taskfile.local.example.yml` as a reference template.
 
 ## Test Categories
 

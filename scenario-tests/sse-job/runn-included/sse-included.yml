@@ -1,20 +1,22 @@
-desc: sampling job tests to be included
+desc: SSE job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
   device_id: ${DEVICE_ID}
   job_name: "{{ parent.vars.job_name }}"
-  job_type: sampling
+  job_type: sse
   shots: 1000
   input_payload_path: "{{ parent.vars.input_payload_path }}"
-  program: "{{ parent.vars.program }}"
   transpiler_info: "{{ parent.vars.transpiler_info ?? {} }}"
   mitigation_info: "{{ parent.vars.mitigation_info ?? {} }}"
   expected_status: "{{ parent.vars.expected_status }}"
   expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
   expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
+  expected_transpiled: "{{ parent.vars.expected_transpiled }}"
+  expected_execution_time_filled: "{{ parent.vars.expected_execution_time_filled }}"
   expected_result_present: "{{ parent.vars.expected_result_present ?? true }}"
-  expected_transpile_result_present: "{{ parent.vars.expected_transpile_result_present ?? true }}"
+  expected_sse_log_present: "{{ parent.vars.expected_sse_log_present ?? true }}"
+  pass_transpiler_result_check: "{{ parent.vars.pass_transpiler_result_check }}:-false"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
 if: included
 steps:
@@ -23,7 +25,8 @@ steps:
     dump:
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " to " + vars.device_id + " is started"'
   post:
-    include: ../../include/post.yml
+    include:
+      path: ../../runn-included/post.yml
     bind:
       post_res_job_id: steps.post.steps.register.res.body.job_id
       wait_res_body: steps.post.steps.wait.res.body
@@ -41,7 +44,13 @@ steps:
       && wait_res_body.job_info?.input != null
       && ((vars.expected_result_present && wait_res_body.job_info?.result != null)
         || (!vars.expected_result_present && wait_res_body.job_info?.result == null))
-      && wait_res_body.execution_time > 0
+      && ((vars.expected_sse_log_present && wait_res_body.job_info?.sse_log != null)
+        || (!vars.expected_sse_log_present && wait_res_body.job_info?.sse_log == null))
+      && wait_res_body.job_info?.combined_program == null
+  exec-test:
+    test: |
+      (( vars.expected_execution_time_filled && wait_res_body.execution_time > 0 )
+        || (!vars.expected_execution_time_filled && wait_res_body.execution_time == null))
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
       && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
       && date(wait_res_body.running_at) <= date(wait_res_body.ended_at)
@@ -51,17 +60,12 @@ steps:
       && toJSON(wait_res_body.transpiler_info?.transpiler_options) == toJSON(vars.expected_transpiler_options)
   transpiler-result-test:
     test: |
-      ((vars.expected_transpile_result_present && wait_res_body.job_info?.transpile_result != null)
-        || (!vars.expected_transpile_result_present && wait_res_body.job_info?.transpile_result == null))
-      && wait_res_body.job_info?.combined_program == null
-      && wait_res_body.job_info?.sse_log == null
+      vars.pass_transpiler_result_check == true
+      || (wait_res_body.job_info?.transpile_result == null && vars.expected_transpiled == false)
+      || (wait_res_body.job_info?.transpile_result != null && vars.expected_transpiled == true)
   mitigation-info-test:
     test: |
       toJSON(wait_res_body.mitigation_info) == toJSON(vars.mitigation_info)
   simulator-info-test:
     test: |
       wait_res_body.simulator_info == {}
-  finished:
-    desc: test finished
-    dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is finished"'

@@ -1,4 +1,4 @@
-desc: sampling job tests failed to be included
+desc: sampling job tests to be included
 vars:
   user_api_endpoint: ${USER_API_ENDPOINT}
   q_api_token: ${Q_API_TOKEN}
@@ -13,17 +13,12 @@ vars:
   expected_status: "{{ parent.vars.expected_status }}"
   expected_transpiler_lib: "{{ parent.vars.expected_transpiler_lib }}"
   expected_transpiler_options: "{{ parent.vars.expected_transpiler_options }}"
-  expected_result_present: "{{ parent.vars.expected_result_present ?? false }}"
-  expected_transpile_result_present: "{{ parent.vars.expected_transpile_result_present ?? false }}"
-  dump_request: "{{ parent.vars.dump_request ?? false }}"
+  expected_result_present: "{{ parent.vars.expected_result_present ?? true }}"
+  expected_transpile_result_present: "{{ parent.vars.expected_transpile_result_present ?? true }}"
 if: included
 steps:
-  started:
-    desc: test started
-    dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is started"'
   post:
-    include: ../../include/post.yml
+    include: ./runn-included/post.yml
     bind:
       post_res_job_id: steps.post.steps.register.res.body.job_id
       wait_res_body: steps.post.steps.wait.res.body
@@ -41,9 +36,10 @@ steps:
       && wait_res_body.job_info?.input != null
       && ((vars.expected_result_present && wait_res_body.job_info?.result != null)
         || (!vars.expected_result_present && wait_res_body.job_info?.result == null))
-      && wait_res_body.execution_time == null
+      && wait_res_body.execution_time > 0
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
-      && wait_res_body.running_at == null
+      && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
+      && date(wait_res_body.running_at) <= date(wait_res_body.ended_at)
   transpiler-info-test:
     test: |
       wait_res_body.transpiler_info?.transpiler_lib == vars.expected_transpiler_lib
@@ -60,7 +56,3 @@ steps:
   simulator-info-test:
     test: |
       wait_res_body.simulator_info == {}
-  finished:
-    desc: test finished
-    dump:
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + vars.job_name + " is finished"'
