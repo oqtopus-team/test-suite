@@ -71,6 +71,7 @@ After the job reaches a terminal state, the test blocks in `sampling-included.ym
 
 - [runn](https://github.com/k1LoW/runn) installed
 - [Task](https://taskfile.dev/) installed (for running Taskfile.yml commands)
+- `bc` installed (used by `run_endurance_test.sh` for sub-second arithmetic; not preinstalled on minimal Linux images such as Amazon Linux). Install with `sudo dnf install -y bc` on Amazon Linux 2023, `sudo yum install -y bc` on Amazon Linux 2, or `sudo apt-get install -y bc` on Debian/Ubuntu.
 - A `.env` file in the `endurance-test` directory with the required environment variables
 
 ## File Layout
