@@ -55,7 +55,7 @@ steps:
             q-api-token: "{{ vars.q_api_token }}"
     dump:
       desc: job status
-      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+      expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.post.res.body.job_id + "(" + vars.job_name + ") is in " + (current.res?.body?.status ?? ("<no status: HTTP " + string(current.res?.status ?? 0) + " body=" + string(current.res?.rawBody ?? "") + ">"))'
   confirm:
     desc: confirm job status
     req:
