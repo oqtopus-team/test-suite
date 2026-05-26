@@ -15,7 +15,7 @@ steps:
     test: |
       current.res.status == 200
     bind:
-      device_info_json: steps.get_devices.res.body[0].device_info
+      device_info_json: find(steps.get_devices.res.body, {.device_id == "${DEVICE_ID}"}).device_info
   message:
     desc: some devices are registered
     dump:
