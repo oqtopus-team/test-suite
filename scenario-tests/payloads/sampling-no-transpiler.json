@@ -1,0 +1,5 @@
+{
+  "program": [
+    "OPENQASM 3;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\ncx q[0],q[1];\nc = measure q;\n"
+  ]
+}

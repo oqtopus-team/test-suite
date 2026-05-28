@@ -20,7 +20,7 @@ The main test script, `run_endurance_test.sh`, executes the `endr.yml` test scen
 - **`Taskfile.yml`**: Defines tasks for starting, stopping, and checking the status of the endurance test.
 - **`endr.yml`**: The main `runn`book that defines the endurance test. It includes `sampling-included.yml`.
 - **`sampling-included.yml`**: A `runn`book that defines the steps for a sampling job test. It includes `include/post.yml`.
-- **`include/post.yml`**: A `runn`book that handles the job submission (POST request) and waits for the job to complete.
+- **`include/post.yml`**: A `runn`book that handles job registration, payload upload, job submission, and waits for the job to complete.
 
 ## How to Use
 

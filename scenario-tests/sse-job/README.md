@@ -38,11 +38,12 @@ The following constraints currently apply to this test suite:
 
 Each test follows this flow:
 
-1.  Submit a job via **`POST /jobs`** with the specified parameters.
-2.  Verify that the response contains a valid job ID.
-3.  Poll the job status using **`GET /jobs/{job_id}`** every 5 seconds.
-4.  Confirm that the job status becomes either **`succeeded` or `failed`**.
-5.  Verify that the returned Job information matches the expected output.
+1.  Register a job via **`POST /jobs`** and verify that the response contains a valid job ID and presigned upload URL.
+2.  Upload the scenario payload as **`input.zip`** to the returned presigned URL.
+3.  Submit the job via **`POST /jobs/{job_id}/submit`** with the specified parameters.
+4.  Poll the job status using **`GET /jobs/{job_id}`** every 5 seconds.
+5.  Confirm that the job status becomes either **`succeeded` or `failed`**.
+6.  Verify that the returned Job metadata matches the expected output.
 
 ---
 
@@ -61,4 +62,4 @@ Each test follows this flow:
 | 9 | default transpiler | off | succeeded | | |
 
 ## Tools
-Tools are available in `tools` for base64 encoding/decoding of python files.
+Tools are available in `tools` for inspecting and converting legacy base64-encoded SSE payloads.
