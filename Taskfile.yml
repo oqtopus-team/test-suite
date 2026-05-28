@@ -7,3 +7,8 @@ tasks:
       - cp -r asset docs
       - cp -r scenario-tests/asset docs/scenario-tests
       - uv run mkdocs serve
+
+  scan-secrets:
+    desc: "Scan the full Git history for leaked secrets using gitleaks"
+    cmds:
+      - gitleaks detect --source . --redact --no-banner
