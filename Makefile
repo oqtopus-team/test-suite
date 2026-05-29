@@ -12,8 +12,8 @@ docs-assets: ## Copy scenario-tests assets into docs/
 	@mkdir -p docs/scenario-tests/asset
 	@cp -r scenario-tests/asset/* docs/scenario-tests/asset/
 
-docs-lint: ## Lint all markdown files tracked by git
-	@uv run pymarkdown scan $$(git ls-files '*.md')
+docs-lint: ## Lint all markdown files
+	@uv run pymarkdown scan -r docs README.md
 
 docs-build: docs-assets ## Build documentation
 	@uv run mkdocs build
