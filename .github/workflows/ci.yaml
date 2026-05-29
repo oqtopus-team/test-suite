@@ -46,7 +46,7 @@ jobs:
 
       - name: Markdown Lint
         if: steps.changes.outputs.md == 'true'
-        run: make md-lint
+        run: make docs-lint
 
       - name: Build documentation
         run: make docs-build
