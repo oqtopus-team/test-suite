@@ -44,7 +44,7 @@ jobs:
             md:
               - "**/*.md"
 
-      - name: Markdown Lint
+      - name: Documentation Lint
         if: steps.changes.outputs.md == 'true'
         run: make docs-lint
 
