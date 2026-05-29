@@ -5,6 +5,15 @@ steps:
   cleanup:
     include:
       path: ../../runn-included/cleanup.yml
+  check_api_token:
+    desc: check if Q_API_TOKEN is valid
+    req:
+      /devices:
+        get:
+          headers:
+            q-api-token: ${Q_API_TOKEN}
+    test: |
+      current.res.status != 401 && current.res.status != 403
   get_devices:
     desc: get devices
     req:
@@ -15,7 +24,7 @@ steps:
     test: |
       current.res.status == 200
     bind:
-      device_info_json: steps.get_devices.res.body[0].device_info
+      device_info_json: find(steps.get_devices.res.body, {.device_id == "${DEVICE_ID}"}).device_info
   message:
     desc: some devices are registered
     dump:

@@ -48,22 +48,25 @@ The profile file takes precedence over `.env`. Variables not defined in the prof
 
 ```text
 scenario-tests/
-├── Taskfile.yml           # Task runner configuration
-├── .env                   # Environment variables (not tracked in git)
-├── profiles/              # Environment profiles
-│   └── example.env        # Reference profile template
-├── include/
-│   └── post.yml           # Common test steps for job submission and polling
-├── estimation-job/        # Estimation job type tests
+├── Taskfile.yml              # Task runner entrypoint
+├── Taskfile.common.yml       # Shared task definitions
+├── Taskfile.local.example.yml # Local task customization example
+├── .env                      # Environment variables (not tracked in git)
+├── profiles/                 # Environment profiles
+│   └── example.env           # Reference profile template
+├── payloads/                 # ZIP payloads uploaded to presigned input URLs
+├── runn-included/            # Common runn steps for setup, submission, and shared checks
+├── setup/                    # Device/qubit setup checks run before scenario tests
+├── estimation-job/           # Estimation job type tests
 │   ├── README.md
 │   └── runn/
-├── mp-job/                # Multi-Programming job type tests
+├── mp-job/                   # Multi-Programming job type tests
 │   ├── README.md
 │   └── runn/
-├── sampling-job/          # Sampling job type tests
+├── sampling-job/             # Sampling job type tests
 │   ├── README.md
 │   └── runn/
-└── sse-job/               # SSE job type tests
+└── sse-job/                  # SSE job type tests
     ├── README.md
     └── runn/
 ```
@@ -148,7 +151,17 @@ task runn-my-device
 
 ## Test Categories
 
+- [Setup](./setup/README.md): Prepares device/qubit state before running scenario tests.
 - [Estimation Job](./estimation-job/README.md): Verifies estimation job execution across various parameter combinations.
 - [Multi-Programming (MP) Job](./mp-job/README.md): Verifies MP job execution.
 - [Sampling Job](./sampling-job/README.md): Verifies sampling job execution with different transpilers (qiskit, no transpiler, default transpiler) and mitigation settings (on/off).
 - [SSE Job](./sse-job/README.md): Verifies SSE job execution.
+
+## Current User API Flow
+
+Current job scenarios follow the User API register/upload/submit flow:
+
+1. `POST /jobs` to register a job and receive `job_id` plus `presigned_url`
+2. Upload `input.zip` to the returned presigned URL
+3. `POST /jobs/{job_id}/submit` with metadata such as `device_id`, `job_type`, and `transpiler_info`
+4. Poll `GET /jobs/{job_id}` until the job reaches a terminal status

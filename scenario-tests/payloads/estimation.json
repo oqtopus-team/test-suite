@@ -1,0 +1,15 @@
+{
+  "program": [
+    "OPENQASM 3;\ninclude \"stdgates.inc\";\nqubit[2] q;\nbit[2] c;\nh q[0];\ncx q[0],q[1];\nc = measure q;\n"
+  ],
+  "operator": [
+    {
+      "pauli": "X 0 X 1",
+      "coeff": 1.5
+    },
+    {
+      "pauli": "Y 0 Z 1",
+      "coeff": 1.2
+    }
+  ]
+}

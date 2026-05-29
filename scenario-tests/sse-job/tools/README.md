@@ -12,7 +12,10 @@
 - sample_circuit_nonzero_exit.py:
    Sample with non-zero exit code.
 
-### Encoding and Decoding tools
+### Legacy conversion tools
+Current SSE payloads are stored as plain text Python source in the `sse_program` field.
+
+These scripts are kept only for inspecting or converting older base64-encoded payloads.
 
 To encode a python file with base64, execute following command. The encoded base64 string will be written to a file as named *.encoded.
 

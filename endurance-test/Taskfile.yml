@@ -3,7 +3,7 @@ tasks:
   runn-endr:
     desc: "runn endurance test"
     cmds:
-      - runn run endr.yml --env-file .env --verbose --scopes read:parent
+      - runn run endr.yml --env-file .env --verbose --scopes read:parent,run:exec
 
   start-endr:
     desc: "Start the endurance test in the background"
