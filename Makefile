@@ -6,7 +6,9 @@ SHELL := bash
 
 install: ## Install dependencies
 	@uv sync --group docs
-	@if [ -d .git ]; then git config --local commit.template .gitmessage; fi
+	@if [ -d .git ]; then \
+	  git config --local commit.template .gitmessage; \
+	fi
 
 docs-assets: ## Copy scenario-tests assets into docs/
 	@mkdir -p docs/scenario-tests/asset
