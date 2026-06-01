@@ -1,12 +1,29 @@
 [project]
 name = "test-suite"
-version = "0.1.0"
-description = "test-suite for OQTOPUS"
-requires-python = ">=3.9"
+version = "1.0.0"
+description = "External testing tools for the OQTOPUS quantum computing platform"
+readme = "README.md"
+license = "Apache-2.0"
+authors = [{ name = "oqtopus-team", email = "oqtopus-team@googlegroups.com" }]
+requires-python = ">=3.10"
 
-[project.optional-dependencies]
-dev = [
+[project.urls]
+documentation = "https://oqtopus-test-suite.readthedocs.io/"
+repository = "https://github.com/oqtopus-team/test-suite"
+
+[dependency-groups]
+docs = [
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.0",
     "mkdocs-include-markdown-plugin>=6.0.0",
+    "pymarkdownlnt>=0.9.36",
 ]
+
+[tool.uv]
+exclude-newer = "1 week"
+
+[tool.pymarkdown]
+plugins.line-length.enabled = false            # MD013: Disable line length limit
+plugins.first-line-heading.enabled = false     # MD041: Allow files to start without a top-level heading
+plugins.code-block-style.enabled = false       # MD046: Disable code block style consistency
+plugins.reference-links-images.enabled = false # MD060: Allow inconsistent reference link styles
