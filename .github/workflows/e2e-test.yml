@@ -1,16 +1,12 @@
 name: E2E Test
 
 on:
-  workflow_run:
-    workflows: ["Scenario Test"]
-    types:
-      - completed
+  workflow_call:
   workflow_dispatch:
   pull_request:
 
 jobs:
   run-e2e-test:
-    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     defaults:
       run:
