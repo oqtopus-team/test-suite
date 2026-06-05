@@ -7,6 +7,19 @@ on:
         type: string
         required: false
         description: "Git ref of oqtopus-team/test-suite to check out (defaults to the SHA of the triggering event)"
+    secrets:
+      USER_API_ENDPOINT:
+        required: true
+      Q_API_TOKEN:
+        required: true
+      E2E_BASE_URL:
+        required: true
+      E2E_EMAIL:
+        required: true
+      E2E_PASSWORD:
+        required: true
+      E2E_TOTP_SECRET:
+        required: true
   workflow_dispatch:
   pull_request:
 
