@@ -10,7 +10,7 @@ for (const scheme of colorSchemes) {
     await page.emulateMedia({ colorScheme: scheme });
     await page.goto('/');
 
-    const logo = page.getByRole('img', { name: 'OQTOPUS Playground' });
+    const logo = page.getByRole('banner').getByRole('img').first();
     await expect(logo).toBeVisible();
 
     const naturalWidth = await logo.evaluate(

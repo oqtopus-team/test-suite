@@ -43,26 +43,67 @@ npx playwright test --debug     # step-through debugger
 Run a single test:
 
 ```bash
-npx playwright test tests/login.spec.ts
-npx playwright test -g "login"   # filter by title substring
+npx playwright test tests/logo.spec.ts
+npx playwright test -g "logo"   # filter by title substring
 ```
+
+## Running via Task (with profiles)
+
+[`Taskfile.yml`](./Taskfile.yml) wraps the common Playwright commands and loads
+environment variables from `../profiles/<PROFILE>.env` (shared with
+`scenario-tests`) before falling back to `e2e/.env`. This lets you switch
+between target environments (e.g. `env-a`, `env-b`, `env-c`) without editing
+`.env` each time.
+
+List available tasks:
+
+```bash
+task --list
+```
+
+| Task | Description |
+| --- | --- |
+| `task install` | `npm install` + `npx playwright install --with-deps` |
+| `task test` | Run all Playwright tests |
+| `task test-headed` | Run tests with a visible browser |
+| `task test-ui` | Open Playwright UI mode |
+| `task test-debug` | Run in step-through debug mode |
+| `task report` | Open the last HTML report |
+
+Examples:
+
+```bash
+# Use the env-a profile (loads ../profiles/env-a.env)
+PROFILE=env-a task test
+
+# Pass extra arguments to playwright via `--`
+PROFILE=env-a task test -- tests/logo.spec.ts
+PROFILE=env-b task test -- -g "logo"
+
+# UI mode against the env-b profile
+PROFILE=env-b task test-ui
+```
+
+The profile file takes precedence over `e2e/.env`. Variables not defined in the
+profile fall back to `e2e/.env`. Running `task test` without `PROFILE` uses
+`e2e/.env` only.
 
 ## Test Catalog
 
 ### GUI tests (browser-driven)
 
-| # | Spec | Test Title | What it verifies |
-| --- | --- | --- | --- |
-| 00 | `tests/00-smoke.spec.ts` | base URL is reachable | The frontend at `E2E_BASE_URL` returns a 2xx response on `/` |
-| 01 | `tests/01-logo.spec.ts` | logo is rendered in light/dark mode | The OQTOPUS Playground logo is visible and has `naturalWidth > 0` in both light and dark color schemes |
-| 02 | `tests/02-login.spec.ts` | user is signed in after MFA and lands on the authenticated area | Login + TOTP MFA flow with `.env` credentials leaves the user on a non-login URL with the logo visible |
-| 03 | `tests/03-device-list.spec.ts` | device list shows qulacs after opening the devices page | After login, the `デバイス` page shows a `qulacs` row within 60s |
+| Spec | Test Title | What it verifies |
+| --- | --- | --- |
+| `tests/auth.setup.ts` | authenticate | Login + TOTP MFA flow with `.env` credentials leaves the user on a non-login URL; the resulting session is saved and reused by the authenticated tests below |
+| `tests/logo.spec.ts` | logo is rendered in light/dark mode | The header logo is visible and has `naturalWidth > 0` in both light and dark color schemes |
+| `tests/smoke.spec.ts` | base URL is reachable | The frontend at `E2E_BASE_URL` returns a 2xx response on `/` |
+| `tests/authenticated/device-list.spec.ts` | device list shows qulacs after opening the devices page | After login, the `デバイス` page shows a `qulacs` row within 60s |
 
 ### API tests (HTTP-driven)
 
-| # | Spec | Test Title | What it verifies |
-| --- | --- | --- | --- |
-| 04 | `tests/04-device-list-api.spec.ts` | GET /devices returns a non-empty device list | The User-API `/devices` endpoint returns 200 with a non-empty array whose first item has `device_info` (auth via `Q_API_TOKEN`) |
+| Spec | Test Title | What it verifies |
+| --- | --- | --- |
+| `tests/device-list-api.spec.ts` | GET /devices returns a non-empty device list | The User-API `/devices` endpoint returns 200 with a non-empty array whose first item has `device_info` (auth via `Q_API_TOKEN`) |
 
 ## Environment Variables
 
@@ -73,6 +114,7 @@ Defined in `e2e/.env` (never commit this file; it is excluded via `.gitignore`).
 | `E2E_BASE_URL` | Base URL of the frontend under test |
 | `E2E_EMAIL` | Test user email for login |
 | `E2E_PASSWORD` | Test user password |
+| `E2E_TOTP_SECRET` | TOTP secret used to generate the MFA code at login |
 
 In CI, values are provided via GitHub Actions Secrets instead of `.env`.
 
@@ -81,9 +123,12 @@ In CI, values are provided via GitHub Actions Secrets instead of `.env`.
 ```
 e2e/
 ├── README.md             # this file
+├── Taskfile.yml          # task runner entrypoint (loads ../profiles/*.env)
 ├── .env                  # local only (not tracked)
 ├── tests/                # test specs (*.spec.ts)
-├── helpers/              # shared utilities (login, etc.)
+│   ├── auth.setup.ts     # logs in once, saves the session for reuse
+│   └── authenticated/    # specs that require login (gated on auth.setup.ts)
+├── helpers/              # shared utilities (login, storage, etc.)
 ├── playwright.config.ts  # Playwright configuration
 ├── playwright-report/    # HTML report output (not tracked)
 └── test-results/         # failure traces / screenshots (not tracked)
