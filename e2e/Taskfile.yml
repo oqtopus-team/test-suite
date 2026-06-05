@@ -1,0 +1,32 @@
+version: "3"
+
+dotenv:
+  - "../profiles/{{.PROFILE}}.env"
+  - ".env"
+
+tasks:
+  install:
+    desc: "install npm deps and Playwright browsers"
+    cmds:
+      - npm install
+      - npx playwright install --with-deps
+  test:
+    desc: "run all Playwright tests"
+    cmds:
+      - npx playwright test {{.CLI_ARGS}}
+  test-headed:
+    desc: "run Playwright tests with a visible browser"
+    cmds:
+      - npx playwright test --headed {{.CLI_ARGS}}
+  test-ui:
+    desc: "run Playwright in UI mode"
+    cmds:
+      - npx playwright test --ui {{.CLI_ARGS}}
+  test-debug:
+    desc: "run Playwright in step-through debug mode"
+    cmds:
+      - npx playwright test --debug {{.CLI_ARGS}}
+  report:
+    desc: "open the last HTML report"
+    cmds:
+      - npx playwright show-report
