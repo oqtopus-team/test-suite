@@ -1,6 +1,22 @@
 name: Scheduled Tests
 
 on:
+  workflow_call:
+    secrets:
+      USER_API_ENDPOINT:
+        required: true
+      Q_API_TOKEN:
+        required: true
+      DEVICE_ID:
+        required: true
+      E2E_BASE_URL:
+        required: true
+      E2E_EMAIL:
+        required: true
+      E2E_PASSWORD:
+        required: true
+      E2E_TOTP_SECRET:
+        required: true
   workflow_dispatch:
   schedule:
     - cron: "0 15 * * *"
