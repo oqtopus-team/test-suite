@@ -6,9 +6,9 @@ let lastTotpWindow = -1;
 
 /**
  * Return a TOTP code that is guaranteed to belong to a window we have not
- * already used in this worker. If the current 30-second window was the one
- * used for the previous login, wait until the next window starts so the
- * server does not reject the code as a replay.
+ * already used in this process. If the current 30-second window was the one
+ * used for the previous login, wait until the next window starts so the server
+ * does not reject the code as a replay.
  */
 async function freshTotp(secret: string): Promise<string> {
   let window = Math.floor(Date.now() / TOTP_STEP_MS);
