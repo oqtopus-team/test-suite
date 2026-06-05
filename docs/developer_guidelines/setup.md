@@ -81,10 +81,10 @@ To run the tests against the OQTOPUS Cloud API, configure your environment varia
 
 Profiles let you switch between multiple environments (e.g., staging, production) without editing `.env` each time.
 
-1. Create a profile file under `scenario-tests/profiles/`:
+1. Create a profile file under `profiles/` (at the repository root, shared between `scenario-tests` and `e2e`):
 
-   ```shell
-   cp scenario-tests/profiles/example.env scenario-tests/profiles/<profile-name>.env
+   ```bash
+   cp profiles/example.env profiles/<profile-name>.env
    ```
 
 2. Edit the new profile file with the target environment's credentials:

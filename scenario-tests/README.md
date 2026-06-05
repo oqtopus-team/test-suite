@@ -36,7 +36,7 @@ DEVICE_ID="<your-device-id>"
 
 Profiles let you switch between multiple environments (e.g., staging, production) without modifying `.env`.
 
-Create a file under `profiles/<profile-name>.env` (see `profiles/example.env` as a reference), then specify the profile when running a task:
+Create a file under `../profiles/<profile-name>.env` (see `../profiles/example.env` as a reference). The `profiles/` directory lives at the repository root and is shared between `scenario-tests` and `e2e`. Specify the profile when running a task:
 
 ```bash
 PROFILE=<profile-name> task runn-all
@@ -52,8 +52,6 @@ scenario-tests/
 ├── Taskfile.common.yml       # Shared task definitions
 ├── Taskfile.local.example.yml # Local task customization example
 ├── .env                      # Environment variables (not tracked in git)
-├── profiles/                 # Environment profiles
-│   └── example.env           # Reference profile template
 ├── payloads/                 # ZIP payloads uploaded to presigned input URLs
 ├── runn-included/            # Common runn steps for setup, submission, and shared checks
 ├── setup/                    # Device/qubit setup checks run before scenario tests

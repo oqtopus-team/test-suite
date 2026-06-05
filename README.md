@@ -50,7 +50,7 @@ After setup, `git commit` will fail if gitleaks detects a secret in the staged d
 
 ```bash
 cd scenario-tests
-cp profiles/example.env .env
+cp ../profiles/example.env .env
 # Edit .env and fill in your values:
 #   USER_API_ENDPOINT, Q_API_TOKEN, DEVICE_ID
 ```
