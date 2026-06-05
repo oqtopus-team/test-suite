@@ -1,30 +1,21 @@
 ### Python files for SSE testing
 
-- sample_circuit_default_trans.py:
+- sse.py
    Sample circuit with default transpiler (transpiler_info={}).
 
-- sample_circuit_wo_trans.py:
+- sse-without-transpiler.py
    Sample circuit with no transpiler (transpiler_info={"transpiler_lib": None})
 
-- sample_circuit_wo_trans_fail.py:
+- sse-without-transpiler-failed.py
    Sample circuit with no transpiler. This circuit should end in failure due to H and RY gates.
 
-- sample_circuit_nonzero_exit.py:
+- sse-non-zero-exit.py
    Sample with non-zero exit code.
 
-### Legacy conversion tools
-Current SSE payloads are stored as plain text Python source in the `sse_program` field.
+### Coversion tool
 
-These scripts are kept only for inspecting or converting older base64-encoded payloads.
-
-To encode a python file with base64, execute following command. The encoded base64 string will be written to a file as named *.encoded.
+To generate a json and a zip from a Python file for SSE testing, run the following command.
 
 ```bash
-bash base64encode.sh <file name>
-```
-
-To decode an encoded file, execute following command. The decoded file will be created with the name *.decoded.
-
-```bash
-bash base64decode.sh <file name>
+bash wrap_into_json.sh <Python file name>
 ```
