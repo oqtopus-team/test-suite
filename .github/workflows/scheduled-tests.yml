@@ -2,6 +2,11 @@ name: Scheduled Tests
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        type: string
+        required: false
+        description: "Git ref of oqtopus-team/test-suite to check out (defaults to the SHA of the triggering event)"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -24,9 +29,22 @@ on:
 jobs:
   scenario-test:
     uses: ./.github/workflows/scenario-test.yml
-    secrets: inherit
+    with:
+      ref: ${{ inputs.ref || github.sha }}
+    secrets:
+      USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
+      Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
+      DEVICE_ID: ${{ secrets.DEVICE_ID }}
 
   e2e-test:
     needs: scenario-test
     uses: ./.github/workflows/e2e-test.yml
-    secrets: inherit
+    with:
+      ref: ${{ inputs.ref || github.sha }}
+    secrets:
+      USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
+      Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
+      E2E_BASE_URL: ${{ secrets.E2E_BASE_URL }}
+      E2E_EMAIL: ${{ secrets.E2E_EMAIL }}
+      E2E_PASSWORD: ${{ secrets.E2E_PASSWORD }}
+      E2E_TOTP_SECRET: ${{ secrets.E2E_TOTP_SECRET }}
