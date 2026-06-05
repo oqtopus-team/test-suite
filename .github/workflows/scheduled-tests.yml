@@ -1,0 +1,16 @@
+name: Scheduled Tests
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 15 * * *"
+
+jobs:
+  scenario-test:
+    uses: ./.github/workflows/scenario-test.yml
+    secrets: inherit
+
+  e2e-test:
+    needs: scenario-test
+    uses: ./.github/workflows/e2e-test.yml
+    secrets: inherit

@@ -1,9 +1,8 @@
 name: Scenario Test
 
 on:
+  workflow_call:
   workflow_dispatch:
-  schedule:
-    - cron: "0 15 * * *"
   pull_request:
   workflow_call:
     inputs:
