@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.10"
 
 [options]
-exclude-newer = "2026-05-22T08:30:38.428472Z"
+exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -326,20 +326,20 @@ wheels = [
 
 [[package]]
 name = "mkdocs-include-markdown-plugin"
-version = "6.2.2"
+version = "7.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mkdocs" },
     { name = "wcmatch" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ee/fe/4bb438d0f58995f81e2616d640f7efe0df9b1f992cba706a9453676c9140/mkdocs_include_markdown_plugin-6.2.2.tar.gz", hash = "sha256:f2bd5026650492a581d2fd44be6c22f90391910d76582b96a34c264f2d17875d", size = 21045, upload-time = "2024-08-10T23:36:41.503Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b5/2b/c788fc5c39ccba342eb9067be637327faebbc0e47da41ea79dc2526e693a/mkdocs_include_markdown_plugin-7.3.0.tar.gz", hash = "sha256:2800126746452e31c2e321bbd43c8190b356e0de353e20cbc16a34a3c3d6796c", size = 25527, upload-time = "2026-05-15T18:16:13.946Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/50/d9/7b2b09b4870a2cd5a80628c74553307205a8474aabe128b66e305b56ac30/mkdocs_include_markdown_plugin-6.2.2-py3-none-any.whl", hash = "sha256:d293950f6499d2944291ca7b9bc4a60e652bbfd3e3a42b564f6cceee268694e7", size = 24643, upload-time = "2024-08-10T23:36:39.736Z" },
+    { url = "https://files.pythonhosted.org/packages/85/84/c0109c5991b89cbf028b8597f73fa7bd6a6b092407be2369a354b52737ab/mkdocs_include_markdown_plugin-7.3.0-py3-none-any.whl", hash = "sha256:5b5c99b5d3c9b9ce0114a9e60353bbafb6be53a26c2d3b74ec6b767a7a8e55ca", size = 29675, upload-time = "2026-05-15T18:16:12.654Z" },
 ]
 
 [[package]]
 name = "mkdocs-material"
-version = "9.6.23"
+version = "9.7.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "babel" },
@@ -354,9 +354,9 @@ dependencies = [
     { name = "pymdown-extensions" },
     { name = "requests" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/57/de/cc1d5139c2782b1a49e1ed1845b3298ed6076b9ba1c740ad7c952d8ffcf9/mkdocs_material-9.6.23.tar.gz", hash = "sha256:62ebc9cdbe90e1ae4f4e9b16a6aa5c69b93474c7b9e79ebc0b11b87f9f055e00", size = 4048130, upload-time = "2025-11-01T16:33:11.782Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/45/29/6d2bcf41ae40802c4beda2432396fff97b8456fb496371d1bc7aad6512ec/mkdocs_material-9.7.6.tar.gz", hash = "sha256:00bdde50574f776d328b1862fe65daeaf581ec309bd150f7bff345a098c64a69", size = 4097959, upload-time = "2026-03-19T15:41:58.161Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f5/df/bc583e857174b0dc6df67d555123533f09e7e1ac0f3fae7693fb6840c0a3/mkdocs_material-9.6.23-py3-none-any.whl", hash = "sha256:3bf3f1d82d269f3a14ed6897bfc3a844cc05e1dc38045386691b91d7e6945332", size = 9210689, upload-time = "2025-11-01T16:33:08.196Z" },
+    { url = "https://files.pythonhosted.org/packages/2c/01/bc663630c510822c95c47a66af9fa7a443c295b47d5f041e5e6ae62ef659/mkdocs_material-9.7.6-py3-none-any.whl", hash = "sha256:71b84353921b8ea1ba84fe11c50912cc512da8fe0881038fcc9a0761c0e635ba", size = 9305470, upload-time = "2026-03-19T15:41:55.217Z" },
 ]
 
 [[package]]
@@ -555,7 +555,7 @@ wheels = [
 
 [[package]]
 name = "pymarkdownlnt"
-version = "0.9.36"
+version = "0.9.37"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "application-file-scanner" },
@@ -564,9 +564,9 @@ dependencies = [
     { name = "py-walk" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1b/db/ad28db540e7717cbdcdee98e4b22734958b1508a2a43aecacb158dd7fecb/pymarkdownlnt-0.9.36.tar.gz", hash = "sha256:0b53e436bb5ec018ec0681a8473b4ce604a5c99e16c20f4cf66f08873d3309e5", size = 437442, upload-time = "2026-03-16T01:16:07.146Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/27/b1/3cb62d33eaf59e95d3aab1d0ffb240a90c2d6b7acee12e02661d59a38efd/pymarkdownlnt-0.9.37.tar.gz", hash = "sha256:d0d7882ae08263a12130b159c1a27a728630b1b53bb75246f2f61f81b9289fd9", size = 442920, upload-time = "2026-05-04T04:00:05.757Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/32/0bc96458c08364e453dcfc62b97ab15b7050fdc05ad4b66cf89ced8d6606/pymarkdownlnt-0.9.36-py3-none-any.whl", hash = "sha256:dcbc1d8ab9cc7be3172ac7c410dde4af8154df75dab7a6e8447c912405cc11f1", size = 511216, upload-time = "2026-03-16T01:16:05.968Z" },
+    { url = "https://files.pythonhosted.org/packages/05/30/3f234125f9385ed45dfdb77b20d4f42825f3317d89689883761dfa5f2fca/pymarkdownlnt-0.9.37-py3-none-any.whl", hash = "sha256:1dc7296f9bf96c26736571b3b73311e516dbaf8ec587c3539fdf63c8d30f66e6", size = 514924, upload-time = "2026-05-04T04:00:04.163Z" },
 ]
 
 [[package]]
@@ -721,9 +721,9 @@ docs = [
 [package.metadata.requires-dev]
 docs = [
     { name = "mkdocs", specifier = ">=1.6.0" },
-    { name = "mkdocs-include-markdown-plugin", specifier = ">=6.0.0" },
-    { name = "mkdocs-material", specifier = ">=9.5.0" },
-    { name = "pymarkdownlnt", specifier = ">=0.9.36" },
+    { name = "mkdocs-include-markdown-plugin", specifier = ">=7.3.0" },
+    { name = "mkdocs-material", specifier = ">=9.7.6" },
+    { name = "pymarkdownlnt", specifier = ">=0.9.37" },
 ]
 
 [[package]]
