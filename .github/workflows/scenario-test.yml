@@ -25,7 +25,7 @@ jobs:
         working-directory: ./scenario-tests
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6.0.2
         with:
           repository: oqtopus-team/test-suite
           ref: ${{ inputs.ref || github.sha }}
