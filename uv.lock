@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.10"
 
 [options]
-exclude-newer = "0001-01-01T00:00:00Z" # This has no effect and is included for backwards compatibility when using relative exclude-newer values.
+exclude-newer = "2026-06-01T08:20:07.274436Z"
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -705,7 +705,7 @@ wheels = [
 
 [[package]]
 name = "test-suite"
-version = "1.0.2"
+version = "1.0.3"
 source = { virtual = "." }
 
 [package.dev-dependencies]

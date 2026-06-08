@@ -2,6 +2,8 @@
 
 # OQTOPUS Test Suite
 
+[![Scheduled Tests](https://github.com/oqtopus-team/test-suite/actions/workflows/scheduled-tests.yml/badge.svg)](https://github.com/oqtopus-team/test-suite/actions/workflows/scheduled-tests.yml)
+
 This repository contains external testing tools for the OQTOPUS quantum computing platform.
 
 ## Contents
