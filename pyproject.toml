@@ -14,9 +14,9 @@ repository = "https://github.com/oqtopus-team/test-suite"
 [dependency-groups]
 docs = [
     "mkdocs>=1.6.0",
-    "mkdocs-material>=9.5.0",
-    "mkdocs-include-markdown-plugin>=6.0.0",
-    "pymarkdownlnt>=0.9.36",
+    "mkdocs-material>=9.7.6",
+    "mkdocs-include-markdown-plugin>=7.3.0",
+    "pymarkdownlnt>=0.9.37",
 ]
 
 [tool.uv]
