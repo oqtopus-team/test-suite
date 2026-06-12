@@ -11,11 +11,12 @@ export function requireBaseURL(): void {
 
 /**
  * Read a boolean-ish environment variable. Returns `defaultValue` when the
- * variable is unset; otherwise `false` only for the literal string "false"
- * (case-insensitive). Anything else is treated as `true`.
+ * variable is unset or empty (e.g. a CI expression that resolved to ""),
+ * otherwise `false` only for the literal string "false" (case-insensitive).
+ * Anything else is treated as `true`.
  */
 export function boolEnv(name: string, defaultValue: boolean): boolean {
-  const raw = process.env[name];
-  if (raw === undefined) return defaultValue;
+  const raw = process.env[name]?.trim();
+  if (!raw) return defaultValue;
   return raw.toLowerCase() !== 'false';
 }
