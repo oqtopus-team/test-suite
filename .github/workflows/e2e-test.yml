@@ -7,6 +7,10 @@ on:
         type: string
         required: false
         description: "Git ref of oqtopus-team/test-suite to check out (defaults to the SHA of the triggering event)"
+      signup_blocked:
+        type: string
+        required: false
+        description: "Set to 'true' to run the signup-blocked check (defaults to vars.E2E_SIGNUP_BLOCKED)"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -37,6 +41,7 @@ jobs:
       E2E_TOTP_SECRET: ${{ secrets.E2E_TOTP_SECRET }}
       USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
       Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
+      E2E_SIGNUP_BLOCKED: ${{ inputs.signup_blocked || vars.E2E_SIGNUP_BLOCKED }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6.0.2
