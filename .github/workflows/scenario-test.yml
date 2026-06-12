@@ -14,8 +14,6 @@ on:
         required: true
       Q_API_TOKEN:
         required: true
-      DEVICE_ID:
-        required: true
 
 jobs:
   run-scenario-test:
@@ -30,6 +28,9 @@ jobs:
         with:
           repository: oqtopus-team/test-suite
           ref: ${{ inputs.ref || github.sha }}
+
+      - name: Show target device
+        run: echo "DEVICE_ID=${{ vars.DEVICE_ID }}"
 
       - name: Install Task
         uses: arduino/setup-task@v2
@@ -46,6 +47,6 @@ jobs:
         env:
           USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
           Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
-          DEVICE_ID: ${{ secrets.DEVICE_ID }}
+          DEVICE_ID: ${{ vars.DEVICE_ID }}
         run: |
           task runn-non-sse
