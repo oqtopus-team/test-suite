@@ -47,6 +47,7 @@ jobs:
     uses: ./.github/workflows/e2e-test.yml
     with:
       ref: ${{ inputs.ref || github.sha }}
+      device_id: ${{ inputs.device_id || vars.DEVICE_ID }}
       signup_blocked: ${{ inputs.signup_blocked || vars.E2E_SIGNUP_BLOCKED }}
     secrets:
       USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}

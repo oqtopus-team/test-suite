@@ -11,6 +11,10 @@ on:
         type: string
         required: false
         description: "Set to 'true' to run the signup-blocked check (defaults to vars.E2E_SIGNUP_BLOCKED)"
+      device_id:
+        type: string
+        required: false
+        description: "Device ID to target (defaults to vars.DEVICE_ID)"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -48,6 +52,9 @@ jobs:
         with:
           repository: oqtopus-team/test-suite
           ref: ${{ inputs.ref || github.sha }}
+
+      - name: Show target device
+        run: echo "DEVICE_ID=${{ inputs.device_id || vars.DEVICE_ID }}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
