@@ -2,6 +2,14 @@ import { test, expect } from '@playwright/test';
 import { requireBaseURL } from '../helpers/env';
 import { submitLoginForm } from '../helpers/login';
 
+// Exercise the login form and its error alert in Japanese (ja-JP), the locale
+// the app is operated in. Pin the locale here so the spec is independent of the
+// project default (chromium-public would otherwise render en-US).
+test.use({
+  locale: 'ja-JP',
+  extraHTTPHeaders: { 'Accept-Language': 'ja-JP,ja;q=0.9' },
+});
+
 /**
  * A wrong password must be rejected at the credential step: the app stays on
  * `/login`, never advances to the MFA (confirm-mfa) screen, and surfaces an
@@ -23,11 +31,11 @@ test('login with a wrong password is rejected before MFA', async ({ page }) => {
   await expect(page).not.toHaveURL(/confirm-mfa/i, { timeout: 10_000 });
   await expect(page).toHaveURL(/\/login/i);
 
-  // The app surfaces the rejection as an in-page toast/alert. The exact wording
-  // may differ per environment, so match common failure phrasings loosely.
+  // The rejection is surfaced in a role="alert" toast. The message itself comes
+  // from the backend (Cognito) and is NOT localized: it stays English
+  // ("Incorrect username or password.") even under the ja-JP UI, so match the
+  // English wording rather than a Japanese translation.
   await expect(
-    page
-      .getByRole('alert')
-      .filter({ hasText: /password|incorrect|invalid|失敗|エラー|正しく/i }),
+    page.getByRole('alert').filter({ hasText: /incorrect|invalid|password/i }),
   ).toBeVisible({ timeout: 10_000 });
 });
