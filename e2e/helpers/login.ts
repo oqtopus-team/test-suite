@@ -45,9 +45,9 @@ export async function submitLoginForm(
   await page
     .getByRole('textbox', { name: 'Enter Password' })
     .pressSequentially(password, { delay: 20 });
-  // The sign-in button is localized: 'サインイン' under the ja-JP contexts used
-  // by setup/auth, 'Sign in' under the default-locale chromium-public project.
-  await page.getByRole('button', { name: /サインイン|Sign in/i }).click();
+  // Every caller runs under the ja-JP locale (setup project + the locale pinned
+  // in login-failure.spec), so the sign-in button always renders 'サインイン'.
+  await page.getByRole('button', { name: 'サインイン' }).click();
 }
 
 /**
