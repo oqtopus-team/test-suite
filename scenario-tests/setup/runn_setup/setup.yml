@@ -45,6 +45,20 @@ steps:
       command: |
         jq -r '.qubits[].id' .tmp_info/device_info.json > .tmp_info/available_qubits.txt
         cat .tmp_info/available_qubits.txt
+    test: |
+      current.exit_code == 0
+  check_error_rate:
+    desc: fail when any device error rate reaches the threshold (default 0.4)
+    exec:
+      command: |
+        threshold="${ERROR_RATE_THRESHOLD:-0.4}"
+        max=$(jq '[
+          (.qubits[]    | 1 - .fidelity),
+          (.qubits[].meas_error.readout_assignment_error),
+          (.couplings[] | 1 - .fidelity)
+        ] | max' .tmp_info/device_info.json)
+        echo "max error rate: $max (threshold: $threshold)"
         rm .tmp_info/device_info.json
+        awk -v m="$max" -v t="$threshold" 'BEGIN { exit !(m < t) }'
     test: |
       current.exit_code == 0
