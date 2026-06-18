@@ -46,6 +46,17 @@ rates is **greater than or equal to** the threshold:
 | Readout error      | `qubits[].meas_error.readout_assignment_error` | as-is          |
 | 2-qubit gate error | `couplings[].fidelity`                         | `1 - fidelity` |
 
+The step logs the measured error rate per category (and the overall max) so you
+can see how close the device is to the threshold:
+
+```text
+measured error rates (threshold: 0.4):
+  1-qubit gate error (max): 0.05
+  readout error (max):      0.12
+  2-qubit gate error (max): 0.2
+  -> overall max:           0.2
+```
+
 The threshold defaults to `0.4` and can be overridden via the `ERROR_RATE_THRESHOLD`
 environment variable:
 

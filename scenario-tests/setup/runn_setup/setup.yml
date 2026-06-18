@@ -52,12 +52,19 @@ steps:
     exec:
       command: |
         threshold="${ERROR_RATE_THRESHOLD:-0.4}"
-        max=$(jq '[
-          (.qubits[]    | 1 - .fidelity),
-          (.qubits[].meas_error.readout_assignment_error),
-          (.couplings[] | 1 - .fidelity)
-        ] | max' .tmp_info/device_info.json)
-        echo "max error rate: $max (threshold: $threshold)"
+        eval "$(jq -r '
+          "gate1=\([.qubits[]    | 1 - .fidelity]                      | max)",
+          "readout=\([.qubits[].meas_error.readout_assignment_error]   | max)",
+          "gate2=\([.couplings[] | 1 - .fidelity]                      | max)"
+        ' .tmp_info/device_info.json)"
+        max=$(jq -n -r "[$gate1, $readout, $gate2] | max")
+        echo "measured error rates (threshold: $threshold):"
+        awk -v g1="$gate1" -v ro="$readout" -v g2="$gate2" -v m="$max" 'BEGIN {
+          printf "  1-qubit gate error (max): %.6g\n", g1
+          printf "  readout error (max):      %.6g\n", ro
+          printf "  2-qubit gate error (max): %.6g\n", g2
+          printf "  -> overall max:           %.6g\n", m
+        }'
         rm .tmp_info/device_info.json
         awk -v m="$max" -v t="$threshold" 'BEGIN { exit !(m < t) }'
     test: |
