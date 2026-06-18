@@ -47,8 +47,8 @@ steps:
         cat .tmp_info/available_qubits.txt
     test: |
       current.exit_code == 0
-  check_error_rate:
-    desc: fail when any device error rate reaches the threshold (default 0.4)
+  measure_error_rate:
+    desc: measure device error rates
     exec:
       command: |
         threshold="${ERROR_RATE_THRESHOLD:-0.4}"
@@ -58,13 +58,29 @@ steps:
           "gate2=\([.couplings[] | 1 - .fidelity]                      | max)"
         ' .tmp_info/device_info.json)"
         max=$(jq -n -r "[$gate1, $readout, $gate2] | max")
-        echo "measured error rates (threshold: $threshold):"
-        awk -v g1="$gate1" -v ro="$readout" -v g2="$gate2" -v m="$max" 'BEGIN {
+        awk -v g1="$gate1" -v ro="$readout" -v g2="$gate2" -v m="$max" -v t="$threshold" 'BEGIN {
+          printf "measured error rates (threshold: %s):\n", t
           printf "  1-qubit gate error (max): %.6g\n", g1
           printf "  readout error (max):      %.6g\n", ro
           printf "  2-qubit gate error (max): %.6g\n", g2
           printf "  -> overall max:           %.6g\n", m
         }'
+    test: |
+      current.exit_code == 0
+  report_error_rate:
+    desc: report measured error rates
+    dump:
+      expr: steps.measure_error_rate.stdout
+  check_error_rate:
+    desc: fail when any device error rate reaches the threshold (default 0.4)
+    exec:
+      command: |
+        threshold="${ERROR_RATE_THRESHOLD:-0.4}"
+        max=$(jq '[
+          (.qubits[]    | 1 - .fidelity),
+          (.qubits[].meas_error.readout_assignment_error),
+          (.couplings[] | 1 - .fidelity)
+        ] | max' .tmp_info/device_info.json)
         rm .tmp_info/device_info.json
         awk -v m="$max" -v t="$threshold" 'BEGIN { exit !(m < t) }'
     test: |
