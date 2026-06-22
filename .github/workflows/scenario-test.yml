@@ -37,9 +37,9 @@ jobs:
         run: echo "DEVICE_ID=${{ inputs.device_id || vars.DEVICE_ID }}"
 
       - name: Install Task
-        uses: arduino/setup-task@v2
-        with:
-          version: 3.49.1
+        run: |
+          sh -c "$(curl --location https://taskfile.dev/install.sh)" -- -d -b "$HOME/.local/bin" v3.49.1
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
 
       - name: Install runn
         uses: k1LoW/gh-setup@v1
