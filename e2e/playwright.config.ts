@@ -17,7 +17,13 @@ export default defineConfig({
     {
       name: 'setup',
       testMatch: /.*\.setup\.ts/,
-      use: { ...devices['Desktop Chrome'] },
+      // Pin ja-JP so the login it performs runs against the same Japanese UI as
+      // the chromium-auth tests it feeds (e.g. the 'サインイン' button).
+      use: {
+        ...devices['Desktop Chrome'],
+        locale: 'ja-JP',
+        extraHTTPHeaders: { 'Accept-Language': 'ja-JP,ja;q=0.9' },
+      },
     },
     {
       name: 'chromium-public',

@@ -28,13 +28,14 @@ export interface LoginCredentials {
 }
 
 /**
- * Log in to OQTOPUS Playground using credentials and TOTP secret.
- * Callers are responsible for providing valid credentials (e.g., the
- * `authedPage` fixture validates env vars before calling this helper).
+ * Submit the first login step (email + password) on `/login` and click
+ * サインイン. This stops before MFA, so it is shared by the full MFA login flow
+ * and by failure specs that expect the credentials to be rejected before the
+ * TOTP step is ever reached.
  */
-export async function loginWithMfa(
+export async function submitLoginForm(
   page: Page,
-  { email, password, totpSecret }: LoginCredentials,
+  { email, password }: { email: string; password: string },
 ): Promise<void> {
   await page.goto('/login');
 
@@ -44,7 +45,21 @@ export async function loginWithMfa(
   await page
     .getByRole('textbox', { name: 'Enter Password' })
     .pressSequentially(password, { delay: 20 });
+  // Every caller runs under the ja-JP locale (setup project + the locale pinned
+  // in login-failure.spec), so the sign-in button always renders 'サインイン'.
   await page.getByRole('button', { name: 'サインイン' }).click();
+}
+
+/**
+ * Log in to OQTOPUS Playground using credentials and TOTP secret.
+ * Callers are responsible for providing valid credentials (e.g., the
+ * `authedPage` fixture validates env vars before calling this helper).
+ */
+export async function loginWithMfa(
+  page: Page,
+  { email, password, totpSecret }: LoginCredentials,
+): Promise<void> {
+  await submitLoginForm(page, { email, password });
 
   const code = await freshTotp(totpSecret);
   await page
