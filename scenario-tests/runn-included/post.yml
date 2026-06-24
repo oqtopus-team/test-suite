@@ -99,5 +99,7 @@ steps:
     dump:
       desc: job status
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.register.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
+  check_status:
+    desc: verify the final job status request succeeded
     test: |
-      current.res.status == 200
+      steps.wait.res.status == 200
