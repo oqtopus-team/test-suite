@@ -3,7 +3,7 @@ revision = 3
 requires-python = ">=3.10"
 
 [options]
-exclude-newer = "2026-06-18T03:25:39.302888Z"
+exclude-newer = "2026-06-22T05:36:20.824244Z"
 exclude-newer-span = "P1W"
 
 [[package]]
@@ -705,7 +705,7 @@ wheels = [
 
 [[package]]
 name = "test-suite"
-version = "1.0.7"
+version = "1.0.8"
 source = { virtual = "." }
 
 [package.dev-dependencies]
