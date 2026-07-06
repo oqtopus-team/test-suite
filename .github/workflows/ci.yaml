@@ -41,7 +41,7 @@ jobs:
 
       - name: Detect changed markdown files
         id: changes
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@v4.0.1
         with:
           filters: |
             md:
