@@ -49,8 +49,7 @@ steps:
       && wait_res_body.job_info?.combined_program == null
   exec-test:
     test: |
-      (( vars.expected_execution_time_filled && wait_res_body.execution_time != null && wait_res_body.execution_time > 0 )
-        || (vars.expected_status == "failed" && wait_res_body.execution_time == null)
+      (( vars.expected_execution_time_filled && wait_res_body.execution_time > 0 )
         || (!vars.expected_execution_time_filled && wait_res_body.execution_time == null))
       && date(wait_res_body.submitted_at) <= date(wait_res_body.ready_at)
       && date(wait_res_body.ready_at) <= date(wait_res_body.running_at)
