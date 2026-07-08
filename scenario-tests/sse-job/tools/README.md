@@ -12,6 +12,10 @@
 - sse-non-zero-exit.py
    Sample with non-zero exit code.
 
+- sse-estimation.py
+   Sample estimation job.
+
+
 ### Coversion tool
 
 To generate a json and a zip from a Python file for SSE testing, run the following command.

@@ -30,7 +30,8 @@ for i in range(3):
     circuit.add_CNOT_gate(0, 1)
     circuit.add_RY_gate(1, 0.1*i)
     transpiler_info = {}
-    job = OqtopusSamplingBackend().sample(circuit, shots=10*i+100, name="test circuit", device_id="", transpiler_info=transpiler_info)
+    mitigation_info={"ro_error_mitigation": "pseudo_inverse"}
+    job = OqtopusSamplingBackend().sample(circuit, shots=10*i+100, name="test circuit", device_id="", transpiler_info=transpiler_info, mitigation_info=mitigation_info)
     print(job)
     result = job.result()
     print("#### Result:")
