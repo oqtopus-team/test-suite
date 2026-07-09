@@ -17,7 +17,7 @@ import pennylane
 import openfermion
 import time
 
-from quri_parts_oqtopus.backend.sampling import OqtopusSamplingBackend, OqtopusConfig
+from quri_parts_oqtopus.backend import OqtopusSamplingBackend, OqtopusConfig
 from quri_parts.circuit import QuantumCircuit
 
 for i in range(3):
@@ -29,9 +29,7 @@ for i in range(3):
     circuit.add_X_gate(1)
     circuit.add_CNOT_gate(0, 1)
     circuit.add_RY_gate(1, 0.1*i)
-    transpiler_info = {
-      "transpiler_lib": None
-    }
+    transpiler_info = {}
     job = OqtopusSamplingBackend().sample(circuit, shots=10*i+100, name="test circuit", device_id="", transpiler_info=transpiler_info)
     print(job)
     result = job.result()
@@ -44,3 +42,4 @@ for i in range(3):
     print("#### FAILED")
 
 print("## Finish ##")
+raise SystemExit(1)
