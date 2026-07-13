@@ -1,0 +1,6 @@
+*.env
+!.env.org
+node_modules/
+playwright-report/
+test-results/
+Taskfile.local.yml
