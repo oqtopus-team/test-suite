@@ -14,6 +14,10 @@ tasks:
     desc: "run all benchmark tests"
     cmds:
       - npx playwright test {{.CLI_ARGS}}
+  chart:
+    desc: "render the measured-vs-threshold chart from the last run"
+    cmds:
+      - node scripts/render-chart.mjs
   report:
     desc: "open the last HTML report"
     cmds:

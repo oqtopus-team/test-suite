@@ -1,13 +1,20 @@
+import { mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test, expect, request } from '@playwright/test';
 import { loadThresholds } from '../helpers/config';
 import {
   averageTwoQubitGateError,
   parseDeviceInfo,
+  twoQubitGateErrors,
+  type GateError,
 } from '../helpers/error-rate';
 
 const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
 const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN;
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
+
+/** Where the measured result is written for the chart-rendering step to read. */
+const RESULT_PATH = join(__dirname, '..', 'results', 'error-rate.json');
 
 /**
  * Fetch the target device and return its parsed `device_info`.
@@ -15,7 +22,7 @@ const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
  */
 async function fetchDeviceErrorRate(): Promise<{
   average: number | null;
-  gateCount: number;
+  gates: GateError[];
 }> {
   const ctx = await request.newContext();
   try {
@@ -27,14 +34,27 @@ async function fetchDeviceErrorRate(): Promise<{
     );
     const body = await res.json();
     const info = parseDeviceInfo(body?.device_info);
-    const gates = info?.calibration_data?.two_qubit_gates ?? {};
     return {
       average: averageTwoQubitGateError(info),
-      gateCount: Object.keys(gates).length,
+      gates: twoQubitGateErrors(info),
     };
   } finally {
     await ctx.dispose();
   }
+}
+
+/**
+ * Persist the measured values and threshold so a later CI step can render the
+ * "measured vs threshold" chart from a real Actions run.
+ */
+function writeResult(result: {
+  device: string;
+  threshold: number;
+  average: number | null;
+  gates: GateError[];
+}): void {
+  mkdirSync(join(__dirname, '..', 'results'), { recursive: true });
+  writeFileSync(RESULT_PATH, `${JSON.stringify(result, null, 2)}\n`);
 }
 
 test.describe('Device two-qubit gate error rate', () => {
@@ -45,7 +65,11 @@ test.describe('Device two-qubit gate error rate', () => {
 
   test('averaged 2Q gate error rate is within threshold', async () => {
     const threshold = loadThresholds().errorRate.max2qGateError;
-    const { average, gateCount } = await fetchDeviceErrorRate();
+    const { average, gates } = await fetchDeviceErrorRate();
+    const gateCount = gates.length;
+
+    // Persist the measurement so the chart step can plot measured vs threshold.
+    writeResult({ device: DEVICE_ID, threshold, average, gates });
 
     // Report the measured value so it is visible in the run output and the
     // HTML report, mirroring the runn `report_error_rate` step.

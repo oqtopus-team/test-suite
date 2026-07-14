@@ -1,6 +1,9 @@
 {
   "name": "oqtopus-benchmark-tests",
   "private": true,
+  "scripts": {
+    "chart": "node scripts/render-chart.mjs"
+  },
   "devDependencies": {
     "@playwright/test": "^1.54.0",
     "dotenv": "^17.2.0",

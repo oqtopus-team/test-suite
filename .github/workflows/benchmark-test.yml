@@ -61,6 +61,21 @@ jobs:
       - name: Run benchmark tests
         run: npx playwright test
 
+      - name: Render measured-vs-threshold chart
+        if: always()
+        run: npm run chart
+
+      - name: Upload error-rate chart
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-error-rate-chart
+          path: |
+            benchmark-tests/results/error-rate-chart.svg
+            benchmark-tests/results/error-rate.json
+          if-no-files-found: ignore
+          retention-days: 7
+
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7

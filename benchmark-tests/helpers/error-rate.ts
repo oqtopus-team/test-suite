@@ -41,6 +41,31 @@ export function parseDeviceInfo(raw: unknown): DeviceInfo | null {
   return null;
 }
 
+/** A named two-qubit gate error measurement. */
+export interface GateError {
+  /** The coupling/gate key from the calibration data (e.g. "0-1"). */
+  name: string;
+  /** The measured `gate_error_value`. */
+  value: number;
+}
+
+/**
+ * Per-gate two-qubit `gate_error_value`s as `{ name, value }` entries, skipping
+ * gates whose value is missing or non-finite. Used to plot the measured value
+ * of each gate against the threshold.
+ */
+export function twoQubitGateErrors(info: DeviceInfo | null): GateError[] {
+  const gates = info?.calibration_data?.two_qubit_gates;
+  if (gates == null) return [];
+
+  return Object.entries(gates)
+    .map(([name, gate]) => ({ name, value: gate?.gate_error_value }))
+    .filter(
+      (g): g is GateError =>
+        typeof g.value === 'number' && Number.isFinite(g.value),
+    );
+}
+
 /**
  * Arithmetic mean of the two-qubit `gate_error_value`s.
  *
@@ -49,13 +74,7 @@ export function parseDeviceInfo(raw: unknown): DeviceInfo | null {
  * treated as a pass by the caller rather than a failure.
  */
 export function averageTwoQubitGateError(info: DeviceInfo | null): number | null {
-  const gates = info?.calibration_data?.two_qubit_gates;
-  if (gates == null) return null;
-
-  const values = Object.values(gates)
-    .map((gate) => gate?.gate_error_value)
-    .filter((v): v is number => typeof v === 'number' && Number.isFinite(v));
-
+  const values = twoQubitGateErrors(info).map((g) => g.value);
   if (values.length === 0) return null;
 
   const sum = values.reduce((acc, v) => acc + v, 0);
