@@ -1,0 +1,11 @@
+# Benchmark thresholds.
+#
+# Each benchmark reads its gating threshold(s) from this file, which is tracked
+# in git (unlike secrets/environment-specific values in .env). Add new sections
+# and keys here as more benchmarks are introduced.
+
+[error_rate]
+# Averaged 2-qubit gate error rate above which the benchmark fails. This is the
+# arithmetic mean of every two-qubit `gate_error_value` reported by the device
+# (each measured by interleaved randomized benchmarking). Range 0.0–1.0.
+max_2q_gate_error = 0.4

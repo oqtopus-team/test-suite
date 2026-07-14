@@ -1,0 +1,24 @@
+version: "3"
+
+dotenv:
+  - "../profiles/{{.PROFILE}}.env"
+  - ".env"
+
+tasks:
+  install:
+    desc: "install npm deps and Playwright browsers"
+    cmds:
+      - npm install
+      - npx playwright install --with-deps
+  test:
+    desc: "run all benchmark tests"
+    cmds:
+      - npx playwright test {{.CLI_ARGS}}
+  chart:
+    desc: "render the measured-vs-threshold chart from the last run"
+    cmds:
+      - node scripts/render-chart.mjs
+  report:
+    desc: "open the last HTML report"
+    cmds:
+      - npx playwright show-report
