@@ -15,6 +15,7 @@ vars:
   expected_transpiled: "{{ parent.vars.expected_transpiled }}"
   expected_execution_time_filled: "{{ parent.vars.expected_execution_time_filled }}"
   expected_result_present: "{{ parent.vars.expected_result_present ?? true }}"
+  expected_result_type: "{{ parent.vars.expected_result_type ?? 'sampling' }}"
   expected_sse_log_present: "{{ parent.vars.expected_sse_log_present ?? true }}"
   pass_transpiler_result_check: "{{ parent.vars.pass_transpiler_result_check }}:-false"
   dump_request: "{{ parent.vars.dump_request ?? false }}"
@@ -47,6 +48,19 @@ steps:
       && ((vars.expected_sse_log_present && wait_res_body.job_info?.sse_log != null)
         || (!vars.expected_sse_log_present && wait_res_body.job_info?.sse_log == null))
       && wait_res_body.job_info?.combined_program == null
+  result-content-test:
+    if: vars.expected_result_present
+    include:
+      path: ../../runn-included/extract_archive_json.yml
+      vars:
+        archive_url: "{{ wait_res_body.job_info?.result }}"
+        json_entry: result.json
+        output_json_path: ".tmp_info/sse_result_{{ post_res_job_id }}.json"
+    bind:
+      result_content: steps["result-content-test"].steps.read_json.stdout
+    test: |
+      result_content != null
+      && fromJSON(result_content)[vars.expected_result_type] != null
   exec-test:
     test: |
       (( vars.expected_execution_time_filled && wait_res_body.execution_time > 0 )

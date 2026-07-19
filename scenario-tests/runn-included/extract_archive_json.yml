@@ -1,0 +1,27 @@
+desc: download an archive and extract a JSON entry
+vars:
+  archive_url: "{{ parent.vars.archive_url }}"
+  json_entry: "{{ parent.vars.json_entry ?? 'result.json' }}"
+  output_json_path: "{{ parent.vars.output_json_path ?? '.tmp_info/extracted_result.json' }}"
+if: included
+steps:
+  extract_json:
+    desc: download archive and extract JSON entry to file
+    exec:
+      command: |
+        set -eu
+        tmpzip=$(mktemp)
+        trap 'rm -f "$tmpzip"' EXIT
+        curl -fsSLo "$tmpzip" '{{ vars.archive_url }}'
+        mkdir -p "$(dirname '{{ vars.output_json_path }}')"
+        unzip -p "$tmpzip" '{{ vars.json_entry }}' > '{{ vars.output_json_path }}'
+    test: |
+      current.exit_code == 0
+  read_json:
+    desc: read extracted JSON entry
+    exec:
+      command: |
+        set -eu
+        cat '{{ vars.output_json_path }}'
+    test: |
+      current.exit_code == 0
