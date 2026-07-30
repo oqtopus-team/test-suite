@@ -1,4 +1,4 @@
-name: CI
+name: Lint & Docs
 
 on:
   push:
@@ -39,16 +39,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --all-groups
 
-      - name: Detect changed markdown files
-        id: changes
-        uses: dorny/paths-filter@v4
-        with:
-          filters: |
-            md:
-              - "**/*.md"
-
       - name: Documentation Lint
-        if: steps.changes.outputs.md == 'true'
         run: make docs-lint
 
       - name: Build documentation
