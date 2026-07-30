@@ -34,47 +34,45 @@ jobs:
       - name: Debug - Print commits
         run: cat commits.txt
 
-      - name: Set labels based on commit messages
-        id: set-labels
-        run: |
-          labels=()
-          while IFS= read -r commit; do
-            echo "Processing commit: $commit"
-            if [[ $commit =~ ^feat ]]; then
-              labels+=("feature")
-            elif [[ $commit =~ ^fix ]]; then
-              labels+=("bugfix")
-            elif [[ $commit =~ ^docs ]]; then
-              labels+=("documentation")
-            elif [[ $commit =~ ^style ]]; then
-              labels+=("style")
-            elif [[ $commit =~ ^refactor ]]; then
-              labels+=("refactor")
-            elif [[ $commit =~ ^test ]]; then
-              labels+=("test")
-            elif [[ $commit =~ ^ci ]]; then
-              labels+=("ci")
-            elif [[ $commit =~ ^chore ]]; then
-              labels+=("chore")
-            fi
-          done < commits.txt
-
-          # Remove duplicate labels and join them as a newline-separated string
-          unique_labels=$(printf "%s\n" "${labels[@]}" | sort -u)
-
-          # Debug output for unique labels
-          echo "Unique labels:"
-          echo "$unique_labels"
-
-          # Set the output as a newline-separated string
-          echo "labels<<EOF" >> $GITHUB_OUTPUT
-          echo "$unique_labels" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-
-      - name: Add labels to PR
-        uses: actions-ecosystem/action-add-labels@v1
+      - name: Add labels based on commit messages
+        uses: actions/github-script@v9
         with:
-          labels: ${{ steps.set-labels.outputs.labels }}
+          script: |
+            const fs = require('fs');
+
+            const prefixToLabel = {
+              feat: 'feature',
+              fix: 'bugfix',
+              docs: 'documentation',
+              style: 'style',
+              refactor: 'refactor',
+              test: 'test',
+              ci: 'ci',
+              chore: 'chore',
+            };
+
+            const commits = fs.readFileSync('commits.txt', 'utf8').split('\n');
+            const labels = new Set();
+            for (const commit of commits) {
+              for (const [prefix, label] of Object.entries(prefixToLabel)) {
+                if (commit.startsWith(prefix)) {
+                  labels.add(label);
+                  break;
+                }
+              }
+            }
+
+            const uniqueLabels = [...labels];
+            console.log('Unique labels:', uniqueLabels);
+
+            if (uniqueLabels.length > 0) {
+              await github.rest.issues.addLabels({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                labels: uniqueLabels,
+              });
+            }
 
       - name: Assign PR creator
         uses: actions/github-script@v9
