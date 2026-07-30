@@ -22,8 +22,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.0
-        with:
-          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v8.3.0
@@ -41,26 +39,7 @@ jobs:
       - name: Install dependencies
         run: uv sync --frozen --all-groups
 
-      - name: Detect changed markdown files
-        id: changes
-        run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base_ref="${{ github.event.pull_request.base.ref }}"
-            git fetch --no-tags --depth=1 origin "$base_ref"
-            changed=$(git diff --name-only "origin/$base_ref...HEAD")
-          else
-            changed=$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}")
-          fi
-          echo "Changed files:"
-          echo "$changed"
-          if echo "$changed" | grep -qE '\.md$'; then
-            echo "md=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "md=false" >> "$GITHUB_OUTPUT"
-          fi
-
       - name: Documentation Lint
-        if: steps.changes.outputs.md == 'true'
         run: make docs-lint
 
       - name: Build documentation
