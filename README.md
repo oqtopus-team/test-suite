@@ -34,9 +34,11 @@ This repository uses [Lefthook](https://github.com/evilmartians/lefthook) to run
    - Linux: see [gitleaks releases](https://github.com/gitleaks/gitleaks/releases)
    - Windows: `scoop install gitleaks`
 2. Install JS tooling and activate the hooks:
+
    ```bash
    npm install
    ```
+
    `npm install` also runs `lefthook install` via the `prepare` script, registering the Git hooks automatically. No extra step is needed.
 
 After setup, `git commit` will fail if gitleaks detects a secret in the staged diff. Fix the finding (or scope the allowlist in `.gitleaks.toml` if it is a false positive) and commit again.
@@ -75,7 +77,7 @@ task runn-all
 
 Browser-based end-to-end tests live under [`e2e/`](e2e/README.md) and are powered by [Playwright](https://playwright.dev/).
 
-**1. Install dependencies (first time only)**
+### 1. Install dependencies (first time only)
 
 ```bash
 cd e2e
@@ -83,11 +85,11 @@ npm install
 npx playwright install --with-deps
 ```
 
-**2. Configure environment variables**
+### 2. Configure E2E environment variables
 
 Create `e2e/.env` (excluded by `.gitignore`) and set the following values:
 
-```
+```bash
 E2E_BASE_URL=https://<frontend-under-test>
 E2E_EMAIL=<test-user-email>
 E2E_PASSWORD=<test-user-password>
@@ -98,7 +100,7 @@ Q_API_TOKEN=<q-api-token>
 
 > Use a dedicated test account. Do not put production credentials in `.env` or CI Secrets.
 
-**3. Run the tests**
+### 3. Run the tests
 
 ```bash
 cd e2e
