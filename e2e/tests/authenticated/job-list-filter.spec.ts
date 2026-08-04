@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Job list status filter (LIST-001).
+ * Job list status filter.
  *
  * Verifies the search form's status dropdown on the /jobs page. For each
  * status the dropdown is set, "検索" is clicked, and the test asserts:
