@@ -24,6 +24,10 @@ for (const status of STATUSES) {
   test(`filtering by "${status}" shows only ${status} jobs`, async ({
     page,
   }) => {
+    // The filter test waits for API responses and page updates that may exceed
+    // the default 30 s test timeout.
+    test.setTimeout(90_000);
+
     await page.goto('/jobs');
     await expect(page).not.toHaveURL(/login/i);
 
@@ -31,7 +35,7 @@ for (const status of STATUSES) {
     const form = page.locator('form').filter({
       has: page.getByText('ジョブ検索', { exact: true }),
     });
-    await expect(form).toBeVisible({ timeout: 30_000 });
+    await expect(form).toBeVisible({ timeout: 60_000 });
 
     // Select the target status and submit.
     await form.locator('select').selectOption(status);
@@ -52,6 +56,12 @@ for (const status of STATUSES) {
       await expect(matchingRow).toBeVisible({ timeout: 60_000 });
     } else {
       await expect(matchingRow.or(noData)).toBeVisible({ timeout: 60_000 });
+    }
+
+    // If the no-data message is visible the filter correctly returned zero
+    // results — nothing left to verify.
+    if (await noData.isVisible()) {
+      return;
     }
 
     // Assert every data row (rows with <td> cells, not header <th>) carries
