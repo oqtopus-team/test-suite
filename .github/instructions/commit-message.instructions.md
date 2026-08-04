@@ -13,4 +13,3 @@ Generate a single-line commit message in English using a Conventional Commits-st
 - Keep it short and specific (prefer ≤72 characters when possible)
 - No emojis, no trailing period
 - If there is a related issue, append `(#123)` at the end
-- **Do NOT include internal ticket/design-doc IDs** (e.g. `QA-001`, `CLOUDDEV-260`, `WT-172`) in commit messages
