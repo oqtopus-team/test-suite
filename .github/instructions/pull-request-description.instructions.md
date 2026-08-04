@@ -10,6 +10,7 @@ Write in English with a professional, friendly tone. Keep it concise and scannab
 - `scope`: use `api|workflow|ui|docs|infra|repo` when clear (omit if unclear)
 - One line, no emojis
 - If there is a related issue, append `(#123)` at the end
+- **Do NOT include internal ticket/design-doc IDs** (e.g. `QA-001`, `CLOUDDEV-260`, `WT-172`, `AUTH-004`) in the title — these are internal references and have no meaning to external readers
 
 ### Description
 
@@ -17,12 +18,13 @@ Follow the section structure in `.github/pull_request_template.md` and fill each
 
 #### Ticket
 
-- Write the issue/ticket link or `#number` directly (not as a bullet list). Use `N/A` if unknown.
+- Write `N.A.` — internal ticket links are not included in PRs
 
 #### Summary
 
 - Explain what changed and why (1–2 sentences)
 - Mention impact/risk and affected areas (API/Workflow/UI, compatibility, config changes)
+- **Do NOT include internal ticket/design-doc IDs** in the summary text
 
 #### Changes
 
