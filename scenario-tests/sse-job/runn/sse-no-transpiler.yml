@@ -20,4 +20,5 @@ steps:
         expected_transpiled: false
         expected_execution_time_filled: true
         expected_result_present: true
+        expected_result_type: sampling
         expected_sse_log_present: true
