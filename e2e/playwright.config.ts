@@ -27,13 +27,13 @@ export default defineConfig({
     },
     {
       name: 'chromium-public',
-      testIgnore: /authenticated\/.*/,
+      testIgnore: /(?:authenticated|quality)\/.*/,
       testMatch: /.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {
       name: 'chromium-auth',
-      testMatch: /authenticated\/.*\.spec\.ts/,
+      testMatch: /(?:authenticated|quality)\/.*\.spec\.ts/,
       // Reuse the cookies saved by `setup` so these tests start already logged
       // in. This logs in only once per run (one TOTP code), avoiding the replay
       // rejection that a per-test login would trigger. The locale is pinned to
