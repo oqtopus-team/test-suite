@@ -16,6 +16,7 @@ steps:
       current.res.status == 200
     bind:
       device_info_json: find(steps.get_devices.res.body, {.device_id == "${DEVICE_ID}"}).device_info
+      n_qubits: find(steps.get_devices.res.body, {.device_id == "${DEVICE_ID}"}).n_qubits
   message:
     desc: some devices are registered
     dump:
@@ -25,16 +26,32 @@ steps:
     exec:
       command: |
         mkdir -p .tmp_info
-        cat > .tmp_info/device_info.json << 'EOF'
+        device_info='{{ device_info_json }}'
+        if printf '%s' "$device_info" | grep -Eq '^(https?|file)://'; then
+          curl -fsSL "$device_info" -o .tmp_info/device_info.download
+          if unzip -p .tmp_info/device_info.download device_info.json > .tmp_info/device_info.json 2>/dev/null; then
+            rm .tmp_info/device_info.download
+          else
+            mv .tmp_info/device_info.download .tmp_info/device_info.json
+          fi
+        elif [ -n "$device_info" ] && [ "$device_info" != "null" ]; then
+          cat > .tmp_info/device_info.json << 'EOF'
         {{ device_info_json }}
         EOF
+        else
+          printf '{}' > .tmp_info/device_info.json
+        fi
     test: |
       current.exit_code == 0
   save_qubit_ids:
     desc: save available qubit IDs to temp text file
     exec:
       command: |
-        jq -r '.qubits[].id' .tmp_info/device_info.json > .tmp_info/available_qubits.txt
+        if jq -e 'has("qubits") and (.qubits | length > 0)' .tmp_info/device_info.json >/dev/null; then
+          jq -r '.qubits[].id' .tmp_info/device_info.json > .tmp_info/available_qubits.txt
+        else
+          seq 0 $(({{ n_qubits }} - 1)) > .tmp_info/available_qubits.txt
+        fi
         cat .tmp_info/available_qubits.txt
         rm .tmp_info/device_info.json
     test: |
