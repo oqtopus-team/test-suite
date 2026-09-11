@@ -93,12 +93,16 @@ function writeResults(): void {
   } else if (allResults.length === 0) {
     lines.push('> No results collected.');
   } else {
-    lines.push('| Qubit Pair | Fidelity | Threshold | Result |');
-    lines.push('|:----------:|:--------:|:---------:|:------:|');
+    lines.push('| Qubit Pair | Fidelity | Threshold | Counts | Result |');
+    lines.push('|:----------:|:--------:|:---------:|:------:|:------:|');
     for (const r of allResults) {
       const icon = r.pass ? '✅' : '❌';
+      const counts = Object.entries(r.counts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
       lines.push(
-        `| ${r.pair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${icon} |`,
+        `| ${r.pair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
       );
     }
   }
