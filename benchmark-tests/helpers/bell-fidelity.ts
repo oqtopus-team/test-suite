@@ -11,16 +11,18 @@
 // ── Circuit generation ─────────────────────────────────────────────
 
 /**
- * Generate an OpenQASM 3 circuit that prepares |Φ+⟩ on the given physical
- * qubit pair and then applies the inverse Bell circuit for Bell-basis
- * measurement.
+ * Generate an OpenQASM 3 circuit that prepares |Φ+⟩ on the given qubit pair
+ * and then applies the inverse Bell circuit for Bell-basis measurement.
  *
  * Circuit: H → CX → CX → H → measure
  *
- * The circuit applies gates directly to physical qubit indices — no
- * transpiler mapping is used (`transpiler_lib: null`).
- * The qubit register is sized to `max(q0, q1) + 1` so the physical indices
- * are valid. Only the two target qubits are measured into a 2-bit register.
+ * The qubit indices can represent either physical or logical qubits depending
+ * on the BELL_QUBIT_MODE setting. In physical mode (`transpiler_lib: null`),
+ * gates target hardware qubits directly. In logical mode, the transpiler
+ * maps logical indices to physical qubits.
+ *
+ * The qubit register is sized to `max(q0, q1) + 1` so the indices are valid.
+ * Only the two target qubits are measured into a 2-bit register.
  */
 export function bellCircuit(pair: QubitPair): string {
   const [q0, q1] = pair;
@@ -32,7 +34,7 @@ export function bellCircuit(pair: QubitPair): string {
     `qubit[${nQubits}] q;`,
     'bit[2] c;',
     '',
-    `// Prepare Bell state |Φ+⟩ on physical qubits ${q0}, ${q1}`,
+    `// Prepare Bell state |Φ+⟩ on qubits ${q0}, ${q1}`,
     `h q[${q0}];`,
     `cx q[${q0}], q[${q1}];`,
     '',
@@ -87,7 +89,7 @@ export type QubitPair = [number, number];
  * Parse a comma-separated list of qubit pairs from an environment variable.
  *
  * Format: "0-1" or "0-1,2-3,4-5"
- * Each pair specifies two physical qubit numbers separated by a hyphen.
+ * Each pair specifies two qubit numbers separated by a hyphen.
  */
 export function parseQubitPairs(value: string): QubitPair[] {
   return value
