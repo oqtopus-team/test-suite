@@ -18,7 +18,11 @@ on:
       bell_qubit_pairs:
         type: string
         required: false
-        description: "Comma-separated physical qubit pairs for Bell fidelity (e.g. '0-1,2-3')"
+        description: "Comma-separated qubit pairs for Bell fidelity (e.g. '0-1,2-3')"
+      bell_qubit_mode:
+        type: string
+        required: false
+        description: "'physical' (default) or 'logical' — physical disables transpiler, logical uses default transpiler"
       bell_shots:
         type: string
         required: false
@@ -72,6 +76,7 @@ jobs:
       ref: ${{ inputs.ref || github.sha }}
       device_id: ${{ inputs.device_id || vars.DEVICE_ID }}
       bell_qubit_pairs: ${{ inputs.bell_qubit_pairs }}
+      bell_qubit_mode: ${{ inputs.bell_qubit_mode }}
       bell_shots: ${{ inputs.bell_shots }}
     secrets:
       USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}

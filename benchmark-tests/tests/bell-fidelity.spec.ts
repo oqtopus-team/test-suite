@@ -11,7 +11,10 @@
  * (not failed) so CI stays green for incompatible device/pair combos.
  *
  * Environment variables:
- *   BELL_QUBIT_PAIRS  — comma-separated physical qubit pairs (e.g. "0-1,2-3")
+ *   BELL_QUBIT_PAIRS  — comma-separated qubit pairs (e.g. "0-1,2-3")
+ *   BELL_QUBIT_MODE   — "physical" (default) or "logical"
+ *                        physical: gates target physical qubits directly (transpiler disabled)
+ *                        logical:  transpiler maps logical → physical qubits
  *   BELL_SHOTS        — shots per measurement (default: 1000)
  *   DEVICE_ID         — target device (default: "qulacs")
  */
@@ -33,6 +36,9 @@ const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN ?? '';
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
 const SHOTS = Number(process.env.BELL_SHOTS) || 1_000;
 const QUBIT_PAIRS_RAW = process.env.BELL_QUBIT_PAIRS ?? '';
+const QUBIT_MODE = (process.env.BELL_QUBIT_MODE ?? 'physical') as
+  | 'physical'
+  | 'logical';
 
 const RESULTS_DIR = join(__dirname, '..', 'results');
 const RESULT_JSON = join(RESULTS_DIR, 'bell-fidelity.json');
@@ -54,14 +60,14 @@ const allResults: BellResult[] = [];
 
 /** Build submission params for a Bell fidelity measurement. */
 function submitParams(pair: QubitPair): SubmitParams {
-  // On real hardware, disable the transpiler so gates target physical qubits
-  // directly. On simulators (e.g. qulacs), use the default transpiler.
-  const transpiler_info =
-    DEVICE_ID === 'qulacs' ? {} : { transpiler_lib: null };
+  // physical mode on real hardware: disable transpiler so gates target physical
+  // qubits directly. logical mode or simulator: use the default transpiler.
+  const usePhysical = QUBIT_MODE === 'physical' && DEVICE_ID !== 'qulacs';
+  const transpiler_info = usePhysical ? { transpiler_lib: null } : {};
 
   return {
     name: `bell-fidelity-${pair[0]}-${pair[1]}`,
-    description: `Bell fidelity for physical qubits ${pair[0]}-${pair[1]}`,
+    description: `Bell fidelity for ${QUBIT_MODE} qubits ${pair[0]}-${pair[1]}`,
     device_id: DEVICE_ID,
     job_type: 'sampling',
     shots: SHOTS,
@@ -85,7 +91,9 @@ function writeResults(): void {
   const lines: string[] = [];
   lines.push('## Bell Pair Fidelity Results');
   lines.push('');
-  lines.push(`**Device**: \`${DEVICE_ID}\` | **Shots**: ${SHOTS}`);
+  lines.push(
+    `**Device**: \`${DEVICE_ID}\` | **Qubit mode**: ${QUBIT_MODE} | **Shots**: ${SHOTS}`,
+  );
   lines.push('');
 
   if (skipReason) {
