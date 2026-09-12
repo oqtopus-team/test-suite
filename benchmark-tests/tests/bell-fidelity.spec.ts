@@ -84,7 +84,7 @@ function writeResults(): void {
   // JSON (for artifact download).
   writeFileSync(
     RESULT_JSON,
-    `${JSON.stringify({ device: DEVICE_ID, shots: SHOTS, results: allResults }, null, 2)}\n`,
+    `${JSON.stringify({ device: DEVICE_ID, qubit_mode: QUBIT_MODE, shots: SHOTS, results: allResults }, null, 2)}\n`,
   );
 
   // Markdown summary table (for GITHUB_STEP_SUMMARY).
@@ -101,7 +101,8 @@ function writeResults(): void {
   } else if (allResults.length === 0) {
     lines.push('> No results collected.');
   } else {
-    lines.push('| Qubit Pair | Fidelity | Threshold | Counts | Result |');
+    const modeLabel = QUBIT_MODE === 'physical' ? 'Physical Qubit Pair' : 'Logical Qubit Pair';
+    lines.push(`| ${modeLabel} | Fidelity | Threshold | Counts | Result |`);
     lines.push('|:----------:|:--------:|:---------:|:------:|:------:|');
     for (const r of allResults) {
       const icon = r.pass ? '✅' : '❌';
@@ -182,7 +183,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
   for (const pair of pairs) {
     const label = `${pair[0]}-${pair[1]}`;
 
-    test(`Bell fidelity for qubits ${label}`, async () => {
+    test(`Bell fidelity for ${QUBIT_MODE} qubits ${label}`, async () => {
       test.skip(!!skipReason, skipReason);
 
       const threshold = loadThresholds().bellFidelity.minFidelity;
@@ -192,7 +193,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         const program = bellCircuit(pair);
         const params = submitParams(pair);
 
-        console.log(`[bell] submitting job for qubits ${label}...`);
+        console.log(`[bell] submitting job for ${QUBIT_MODE} qubits ${label}...`);
         console.log(`[bell] circuit:\n${program}`);
         const result = await runSamplingJob(ctx, [program], params);
         const fidelity = bellFidelity(result.counts);
@@ -211,6 +212,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         // Report.
         const line = [
           `device=${DEVICE_ID}`,
+          `mode=${QUBIT_MODE}`,
           `pair=${label}`,
           `shots=${SHOTS}`,
           `fidelity=${fidelity.toFixed(4)}`,
@@ -224,7 +226,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
 
         expect(
           fidelity,
-          `Bell fidelity ${fidelity.toFixed(4)} for qubits ${label} is below threshold ${threshold}`,
+          `Bell fidelity ${fidelity.toFixed(4)} for ${QUBIT_MODE} qubits ${label} is below threshold ${threshold}`,
         ).toBeGreaterThanOrEqual(threshold);
       } finally {
         await ctx.dispose();
