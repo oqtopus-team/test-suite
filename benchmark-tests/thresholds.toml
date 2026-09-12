@@ -9,3 +9,21 @@
 # arithmetic mean of every two-qubit `gate_error_value` reported by the device
 # (each measured by interleaved randomized benchmarking). Range 0.0–1.0.
 max_2q_gate_error = 0.4
+
+[threshold]
+# Maximum single-qubit gate error: max(1 − qubits[].fidelity). Range 0.0–1.0.
+max_1q_gate_error = 0.1
+
+# Maximum two-qubit gate error: max(1 − couplings[].fidelity). Range 0.0–1.0.
+max_2q_gate_error = 0.5
+
+# Maximum readout assignment error across all qubits. Range 0.0–1.0.
+max_readout_error = 0.3
+
+# Maximum allowed age (hours) of the most recent calibration.
+max_calibration_age_hours = 24
+
+[bell_fidelity]
+# Minimum Bell pair fidelity F(|Φ+⟩). Range 0.0–1.0.
+# F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4.  Maximally mixed state → 0.25.
+min_fidelity = 0.5

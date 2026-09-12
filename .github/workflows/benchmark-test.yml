@@ -11,6 +11,22 @@ on:
         type: string
         required: false
         description: "Device ID to target (defaults to vars.DEVICE_ID)"
+      bell_qubit_pairs:
+        type: string
+        required: false
+        description: "Comma-separated qubit pairs for Bell fidelity (e.g. '0-1,2-3')"
+      bell_qubit_mode:
+        type: string
+        required: false
+        description: "'physical' (default) or 'logical' — physical disables transpiler, logical uses default transpiler"
+      bell_shots:
+        type: string
+        required: false
+        description: "Number of shots per Bell fidelity measurement (default: 1000)"
+      test_files:
+        type: string
+        required: false
+        description: "Space-separated test file paths to run (default: all tests)"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -30,6 +46,9 @@ jobs:
       USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
       Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
       DEVICE_ID: ${{ inputs.device_id || vars.DEVICE_ID }}
+      BELL_QUBIT_PAIRS: ${{ inputs.bell_qubit_pairs }}
+      BELL_QUBIT_MODE: ${{ inputs.bell_qubit_mode }}
+      BELL_SHOTS: ${{ inputs.bell_shots }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
@@ -59,7 +78,7 @@ jobs:
           : "${Q_API_TOKEN:?Q_API_TOKEN is not set}"
 
       - name: Run benchmark tests
-        run: npx playwright test
+        run: npx playwright test ${{ inputs.test_files }}
 
       - name: Render measured-vs-threshold chart
         if: always()
@@ -73,6 +92,24 @@ jobs:
           path: |
             benchmark-tests/results/error-rate-chart.svg
             benchmark-tests/results/error-rate.json
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Bell fidelity summary
+        if: always()
+        run: |
+          if [ -f results/bell-fidelity-summary.md ]; then
+            cat results/bell-fidelity-summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload Bell fidelity results
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: benchmark-bell-fidelity
+          path: |
+            benchmark-tests/results/bell-fidelity.json
+            benchmark-tests/results/bell-fidelity-summary.md
           if-no-files-found: ignore
           retention-days: 7
 
