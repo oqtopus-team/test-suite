@@ -19,7 +19,7 @@
  *   DEVICE_ID         — target device (default: "qulacs")
  */
 
-import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test, expect, request } from '@playwright/test';
 import { loadThresholds } from '../helpers/config';
@@ -207,12 +207,6 @@ function writeResults(): void {
   lines.push('');
 
   writeFileSync(RESULT_SUMMARY, lines.join('\n'));
-
-  // Also append to GITHUB_STEP_SUMMARY if available.
-  const summaryPath = process.env.GITHUB_STEP_SUMMARY;
-  if (summaryPath) {
-    appendFileSync(summaryPath, lines.join('\n'));
-  }
 }
 
 test.describe('Bell pair fidelity (Layer 2)', () => {
