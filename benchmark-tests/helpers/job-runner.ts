@@ -63,6 +63,11 @@ export interface SamplingResult {
   [key: string]: unknown;
 }
 
+export interface SamplingJobResult {
+  result: SamplingResult;
+  job: JobStatus;
+}
+
 // ── Helpers ────────────────────────────────────────────────────────
 
 const API_BASE =
@@ -222,13 +227,13 @@ function extractJsonFromZip(zipBuffer: Buffer): SamplingResult {
  *
  * @param program  Array of OpenQASM 3 program strings.
  * @param params   Job submission parameters (name, device_id, shots, etc.).
- * @returns        The sampling result (counts).
+ * @returns        The sampling result (counts) and full job status.
  */
 export async function runSamplingJob(
   ctx: APIRequestContext,
   program: string[],
   params: SubmitParams,
-): Promise<SamplingResult> {
+): Promise<SamplingJobResult> {
   const inputPayload = { program };
   const zipBuffer = createInputZip(inputPayload);
 
@@ -259,18 +264,38 @@ export async function runSamplingJob(
   //   { sampling: { counts: {...}, ... }, ... }      — nested (qulacs / OQTOPUS)
   //   { "00": 500, "11": 500 }                      — bare counts object
   if (raw.counts && typeof raw.counts === 'object') {
-    return raw;
+    return { result: raw, job };
   }
   const sampling = raw.sampling as Record<string, unknown> | undefined;
   if (sampling?.counts && typeof sampling.counts === 'object') {
-    return { counts: sampling.counts as Record<string, number> };
+    return { result: { counts: sampling.counts as Record<string, number> }, job };
   }
   // If every value is a number, treat the whole object as counts.
   const values = Object.values(raw);
   if (values.length > 0 && values.every((v) => typeof v === 'number')) {
-    return { counts: raw as unknown as Record<string, number> };
+    return { result: { counts: raw as unknown as Record<string, number> }, job };
   }
   // Last resort: log and return as-is (bellFidelity will throw a clearer error).
   console.warn(`[job-runner] WARNING: result has no 'counts' field. Full result: ${JSON.stringify(raw)}`);
-  return raw;
+  return { result: raw, job };
+}
+
+/**
+ * Fetch the transpile result from a job's presigned URL.
+ * Returns the parsed JSON content, or null if the URL is not available.
+ */
+export async function fetchTranspileResult(
+  ctx: APIRequestContext,
+  job: JobStatus,
+): Promise<Record<string, unknown> | null> {
+  const url = job.job_info?.transpile_result;
+  if (!url) return null;
+
+  try {
+    const raw = await fetchResult(ctx, url);
+    return raw as unknown as Record<string, unknown>;
+  } catch (e) {
+    console.warn(`[job-runner] Failed to fetch transpile result: ${e}`);
+    return null;
+  }
 }

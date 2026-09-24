@@ -23,7 +23,7 @@ import { appendFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test, expect, request } from '@playwright/test';
 import { loadThresholds } from '../helpers/config';
-import { runSamplingJob, type SubmitParams } from '../helpers/job-runner';
+import { runSamplingJob, fetchTranspileResult, type SubmitParams } from '../helpers/job-runner';
 import {
   bellCircuit,
   bellFidelity,
@@ -48,6 +48,11 @@ const RESULT_SUMMARY = join(RESULTS_DIR, 'bell-fidelity-summary.md');
 let skipReason = '';
 
 // Accumulated results for summary table.
+interface QubitMapping {
+  logical: number;
+  physical: number;
+}
+
 interface BellResult {
   pair: string;
   shots: number;
@@ -55,8 +60,77 @@ interface BellResult {
   threshold: number;
   pass: boolean;
   counts: Record<string, number>;
+  qubit_mapping?: QubitMapping[];
 }
 const allResults: BellResult[] = [];
+
+/**
+ * Extract logical→physical qubit mapping from a transpile result.
+ * Tries multiple known formats (Qiskit layout, OQTOPUS mapping).
+ */
+function extractQubitMapping(
+  transpileResult: Record<string, unknown>,
+  pair: QubitPair,
+): QubitMapping[] | undefined {
+  console.log(`[bell] transpile result keys: ${JSON.stringify(Object.keys(transpileResult))}`);
+  console.log(`[bell] transpile result: ${JSON.stringify(transpileResult, null, 2).slice(0, 2000)}`);
+
+  // Try: { qubit_mapping: { "0": 5, "1": 3 } } or { qubit_mapping: [[0,5],[1,3]] }
+  const qm = transpileResult.qubit_mapping ?? transpileResult.virtual_physical_mapping;
+  if (qm && typeof qm === 'object') {
+    if (Array.isArray(qm)) {
+      return qm.map((entry: unknown) => {
+        const arr = entry as number[];
+        return { logical: arr[0], physical: arr[1] };
+      });
+    }
+    return Object.entries(qm as Record<string, number>).map(([l, p]) => ({
+      logical: Number(l),
+      physical: p,
+    }));
+  }
+
+  // Try: { layout: { initial_layout: [5, 3, ...] } } — index = logical, value = physical
+  const layout = transpileResult.layout as Record<string, unknown> | undefined;
+  const initialLayout = (layout?.initial_layout ?? transpileResult.initial_layout) as number[] | undefined;
+  if (Array.isArray(initialLayout)) {
+    return pair.map((logicalIdx) => ({
+      logical: logicalIdx,
+      physical: initialLayout[logicalIdx] ?? logicalIdx,
+    }));
+  }
+
+  // Try: embedded in transpiled QASM — parse physical qubit indices from the circuit
+  const transpiledQasm = (transpileResult.transpiled_program ?? transpileResult.transpiled_qasm
+    ?? transpileResult.program ?? transpileResult.qasm) as string | undefined;
+  if (typeof transpiledQasm === 'string') {
+    console.log(`[bell] transpiled circuit:\n${transpiledQasm.slice(0, 1000)}`);
+    const physicalQubits = extractPhysicalQubitsFromQasm(transpiledQasm);
+    if (physicalQubits.length >= 2) {
+      return pair.map((logicalIdx, i) => ({
+        logical: logicalIdx,
+        physical: physicalQubits[i] ?? logicalIdx,
+      }));
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * Extract the physical qubit indices used in a transpiled QASM circuit
+ * by looking for CX/cx gate operations.
+ */
+function extractPhysicalQubitsFromQasm(qasm: string): number[] {
+  const qubits = new Set<number>();
+  const cxPattern = /cx\s+q\[(\d+)\]\s*,\s*q\[(\d+)\]/gi;
+  let match: RegExpExecArray | null;
+  while ((match = cxPattern.exec(qasm)) !== null) {
+    qubits.add(Number(match[1]));
+    qubits.add(Number(match[2]));
+  }
+  return [...qubits].sort((a, b) => a - b);
+}
 
 /** Build submission params for a Bell fidelity measurement. */
 function submitParams(pair: QubitPair): SubmitParams {
@@ -102,17 +176,32 @@ function writeResults(): void {
     lines.push('> No results collected.');
   } else {
     const modeLabel = QUBIT_MODE === 'physical' ? 'Physical Qubit Pair' : 'Logical Qubit Pair';
-    lines.push(`| ${modeLabel} | Fidelity | Threshold | Counts | Result |`);
-    lines.push('|:----------:|:--------:|:---------:|:------:|:------:|');
+    const hasMapping = allResults.some((r) => r.qubit_mapping);
+    if (hasMapping) {
+      lines.push(`| ${modeLabel} | Physical Qubits | Fidelity | Threshold | Counts | Result |`);
+      lines.push('|:----------:|:---------------:|:--------:|:---------:|:------:|:------:|');
+    } else {
+      lines.push(`| ${modeLabel} | Fidelity | Threshold | Counts | Result |`);
+      lines.push('|:----------:|:--------:|:---------:|:------:|:------:|');
+    }
     for (const r of allResults) {
       const icon = r.pass ? '✅' : '❌';
       const counts = Object.entries(r.counts)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ');
-      lines.push(
-        `| ${r.pair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
-      );
+      if (hasMapping) {
+        const mapping = r.qubit_mapping
+          ? r.qubit_mapping.map((m) => `${m.physical}`).join('-')
+          : '—';
+        lines.push(
+          `| ${r.pair} | ${mapping} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
+        );
+      } else {
+        lines.push(
+          `| ${r.pair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
+        );
+      }
     }
   }
   lines.push('');
@@ -195,9 +284,31 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
 
         console.log(`[bell] submitting job for ${QUBIT_MODE} qubits ${label}...`);
         console.log(`[bell] circuit:\n${program}`);
-        const result = await runSamplingJob(ctx, [program], params);
+        const { result, job } = await runSamplingJob(ctx, [program], params);
         const fidelity = bellFidelity(result.counts);
         const pass = fidelity >= threshold;
+
+        // Fetch transpile result to extract logical→physical qubit mapping.
+        let qubit_mapping: QubitMapping[] | undefined;
+        if (QUBIT_MODE === 'logical') {
+          const transpileResult = await fetchTranspileResult(ctx, job);
+          if (transpileResult) {
+            qubit_mapping = extractQubitMapping(transpileResult, pair);
+            if (qubit_mapping) {
+              const mappingStr = qubit_mapping
+                .map((m) => `L${m.logical}→P${m.physical}`)
+                .join(', ');
+              console.log(`[bell] qubit mapping: ${mappingStr}`);
+            } else {
+              console.warn(`[bell] Could not extract qubit mapping from transpile result`);
+            }
+          } else {
+            console.log(`[bell] No transpile result available`);
+          }
+        } else if (QUBIT_MODE === 'physical' && DEVICE_ID !== 'qulacs') {
+          qubit_mapping = pair.map((q) => ({ logical: q, physical: q }));
+          console.log(`[bell] physical mode: qubits ${label} target hardware directly`);
+        }
 
         // Accumulate for summary.
         allResults.push({
@@ -207,9 +318,13 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
           threshold,
           pass,
           counts: result.counts,
+          qubit_mapping,
         });
 
         // Report.
+        const mappingInfo = qubit_mapping
+          ? ` mapping=${qubit_mapping.map((m) => `L${m.logical}→P${m.physical}`).join(',')}`
+          : '';
         const line = [
           `device=${DEVICE_ID}`,
           `mode=${QUBIT_MODE}`,
@@ -217,7 +332,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
           `shots=${SHOTS}`,
           `fidelity=${fidelity.toFixed(4)}`,
           `threshold=${threshold}`,
-        ].join(' ');
+        ].join(' ') + mappingInfo;
         console.log(`[bell] ${line}`);
         await test.info().attach('bell-fidelity', {
           body: line,
