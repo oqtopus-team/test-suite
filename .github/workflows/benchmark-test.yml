@@ -99,7 +99,15 @@ jobs:
         if: always()
         run: |
           if [ -f results/bell-fidelity-summary.md ]; then
+            cat results/bell-fidelity-summary.md
             cat results/bell-fidelity-summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "No Bell fidelity results (bell-fidelity-summary.md not found)"
+          fi
+          if [ -f results/bell-fidelity.json ]; then
+            echo ""
+            echo "--- Raw JSON ---"
+            cat results/bell-fidelity.json
           fi
 
       - name: Upload Bell fidelity results
