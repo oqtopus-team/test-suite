@@ -1,0 +1,39 @@
+name: Tag Release
+
+on:
+  push:
+    branches: [main]
+    # Only the version bump commit needs to be considered.
+    paths:
+      - pyproject.toml
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+        with:
+          # Full history so existing tags can be checked.
+          fetch-depth: 0
+
+      - name: Read version from pyproject.toml
+        id: version
+        run: echo "version=$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag if it does not exist
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "Tag v$VERSION already exists; nothing to do."
+            exit 0
+          fi
+          gh api "repos/${{ github.repository }}/git/refs" \
+            -f ref="refs/tags/v$VERSION" \
+            -f sha="${{ github.sha }}"
+          echo "Created tag v$VERSION."
