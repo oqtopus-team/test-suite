@@ -1,29 +1,23 @@
 /**
  * Bell pair fidelity measurement — circuit generation and analysis.
  *
- * Creates a Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2 on two qubits, then applies
- * the inverse Bell circuit (CX → H) to measure in the Bell basis.
+ * Prepares a Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2 on two qubits and measures
+ * in the computational (Z) basis.
  *
- * For a perfect Bell state the inverse maps back to |00⟩, so:
- *   Fidelity = P(00)
+ * For a perfect Bell state, P(00) = P(11) = 0.5, so:
+ *   Fidelity = P(00) + P(11)
  */
 
 // ── Circuit generation ─────────────────────────────────────────────
 
 /**
  * Generate an OpenQASM 3 circuit that prepares |Φ+⟩ on the given qubit pair
- * and then applies the inverse Bell circuit for Bell-basis measurement.
+ * and measures in the computational (Z) basis.
  *
- * Circuit: H → CX → CX → H → measure
- *
- * The qubit indices can represent either physical or logical qubits depending
- * on the BELL_QUBIT_MODE setting. In physical mode (`transpiler_lib: null`),
- * gates target hardware qubits directly. In logical mode, the transpiler
- * maps logical indices to physical qubits.
+ * Circuit: H → CX → measure
  *
  * In physical mode the circuit uses OpenQASM 3 hardware-qubit syntax (`$n`);
  * otherwise a virtual register sized to `max(q0, q1) + 1` is declared.
- * Only the two target qubits are measured into a 2-bit register.
  */
 export function bellCircuit(pair: QubitPair, physical = false): string {
   const [q0, q1] = pair;
@@ -38,13 +32,8 @@ export function bellCircuit(pair: QubitPair, physical = false): string {
     'include "stdgates.inc";',
     ...decls,
     '',
-    `// Prepare Bell state |Φ+⟩ on qubits ${q0}, ${q1}`,
     `h ${ref(q0)};`,
     `cx ${ref(q0)}, ${ref(q1)};`,
-    '',
-    '// Inverse Bell circuit (Bell-basis measurement)',
-    `cx ${ref(q0)}, ${ref(q1)};`,
-    `h ${ref(q0)};`,
     '',
     `c[0] = measure ${ref(q0)};`,
     `c[1] = measure ${ref(q1)};`,
@@ -57,10 +46,10 @@ export function bellCircuit(pair: QubitPair, physical = false): string {
 // ── Fidelity computation ───────────────────────────────────────────
 
 /**
- * Compute Bell pair fidelity as P(00) from measurement counts.
+ * Compute Bell pair fidelity as P(00) + P(11) from measurement counts.
  *
- * After the inverse Bell circuit, a perfect |Φ+⟩ state maps to |00⟩.
- * Fidelity = (number of "00" outcomes) / (total shots).
+ * |Φ+⟩ = (|00⟩ + |11⟩)/√2 — a perfect Bell state yields P(00) = P(11) = 0.5.
+ * Fidelity = P(00) + P(11) measures how well the correlated outcomes are preserved.
  */
 export function bellFidelity(counts: Record<string, number>): number {
   if (counts == null || typeof counts !== 'object') {
@@ -69,20 +58,20 @@ export function bellFidelity(counts: Record<string, number>): number {
     );
   }
   let total = 0;
-  let count00 = 0;
+  let countCorrelated = 0;
 
   for (const [bitstring, count] of Object.entries(counts)) {
     total += count;
     const bits = bitstring.padStart(2, '0');
     const b0 = bits[bits.length - 2];
     const b1 = bits[bits.length - 1];
-    if (b0 === '0' && b1 === '0') {
-      count00 += count;
+    if (b0 === b1) {
+      countCorrelated += count;
     }
   }
 
   if (total === 0) return 0;
-  return count00 / total;
+  return countCorrelated / total;
 }
 
 // ── Configuration parsing ──────────────────────────────────────────

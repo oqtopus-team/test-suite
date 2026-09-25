@@ -1,9 +1,9 @@
 /**
  * Layer-2 benchmark: Bell pair fidelity measurement.
  *
- * For each specified physical qubit pair, creates a Bell state |Φ+⟩ and
- * applies the inverse Bell circuit (CX → H) for Bell-basis measurement.
- * Fidelity = P(00) — the probability of measuring |00⟩ after the round-trip.
+ * For each specified qubit pair, prepares a Bell state |Φ+⟩ = (|00⟩+|11⟩)/√2
+ * using H → CX and measures in the computational (Z) basis.
+ * Fidelity = P(00) + P(11) — correlation fidelity of the Bell state.
  *
  * Before running any circuit, the test validates that the target device
  * has enough qubits to support the requested physical qubit indices.
