@@ -39,6 +39,7 @@ const QUBIT_PAIRS_RAW = process.env.BELL_QUBIT_PAIRS ?? '';
 const QUBIT_MODE = (process.env.BELL_QUBIT_MODE ?? 'physical') as
   | 'physical'
   | 'logical';
+const USE_PHYSICAL = QUBIT_MODE === 'physical' && DEVICE_ID !== 'qulacs';
 
 const RESULTS_DIR = join(__dirname, '..', 'results');
 const RESULT_JSON = join(RESULTS_DIR, 'bell-fidelity.json');
@@ -75,8 +76,12 @@ function extractQubitMapping(
   console.log(`[bell] transpile result keys: ${JSON.stringify(Object.keys(transpileResult))}`);
   console.log(`[bell] transpile result: ${JSON.stringify(transpileResult, null, 2).slice(0, 2000)}`);
 
-  // Try: { qubit_mapping: { "0": 5, "1": 3 } } or { qubit_mapping: [[0,5],[1,3]] }
-  const qm = transpileResult.qubit_mapping ?? transpileResult.virtual_physical_mapping;
+  // OQTOPUS returns { virtual_physical_mapping: { qubit_mapping: {...}, bit_mapping: {...} } },
+  // so unwrap one level before falling back to a top-level qubit_mapping.
+  const vpm = transpileResult.virtual_physical_mapping as
+    | { qubit_mapping?: unknown }
+    | undefined;
+  const qm = transpileResult.qubit_mapping ?? vpm?.qubit_mapping ?? vpm;
   if (qm && typeof qm === 'object') {
     if (Array.isArray(qm)) {
       return qm.map((entry: unknown) => {
@@ -134,10 +139,7 @@ function extractPhysicalQubitsFromQasm(qasm: string): number[] {
 
 /** Build submission params for a Bell fidelity measurement. */
 function submitParams(pair: QubitPair): SubmitParams {
-  // physical mode on real hardware: disable transpiler so gates target physical
-  // qubits directly. logical mode or simulator: use the default transpiler.
-  const usePhysical = QUBIT_MODE === 'physical' && DEVICE_ID !== 'qulacs';
-  const transpiler_info = usePhysical ? { transpiler_lib: null } : {};
+  const transpiler_info = USE_PHYSICAL ? { transpiler_lib: null } : {};
 
   return {
     name: `bell-fidelity-${pair[0]}-${pair[1]}`,
@@ -260,7 +262,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
       const ctx = await request.newContext();
 
       try {
-        const program = bellCircuit(pair);
+        const program = bellCircuit(pair, USE_PHYSICAL);
         const params = submitParams(pair);
 
         console.log(`[bell] submitting job for ${QUBIT_MODE} qubits ${label}...`);
@@ -286,7 +288,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
           } else {
             console.log(`[bell] No transpile result available`);
           }
-        } else if (QUBIT_MODE === 'physical' && DEVICE_ID !== 'qulacs') {
+        } else if (USE_PHYSICAL) {
           qubit_mapping = pair.map((q) => ({ logical: q, physical: q }));
           console.log(`[bell] physical mode: qubits ${label} target hardware directly`);
         }
