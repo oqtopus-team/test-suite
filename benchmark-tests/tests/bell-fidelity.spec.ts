@@ -123,16 +123,28 @@ function extractQubitMapping(
 }
 
 /**
- * Extract the physical qubit indices used in a transpiled QASM circuit
- * by looking for CX/cx gate operations.
+ * Extract the physical qubit indices used in a transpiled QASM circuit.
+ * Handles both virtual-register syntax (`q[n]`) and hardware-qubit syntax (`$n`).
  */
 function extractPhysicalQubitsFromQasm(qasm: string): number[] {
   const qubits = new Set<number>();
-  const cxPattern = /cx\s+q\[(\d+)\]\s*,\s*q\[(\d+)\]/gi;
-  let match: RegExpExecArray | null;
-  while ((match = cxPattern.exec(qasm)) !== null) {
-    qubits.add(Number(match[1]));
-    qubits.add(Number(match[2]));
+  const patterns = [
+    /cx\s+q\[(\d+)\]\s*,\s*q\[(\d+)\]/gi,
+    /cx\s+\$(\d+)\s*,\s*\$(\d+)/gi,
+  ];
+  for (const pattern of patterns) {
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(qasm)) !== null) {
+      qubits.add(Number(match[1]));
+      qubits.add(Number(match[2]));
+    }
+  }
+  if (qubits.size === 0) {
+    const measurePattern = /measure\s+\$(\d+)/gi;
+    let match: RegExpExecArray | null;
+    while ((match = measurePattern.exec(qasm)) !== null) {
+      qubits.add(Number(match[1]));
+    }
   }
   return [...qubits].sort((a, b) => a - b);
 }
@@ -276,6 +288,17 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         if (QUBIT_MODE === 'logical') {
           const transpileResult = await fetchTranspileResult(ctx, job);
           if (transpileResult) {
+            // Detect transpiler folding the identity circuit.
+            const stats = transpileResult.stats as
+              | { after?: { n_gates_2q?: number } }
+              | undefined;
+            if (stats?.after?.n_gates_2q === 0) {
+              console.warn(
+                `[bell] WARNING: transpiled circuit has 0 two-qubit gates. ` +
+                `The transpiler likely folded the round-trip (identity) circuit. ` +
+                `Fidelity measures readout error, not Bell pair entanglement.`,
+              );
+            }
             qubit_mapping = extractQubitMapping(transpileResult, pair);
             if (qubit_mapping) {
               const mappingStr = qubit_mapping
