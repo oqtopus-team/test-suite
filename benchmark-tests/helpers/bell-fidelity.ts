@@ -21,29 +21,33 @@
  * gates target hardware qubits directly. In logical mode, the transpiler
  * maps logical indices to physical qubits.
  *
- * The qubit register is sized to `max(q0, q1) + 1` so the indices are valid.
+ * In physical mode the circuit uses OpenQASM 3 hardware-qubit syntax (`$n`);
+ * otherwise a virtual register sized to `max(q0, q1) + 1` is declared.
  * Only the two target qubits are measured into a 2-bit register.
  */
-export function bellCircuit(pair: QubitPair): string {
+export function bellCircuit(pair: QubitPair, physical = false): string {
   const [q0, q1] = pair;
-  const nQubits = Math.max(q0, q1) + 1;
+
+  const decls = physical
+    ? ['bit[2] c;']
+    : [`qubit[${Math.max(q0, q1) + 1}] q;`, 'bit[2] c;'];
+  const ref = (q: number) => (physical ? `$${q}` : `q[${q}]`);
 
   const lines = [
     'OPENQASM 3;',
     'include "stdgates.inc";',
-    `qubit[${nQubits}] q;`,
-    'bit[2] c;',
+    ...decls,
     '',
     `// Prepare Bell state |Φ+⟩ on qubits ${q0}, ${q1}`,
-    `h q[${q0}];`,
-    `cx q[${q0}], q[${q1}];`,
+    `h ${ref(q0)};`,
+    `cx ${ref(q0)}, ${ref(q1)};`,
     '',
-    `// Inverse Bell circuit (Bell-basis measurement)`,
-    `cx q[${q0}], q[${q1}];`,
-    `h q[${q0}];`,
+    '// Inverse Bell circuit (Bell-basis measurement)',
+    `cx ${ref(q0)}, ${ref(q1)};`,
+    `h ${ref(q0)};`,
     '',
-    `c[0] = measure q[${q0}];`,
-    `c[1] = measure q[${q1}];`,
+    `c[0] = measure ${ref(q0)};`,
+    `c[1] = measure ${ref(q1)};`,
     '',
   ];
 
