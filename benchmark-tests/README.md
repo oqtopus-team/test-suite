@@ -3,10 +3,10 @@
 HTTP-driven benchmark of the target device's error rate, implemented with
 [Playwright](https://playwright.dev/) and TypeScript.
 
-This is a Playwright port of the error-rate measurement that
-`scenario-tests/setup/runn/device-error-rate-check.yml` performs with runn. It
-queries the User-API for the device calibration data, computes the average
-2-qubit gate error rate, and fails when it exceeds a threshold.
+This is a Playwright port of the error-rate measurement that the
+`check_error_rate` step of `scenario-tests/setup/runn/setup.yml` performs with
+runn. It queries the User-API for the device calibration data, computes the
+average 2-qubit gate error rate, and fails when it exceeds a threshold.
 
 ## What it measures
 
