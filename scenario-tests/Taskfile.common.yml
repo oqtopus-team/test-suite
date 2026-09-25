@@ -1,10 +1,14 @@
 version: "3"
 
+# Suite-wide tasks glob `*-job/runn/*.yml` instead of `*/runn/*.yml` so that
+# `setup/runn/setup.yml` is not picked up as an ordinary scenario: setup runs
+# once up front via the `runn-setup` dependency, and running it again inside
+# the suite races with the tests over `.tmp_info/`.
 tasks:
   runn-setup:
     desc: "run setup before all the scenario tests"
     cmds:
-      - runn run setup/runn_setup/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
+      - runn run setup/runn/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
   runn-sampling:
     desc: "run sampling job tests"
     vars:
@@ -50,7 +54,7 @@ tasks:
   runn-list:
     desc: "list up runn list"
     cmds:
-      - runn list */runn/*.yml --scopes read:parent
+      - runn list *-job/runn/*.yml --scopes read:parent
   runn-id:
     desc: "runn with runnbook id"
     vars:
@@ -58,13 +62,13 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run */runn/*.yml --id {{.CLI_ARGS}} --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run *-job/runn/*.yml --id {{.CLI_ARGS}} --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-id-stress:
     desc: "runn with runnbook id (stress test)"
     deps:
       - runn-setup
     cmds:
-      - runn loadt --concurrent on --load-concurrent 32 */runn/*.yml --id {{.CLI_ARGS}} --scopes run:exec,read:parent
+      - runn loadt --concurrent on --load-concurrent 32 *-job/runn/*.yml --id {{.CLI_ARGS}} --scopes run:exec,read:parent
   runn-all:
     desc: "runn all tests sequentially"
     vars:
@@ -72,7 +76,7 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run */runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run *-job/runn/*.yml --verbose --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
   runn-all-con:
     desc: "runn all tests concurrently"
     vars:
@@ -80,4 +84,4 @@ tasks:
     deps:
       - runn-setup
     cmds:
-      - runn run */runn/*.yml --concurrent 8 --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
+      - runn run *-job/runn/*.yml --concurrent 8 --scopes run:exec,read:parent --var dump_request:{{.DUMP}}
