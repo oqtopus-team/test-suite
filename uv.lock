@@ -705,7 +705,7 @@ wheels = [
 
 [[package]]
 name = "test-suite"
-version = "1.0.14"
+version = "1.0.15"
 source = { virtual = "." }
 
 [package.dev-dependencies]
