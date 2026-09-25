@@ -175,33 +175,20 @@ function writeResults(): void {
   } else if (allResults.length === 0) {
     lines.push('> No results collected.');
   } else {
-    const modeLabel = QUBIT_MODE === 'physical' ? 'Physical Qubit Pair' : 'Logical Qubit Pair';
-    const hasMapping = allResults.some((r) => r.qubit_mapping);
-    if (hasMapping) {
-      lines.push(`| ${modeLabel} | Physical Qubits | Fidelity | Threshold | Counts | Result |`);
-      lines.push('|:----------:|:---------------:|:--------:|:---------:|:------:|:------:|');
-    } else {
-      lines.push(`| ${modeLabel} | Fidelity | Threshold | Counts | Result |`);
-      lines.push('|:----------:|:--------:|:---------:|:------:|:------:|');
-    }
+    lines.push('| Logical Qubit Pair | Physical Qubit Pair | Fidelity | Threshold | Counts | Result |');
+    lines.push('|:------------------:|:-------------------:|:--------:|:---------:|:------:|:------:|');
     for (const r of allResults) {
       const icon = r.pass ? '✅' : '❌';
       const counts = Object.entries(r.counts)
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([k, v]) => `${k}: ${v}`)
         .join(', ');
-      if (hasMapping) {
-        const mapping = r.qubit_mapping
-          ? r.qubit_mapping.map((m) => `${m.physical}`).join('-')
-          : '—';
-        lines.push(
-          `| ${r.pair} | ${mapping} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
-        );
-      } else {
-        lines.push(
-          `| ${r.pair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
-        );
-      }
+      const physicalPair = r.qubit_mapping
+        ? r.qubit_mapping.map((m) => `${m.physical}`).join('-')
+        : r.pair;
+      lines.push(
+        `| ${r.pair} | ${physicalPair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
+      );
     }
   }
   lines.push('');
