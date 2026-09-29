@@ -9,8 +9,8 @@ import {
   type GateError,
 } from '../helpers/error-rate';
 
-const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
-const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN;
+const API_BASE = process.env.USER_API_ENDPOINT || process.env.E2E_API_BASE_URL;
+const API_TOKEN = process.env.Q_API_TOKEN || process.env.E2E_API_TOKEN;
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
 
 /** Where the measured result is written for the chart-rendering step to read. */
