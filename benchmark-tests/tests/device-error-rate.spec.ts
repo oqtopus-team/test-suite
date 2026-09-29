@@ -62,6 +62,7 @@ test.describe('Device two-qubit gate error rate', () => {
     !API_BASE,
     'USER_API_ENDPOINT (or E2E_API_BASE_URL) is not set',
   );
+  test.skip(!API_TOKEN, 'Q_API_TOKEN (or E2E_API_TOKEN) is not set');
 
   test('averaged 2Q gate error rate is within threshold', async () => {
     const threshold = loadThresholds().errorRate.max2qGateError;
