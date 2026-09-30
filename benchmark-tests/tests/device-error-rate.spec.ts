@@ -9,8 +9,8 @@ import {
   type GateError,
 } from '../helpers/error-rate';
 
-const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
-const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN;
+const API_BASE = process.env.USER_API_ENDPOINT || process.env.E2E_API_BASE_URL;
+const API_TOKEN = process.env.Q_API_TOKEN || process.env.E2E_API_TOKEN;
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
 
 /** Where the measured result is written for the chart-rendering step to read. */
@@ -62,6 +62,7 @@ test.describe('Device two-qubit gate error rate', () => {
     !API_BASE,
     'USER_API_ENDPOINT (or E2E_API_BASE_URL) is not set',
   );
+  test.skip(!API_TOKEN, 'Q_API_TOKEN (or E2E_API_TOKEN) is not set');
 
   test('averaged 2Q gate error rate is within threshold', async () => {
     const threshold = loadThresholds().errorRate.max2qGateError;

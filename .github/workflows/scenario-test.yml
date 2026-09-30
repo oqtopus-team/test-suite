@@ -17,7 +17,7 @@ on:
       USER_API_ENDPOINT:
         required: true
       Q_API_TOKEN:
-        required: true
+        required: false
 
 jobs:
   run-scenario-test:
@@ -53,4 +53,8 @@ jobs:
           Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
           DEVICE_ID: ${{ inputs.device_id || vars.DEVICE_ID }}
         run: |
+          if [ -z "${Q_API_TOKEN}" ]; then
+            echo "::warning::Q_API_TOKEN is not set; skipping scenario tests"
+            exit 0
+          fi
           task runn-all

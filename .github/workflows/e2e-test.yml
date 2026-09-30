@@ -19,7 +19,7 @@ on:
       USER_API_ENDPOINT:
         required: true
       Q_API_TOKEN:
-        required: true
+        required: false
       E2E_BASE_URL:
         required: true
       E2E_EMAIL:
@@ -76,7 +76,7 @@ jobs:
           : "${E2E_PASSWORD:?E2E_PASSWORD is not set}"
           : "${E2E_TOTP_SECRET:?E2E_TOTP_SECRET is not set}"
           : "${USER_API_ENDPOINT:?USER_API_ENDPOINT is not set}"
-          : "${Q_API_TOKEN:?Q_API_TOKEN is not set}"
+          [ -n "${Q_API_TOKEN}" ] || echo "::warning::Q_API_TOKEN is not set"
 
       - name: Run Playwright tests
         run: npx playwright test
