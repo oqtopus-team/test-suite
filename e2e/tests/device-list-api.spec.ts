@@ -13,10 +13,9 @@ test('GET /devices returns a non-empty device list', async ({ request }) => {
   const { USER_API_ENDPOINT, Q_API_TOKEN } = process.env;
 
   test.skip(!USER_API_ENDPOINT, 'USER_API_ENDPOINT is not set');
-  test.skip(!Q_API_TOKEN, 'Q_API_TOKEN is not set');
 
   const response = await request.get(`${USER_API_ENDPOINT}/devices`, {
-    headers: { 'q-api-token': Q_API_TOKEN! },
+    headers: { 'q-api-token': Q_API_TOKEN ?? '' },
   });
 
   expect(response.status()).toBe(200);
