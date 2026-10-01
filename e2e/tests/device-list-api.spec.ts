@@ -5,9 +5,11 @@ import { test, expect } from '@playwright/test';
  * `scenario-tests/setup/runn_setup/setup.yml`.
  *
  * Verifies that the User-API `/devices` endpoint returns 200 and a non-empty
- * device list when authenticated with a valid Q API token. This is intended as
- * a probe to see whether Playwright's APIRequestContext is a viable way to
- * cover API checks from the e2e suite alongside the browser-based tests.
+ * device list. The `q-api-token` header carries `Q_API_TOKEN`, or an empty
+ * value when it is unset, so both token-authenticated APIs and APIs without
+ * auth are covered. This is intended as a probe to see whether Playwright's
+ * APIRequestContext is a viable way to cover API checks from the e2e suite
+ * alongside the browser-based tests.
  */
 test('GET /devices returns a non-empty device list', async ({ request }) => {
   const { USER_API_ENDPOINT, Q_API_TOKEN } = process.env;
