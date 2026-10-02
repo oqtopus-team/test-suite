@@ -76,13 +76,14 @@ token, target device). Benchmark **thresholds** are kept out of `.env` — see
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `USER_API_ENDPOINT` | User-API base URL | (required) |
-| `Q_API_TOKEN` | API token sent as the `q-api-token` header | (optional; test is skipped when empty) |
+| `Q_API_TOKEN` | API token sent as the `q-api-token` header | (optional; empty for APIs without auth) |
 | `DEVICE_ID` | Target device id | `qulacs` |
 
 `USER_API_ENDPOINT` / `Q_API_TOKEN` fall back to `E2E_API_BASE_URL` /
 `E2E_API_TOKEN` when unset or empty, matching the `e2e` API specs. The test is
-skipped when no API base URL or API token is configured. A device with no
-calibration data is treated as a pass, consistent with the scenario-tests gate.
+skipped when no API base URL is configured; an empty token is still sent, so
+APIs without auth are covered. A device with no calibration data is treated as
+a pass, consistent with the scenario-tests gate.
 
 ## Thresholds
 

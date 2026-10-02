@@ -11,7 +11,7 @@ steps:
       /devices:
         get:
           headers:
-            q-api-token: ${Q_API_TOKEN}
+            q-api-token: "${Q_API_TOKEN}"
     test: |
       current.res.status != 401 && current.res.status != 403
   get_devices:
@@ -20,7 +20,7 @@ steps:
       /devices:
         get:
           headers:
-            q-api-token: ${Q_API_TOKEN}
+            q-api-token: "${Q_API_TOKEN}"
     test: |
       current.res.status == 200
     bind:

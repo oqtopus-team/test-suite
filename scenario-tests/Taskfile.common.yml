@@ -4,6 +4,11 @@ tasks:
   runn-setup:
     desc: "run setup before all the scenario tests"
     cmds:
+      # An empty token is a supported setup (User-APIs without auth), so say so
+      # once up front. Kept silent so the check itself is not echoed when the
+      # token is present.
+      - cmd: '[ -n "$Q_API_TOKEN" ] || echo "WARNING: Q_API_TOKEN is empty; requests are sent with an empty q-api-token header"'
+        silent: true
       - runn run setup/runn_setup/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
   runn-sampling:
     desc: "run sampling job tests"
