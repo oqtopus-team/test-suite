@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 /**
  * API-level smoke test that mirrors the `get_devices` step in
- * `scenario-tests/setup/runn_setup/setup.yml`.
+ * `scenario-tests/setup/runn/setup.yml`.
  *
  * Verifies that the User-API `/devices` endpoint returns 200 and a non-empty
  * device list. The `q-api-token` header carries `Q_API_TOKEN`, or an empty
