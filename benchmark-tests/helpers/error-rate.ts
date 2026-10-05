@@ -1,8 +1,7 @@
 /**
  * Device error-rate computation.
  *
- * This mirrors the scenario-tests runn gate (`device-error-rate-check.yml`):
- * it reads `device_info.calibration_data.two_qubit_gates` and computes the
+ * Reads `device_info.calibration_data.two_qubit_gates` and computes the
  * arithmetic mean of every `gate_error_value`. The underlying values are
  * average gate errors obtained by interleaved randomized benchmarking of the
  * two-qubit gate on the real device.
