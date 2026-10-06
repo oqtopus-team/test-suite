@@ -27,6 +27,12 @@ const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
 const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN;
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
 
+/**
+ * Tolerated clock skew between this runner and the calibration host. A
+ * `calibrated_at` further in the future than this is rejected as invalid.
+ */
+const MAX_CLOCK_SKEW_HOURS = 5 / 60;
+
 /** Fetch device_info once per worker. */
 async function fetchDeviceInfo(): Promise<DeviceInfo | null> {
   const ctx = await request.newContext();
@@ -45,19 +51,25 @@ async function fetchDeviceInfo(): Promise<DeviceInfo | null> {
 }
 
 /**
- * Record the result, report it, and assert it is within the threshold.
- * A `null` measurement is recorded and reported but not asserted.
+ * Record the result, report it, and assert it is within the threshold (and at
+ * or above `min` when given). A `null` measurement is recorded and reported
+ * but not asserted.
  */
 async function checkThreshold(opts: {
   key: string;
   label: string;
   measured: number | null;
   threshold: number;
+  /** Lower bound below which the measurement is invalid. */
+  min?: { value: number; message: string };
   unit?: string;
   format: (v: number | null) => string;
 }): Promise<void> {
-  const { key, label, measured, threshold, unit = '', format } = opts;
-  const passed = measured === null ? null : measured <= threshold;
+  const { key, label, measured, threshold, min, unit = '', format } = opts;
+  const passed =
+    measured === null
+      ? null
+      : measured <= threshold && (min === undefined || measured >= min.value);
 
   recordThresholdResult(key, {
     device: DEVICE_ID,
@@ -73,6 +85,9 @@ async function checkThreshold(opts: {
   await test.info().attach(key, { body: line, contentType: 'text/plain' });
 
   if (measured === null) return;
+  if (min !== undefined) {
+    expect(measured, min.message).toBeGreaterThanOrEqual(min.value);
+  }
   expect(
     measured,
     `${label} ${format(measured)} exceeds threshold ${threshold}${unit}`,
@@ -130,11 +145,16 @@ test.describe('Device threshold verification (Layer 1)', () => {
   });
 
   test('calibration is within allowed age', async () => {
+    const measured = calibrationAgeHours(info);
     await checkThreshold({
       key: 'calibration-age',
       label: 'calibration_age',
-      measured: calibrationAgeHours(info),
+      measured,
       threshold: loadThresholds().threshold.maxCalibrationAgeHours,
+      min: {
+        value: -MAX_CLOCK_SKEW_HOURS,
+        message: `calibrated_at is in the future (age ${fmtAge(measured)})`,
+      },
       unit: 'h',
       format: fmtAge,
     });

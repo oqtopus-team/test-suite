@@ -165,7 +165,8 @@ export function maxReadoutError(info: DeviceInfo | null): number | null {
 
 /**
  * Age of the most recent calibration in hours (now − calibrated_at).
- * Returns `null` when the field is missing or unparseable.
+ * Returns `null` when the field is missing or unparseable. A future
+ * `calibrated_at` yields a negative age, which the caller must reject.
  */
 export function calibrationAgeHours(
   info: DeviceInfo | null,
