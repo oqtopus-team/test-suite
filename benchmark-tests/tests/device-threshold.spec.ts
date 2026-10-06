@@ -34,6 +34,12 @@ const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
  */
 const MAX_CLOCK_SKEW_HOURS = 5 / 60;
 
+/**
+ * Absolute tolerance for floating-point round-off at the threshold boundary,
+ * e.g. `1 - 0.99` evaluates to `0.010000000000000009`.
+ */
+const FLOAT_TOLERANCE = 1e-9;
+
 /** Fetch the device once per worker. */
 async function fetchDevice(): Promise<{
   deviceType: string | undefined;
@@ -76,7 +82,8 @@ async function checkThreshold(opts: {
   const passed =
     measured === null
       ? null
-      : measured <= threshold && (min === undefined || measured >= min.value);
+      : measured <= threshold + FLOAT_TOLERANCE &&
+        (min === undefined || measured >= min.value);
 
   recordThresholdResult(key, {
     device: DEVICE_ID,
@@ -98,7 +105,7 @@ async function checkThreshold(opts: {
   expect(
     measured,
     `${label} ${format(measured)} exceeds threshold ${threshold}${unit}`,
-  ).toBeLessThanOrEqual(threshold);
+  ).toBeLessThanOrEqual(threshold + FLOAT_TOLERANCE);
 }
 
 function fmtError(v: number | null): string {
