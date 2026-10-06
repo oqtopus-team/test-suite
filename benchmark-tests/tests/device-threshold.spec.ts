@@ -8,7 +8,8 @@
  * A URL-valued `device_info` is resolved the same way as the scenario setup
  * (JSON or a ZIP containing `device_info.json`); a retrieval or decoding error
  * fails the test. An unmeasurable value (missing calibration data) is treated
- * as a pass, consistent with the existing error-rate benchmark.
+ * as a pass, consistent with the existing error-rate benchmark. Calibration
+ * freshness is skipped for simulators, whose `calibrated_at` is static.
  */
 
 import { test, expect, request } from '@playwright/test';
@@ -33,8 +34,11 @@ const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
  */
 const MAX_CLOCK_SKEW_HOURS = 5 / 60;
 
-/** Fetch device_info once per worker. */
-async function fetchDeviceInfo(): Promise<DeviceInfo | null> {
+/** Fetch the device once per worker. */
+async function fetchDevice(): Promise<{
+  deviceType: string | undefined;
+  info: DeviceInfo | null;
+}> {
   const ctx = await request.newContext();
   try {
     const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
@@ -44,7 +48,10 @@ async function fetchDeviceInfo(): Promise<DeviceInfo | null> {
       200,
     );
     const body = await res.json();
-    return await resolveDeviceInfo(body?.device_info);
+    return {
+      deviceType: body?.device_type,
+      info: await resolveDeviceInfo(body?.device_info),
+    };
   } finally {
     await ctx.dispose();
   }
@@ -108,10 +115,11 @@ test.describe('Device threshold verification (Layer 1)', () => {
     'USER_API_ENDPOINT (or E2E_API_BASE_URL) is not set',
   );
 
+  let deviceType: string | undefined;
   let info: DeviceInfo | null;
 
   test.beforeAll(async () => {
-    info = await fetchDeviceInfo();
+    ({ deviceType, info } = await fetchDevice());
   });
 
   test('max 1Q gate error is within threshold', async () => {
@@ -145,6 +153,10 @@ test.describe('Device threshold verification (Layer 1)', () => {
   });
 
   test('calibration is within allowed age', async () => {
+    test.skip(
+      deviceType === 'simulator',
+      'simulators carry a static calibrated_at, so freshness does not apply',
+    );
     const measured = calibrationAgeHours(info);
     await checkThreshold({
       key: 'calibration-age',
