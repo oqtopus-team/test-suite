@@ -165,18 +165,21 @@ export function maxReadoutError(info: DeviceInfo | null): number | null {
 
 /**
  * Age of the most recent calibration in hours (now − calibrated_at).
- * Returns `null` when the field is missing or unparseable. A future
- * `calibrated_at` yields a negative age, which the caller must reject.
+ * Returns `null` when the field is missing or empty, and throws when it is
+ * present but unparseable so malformed metadata fails instead of passing. A
+ * future `calibrated_at` yields a negative age, which the caller must reject.
  */
 export function calibrationAgeHours(
   info: DeviceInfo | null,
   now: Date = new Date(),
 ): number | null {
   const raw = (info as DeviceInfoExt | null)?.calibrated_at;
-  if (raw == null) return null;
+  if (raw == null || raw.trim() === '') return null;
 
   const ts = new Date(raw);
-  if (Number.isNaN(ts.getTime())) return null;
+  if (Number.isNaN(ts.getTime())) {
+    throw new Error(`unparseable calibrated_at: ${JSON.stringify(raw)}`);
+  }
 
   return (now.getTime() - ts.getTime()) / (1000 * 60 * 60);
 }
