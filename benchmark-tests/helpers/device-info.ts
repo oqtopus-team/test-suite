@@ -46,31 +46,38 @@ function unzipDeviceInfo(zip: Buffer): string {
   }
 }
 
+/** Decode a string `device_info`: inline JSON, or a URL to JSON / a ZIP. */
+async function decodeDeviceInfo(raw: string): Promise<unknown> {
+  const trimmed = raw.trim();
+  if (trimmed === '') return null;
+  if (!URL_PATTERN.test(trimmed)) return JSON.parse(trimmed);
+
+  const payload = await fetchPayload(trimmed);
+  const json = payload.subarray(0, ZIP_MAGIC.length).equals(ZIP_MAGIC)
+    ? unzipDeviceInfo(payload)
+    : payload.toString('utf-8');
+  return JSON.parse(json);
+}
+
 /**
  * Resolve the raw `device_info` field into a `DeviceInfo`.
  *
  * Unlike `parseDeviceInfo`, this follows the same rules as the scenario setup
  * (`scenario-tests/setup/runn_setup/setup.yml`): an HTTP(S)/file URL is
  * fetched, and a ZIP payload is unpacked to its `device_info.json`. Only an
- * absent/empty field yields `null` (no calibration data); retrieval or decoding
- * failures throw so they surface as test failures instead of silent passes.
+ * absent/empty/`null` value yields `null` (no calibration data); retrieval or
+ * decoding failures, and a resolved value that is not a JSON object (an array
+ * or a primitive such as `false`), throw so they surface as test failures
+ * instead of silent passes.
  */
 export async function resolveDeviceInfo(raw: unknown): Promise<DeviceInfo | null> {
-  if (raw == null) return null;
-  if (typeof raw === 'object') return raw as DeviceInfo;
-  if (typeof raw !== 'string') {
-    throw new Error(`unexpected device_info type: ${typeof raw}`);
+  const value = typeof raw === 'string' ? await decodeDeviceInfo(raw) : raw;
+  if (value == null) return null;
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    const type = Array.isArray(value) ? 'array' : typeof value;
+    throw new Error(`device_info must be a JSON object, got ${type}`);
   }
-
-  const trimmed = raw.trim();
-  if (trimmed === '' || trimmed === 'null') return null;
-  if (!URL_PATTERN.test(trimmed)) return JSON.parse(trimmed) as DeviceInfo;
-
-  const payload = await fetchPayload(trimmed);
-  const json = payload.subarray(0, ZIP_MAGIC.length).equals(ZIP_MAGIC)
-    ? unzipDeviceInfo(payload)
-    : payload.toString('utf-8');
-  return JSON.parse(json) as DeviceInfo;
+  return value as DeviceInfo;
 }
 
 // ── Qubit-level types ──────────────────────────────────────────────
