@@ -115,9 +115,14 @@ benchmark-tests/
 ├── thresholds.toml         # benchmark thresholds (tracked)
 ├── package.json
 ├── playwright.config.ts
+├── global-setup.ts         # clears stale threshold results
+├── global-teardown.ts      # aggregates results/threshold.json
 ├── helpers/
 │   ├── config.ts           # loads thresholds.toml
-│   └── error-rate.ts       # device_info parsing + average error computation
+│   ├── device-info.ts      # device_info resolution (JSON / URL / ZIP) + Layer-1 metrics
+│   ├── error-rate.ts       # device_info parsing + average error computation
+│   └── threshold-results.ts # per-test threshold result persistence
 └── tests/
-    └── device-error-rate.spec.ts
+    ├── device-error-rate.spec.ts
+    └── device-threshold.spec.ts
 ```
