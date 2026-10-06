@@ -106,20 +106,48 @@ interface DeviceInfoExt {
   calibration_data?: unknown;
 }
 
+// ── Probability validation ────────────────────────────────────────
+
+/**
+ * Collect the finite numeric values `pick` reads from each entry, skipping
+ * missing/non-numeric ones. A finite value outside [0, 1] is invalid metadata
+ * and throws, so it cannot hide among valid samples or slip past the
+ * upper-bound check (e.g. fidelity 1.1 → error −0.1).
+ */
+function probabilities<T>(
+  entries: Record<string, T>,
+  collection: string,
+  field: string,
+  pick: (entry: T | null | undefined) => number | null | undefined,
+): number[] {
+  const values: number[] = [];
+  for (const [key, entry] of Object.entries(entries)) {
+    const v = pick(entry);
+    if (typeof v !== 'number' || !Number.isFinite(v)) continue;
+    if (v < 0 || v > 1) {
+      throw new Error(
+        `${collection}[${JSON.stringify(key)}].${field} out of range [0, 1]: ${v}`,
+      );
+    }
+    values.push(v);
+  }
+  return values;
+}
+
 // ── 1Q gate error (max) ───────────────────────────────────────────
 
 /**
  * Maximum single-qubit gate error across all qubits:  `max(1 − fidelity)`.
- * Returns `null` when no qubit fidelity data is available.
+ * Returns `null` when no qubit fidelity data is available, and throws when a
+ * fidelity is outside [0, 1].
  */
 export function max1qGateError(info: DeviceInfo | null): number | null {
   const qubits = (info as DeviceInfoExt | null)?.qubits;
   if (qubits == null) return null;
 
-  const errors = Object.values(qubits)
-    .map((q) => q?.fidelity)
-    .filter((f): f is number => typeof f === 'number' && Number.isFinite(f))
-    .map((f) => 1 - f);
+  const errors = probabilities(qubits, 'qubits', 'fidelity', (q) => q?.fidelity).map(
+    (f) => 1 - f,
+  );
 
   return errors.length === 0 ? null : Math.max(...errors);
 }
@@ -128,16 +156,19 @@ export function max1qGateError(info: DeviceInfo | null): number | null {
 
 /**
  * Maximum two-qubit gate error across all couplings: `max(1 − fidelity)`.
- * Returns `null` when no coupling fidelity data is available.
+ * Returns `null` when no coupling fidelity data is available, and throws when
+ * a fidelity is outside [0, 1].
  */
 export function max2qGateError(info: DeviceInfo | null): number | null {
   const couplings = (info as DeviceInfoExt | null)?.couplings;
   if (couplings == null) return null;
 
-  const errors = Object.values(couplings)
-    .map((c) => c?.fidelity)
-    .filter((f): f is number => typeof f === 'number' && Number.isFinite(f))
-    .map((f) => 1 - f);
+  const errors = probabilities(
+    couplings,
+    'couplings',
+    'fidelity',
+    (c) => c?.fidelity,
+  ).map((f) => 1 - f);
 
   return errors.length === 0 ? null : Math.max(...errors);
 }
@@ -146,17 +177,19 @@ export function max2qGateError(info: DeviceInfo | null): number | null {
 
 /**
  * Maximum readout assignment error across all qubits.
- * Returns `null` when no readout error data is available.
+ * Returns `null` when no readout error data is available, and throws when an
+ * error is outside [0, 1].
  */
 export function maxReadoutError(info: DeviceInfo | null): number | null {
   const qubits = (info as DeviceInfoExt | null)?.qubits;
   if (qubits == null) return null;
 
-  const errors = Object.values(qubits)
-    .map((q) => q?.meas_error?.readout_assignment_error)
-    .filter(
-      (e): e is number => typeof e === 'number' && Number.isFinite(e),
-    );
+  const errors = probabilities(
+    qubits,
+    'qubits',
+    'meas_error.readout_assignment_error',
+    (q) => q?.meas_error?.readout_assignment_error,
+  );
 
   return errors.length === 0 ? null : Math.max(...errors);
 }
