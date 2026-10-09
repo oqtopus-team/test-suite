@@ -140,26 +140,53 @@ interface DeviceInfoExt {
 
 // ── Probability validation ────────────────────────────────────────
 
+function isObject(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/** Short JSON rendering of an offending value for error messages. */
+function preview(v: unknown): string {
+  const json = JSON.stringify(v) ?? String(v);
+  return json.length > 80 ? `${json.slice(0, 77)}...` : json;
+}
+
 /**
- * Collect the numeric values `pick` reads from each entry, skipping only
- * missing (`null`/`undefined`) ones. A present value that is not a finite
- * number (e.g. `"bad"`) or lies outside [0, 1] is invalid metadata and throws,
- * so it cannot be mistaken for missing data, hide among valid samples, or slip
- * past the upper-bound check (e.g. fidelity 1.1 → error −0.1).
+ * Collect the probability at `field` (a property path) from every entry of a
+ * `qubits` / `couplings` collection, skipping only entries whose value is
+ * absent (`null`/`undefined` at the leaf or at an intermediate object such as
+ * `meas_error`).
+ *
+ * Anything else that is malformed is invalid metadata and throws, so it cannot
+ * be mistaken for missing data, hide among valid samples, or slip past the
+ * upper-bound check:
+ * - the collection, a non-null entry, or a non-null intermediate value is not
+ *   a JSON object (e.g. `qubits: "x"`, `qubits: {"0": "bad"}`)
+ * - the leaf value is not a finite number (e.g. `"bad"`)
+ * - the leaf value is outside [0, 1] (e.g. fidelity 1.1 → error −0.1)
  */
-function probabilities<T>(
-  entries: Record<string, T>,
-  collection: string,
-  field: string,
-  pick: (entry: T | null | undefined) => unknown,
+function probabilities(
+  collection: unknown,
+  name: string,
+  field: readonly string[],
 ): number[] {
+  if (!isObject(collection)) {
+    throw new Error(`${name} must be a JSON object, got ${preview(collection)}`);
+  }
   const values: number[] = [];
-  for (const [key, entry] of Object.entries(entries)) {
-    const v = pick(entry);
+  for (const [key, entry] of Object.entries(collection)) {
+    let path = `${name}[${JSON.stringify(key)}]`;
+    let v: unknown = entry;
+    for (const prop of field) {
+      if (v == null) break;
+      if (!isObject(v)) {
+        throw new Error(`${path} must be a JSON object, got ${preview(v)}`);
+      }
+      v = v[prop];
+      path += `.${prop}`;
+    }
     if (v == null) continue;
-    const path = `${collection}[${JSON.stringify(key)}].${field}`;
     if (typeof v !== 'number' || !Number.isFinite(v)) {
-      throw new Error(`${path} is not a finite number: ${JSON.stringify(v)}`);
+      throw new Error(`${path} is not a finite number: ${preview(v)}`);
     }
     if (v < 0 || v > 1) {
       throw new Error(`${path} out of range [0, 1]: ${v}`);
@@ -169,64 +196,52 @@ function probabilities<T>(
   return values;
 }
 
+/** `max(values)`, or `null` when there are no samples. */
+function maxOrNull(values: number[]): number | null {
+  return values.length === 0 ? null : Math.max(...values);
+}
+
 // ── 1Q gate error (max) ───────────────────────────────────────────
 
 /**
  * Maximum single-qubit gate error across all qubits:  `max(1 − fidelity)`.
- * Returns `null` when no qubit fidelity data is available, and throws when a
- * fidelity is not a number or is outside [0, 1].
+ * Returns `null` when no qubit fidelity data is available, and throws on
+ * malformed `qubits` data (see `probabilities`).
  */
 export function max1qGateError(info: DeviceInfo | null): number | null {
   const qubits = (info as DeviceInfoExt | null)?.qubits;
   if (qubits == null) return null;
-
-  const errors = probabilities(qubits, 'qubits', 'fidelity', (q) => q?.fidelity).map(
-    (f) => 1 - f,
-  );
-
-  return errors.length === 0 ? null : Math.max(...errors);
+  return maxOrNull(probabilities(qubits, 'qubits', ['fidelity']).map((f) => 1 - f));
 }
 
 // ── 2Q gate error (max) ───────────────────────────────────────────
 
 /**
  * Maximum two-qubit gate error across all couplings: `max(1 − fidelity)`.
- * Returns `null` when no coupling fidelity data is available, and throws when
- * a fidelity is not a number or is outside [0, 1].
+ * Returns `null` when no coupling fidelity data is available, and throws on
+ * malformed `couplings` data (see `probabilities`).
  */
 export function max2qGateError(info: DeviceInfo | null): number | null {
   const couplings = (info as DeviceInfoExt | null)?.couplings;
   if (couplings == null) return null;
-
-  const errors = probabilities(
-    couplings,
-    'couplings',
-    'fidelity',
-    (c) => c?.fidelity,
-  ).map((f) => 1 - f);
-
-  return errors.length === 0 ? null : Math.max(...errors);
+  return maxOrNull(
+    probabilities(couplings, 'couplings', ['fidelity']).map((f) => 1 - f),
+  );
 }
 
 // ── Readout error (max) ───────────────────────────────────────────
 
 /**
  * Maximum readout assignment error across all qubits.
- * Returns `null` when no readout error data is available, and throws when an
- * error is not a number or is outside [0, 1].
+ * Returns `null` when no readout error data is available, and throws on
+ * malformed `qubits` / `meas_error` data (see `probabilities`).
  */
 export function maxReadoutError(info: DeviceInfo | null): number | null {
   const qubits = (info as DeviceInfoExt | null)?.qubits;
   if (qubits == null) return null;
-
-  const errors = probabilities(
-    qubits,
-    'qubits',
-    'meas_error.readout_assignment_error',
-    (q) => q?.meas_error?.readout_assignment_error,
+  return maxOrNull(
+    probabilities(qubits, 'qubits', ['meas_error', 'readout_assignment_error']),
   );
-
-  return errors.length === 0 ? null : Math.max(...errors);
 }
 
 // ── Calibration freshness ─────────────────────────────────────────
