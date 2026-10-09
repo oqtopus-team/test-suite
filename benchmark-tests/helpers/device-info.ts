@@ -131,9 +131,10 @@ interface Coupling {
 
 // ── Extended DeviceInfo (adds fields the baseline helper does not need) ──
 
+/** The User-API returns arrays; keyed objects are accepted as well. */
 interface DeviceInfoExt {
-  qubits?: Record<string, Qubit> | null;
-  couplings?: Record<string, Coupling> | null;
+  qubits?: Qubit[] | Record<string, Qubit> | null;
+  couplings?: Coupling[] | Record<string, Coupling> | null;
   calibrated_at?: string | null;
   calibration_data?: unknown;
 }
@@ -152,15 +153,17 @@ function preview(v: unknown): string {
 
 /**
  * Collect the probability at `field` (a property path) from every entry of a
- * `qubits` / `couplings` collection, skipping only entries whose value is
+ * `qubits` / `couplings` collection (an array, as the User-API returns, or a
+ * keyed object), skipping only entries whose value is
  * absent (`null`/`undefined` at the leaf or at an intermediate object such as
  * `meas_error`).
  *
  * Anything else that is malformed is invalid metadata and throws, so it cannot
  * be mistaken for missing data, hide among valid samples, or slip past the
  * upper-bound check:
- * - the collection, a non-null entry, or a non-null intermediate value is not
- *   a JSON object (e.g. `qubits: "x"`, `qubits: {"0": "bad"}`)
+ * - the collection is neither an array nor a JSON object (e.g. `qubits: "x"`)
+ * - a non-null entry or a non-null intermediate value is not a JSON object
+ *   (e.g. `qubits: ["bad"]`, `meas_error: "x"`)
  * - the leaf value is not a finite number (e.g. `"bad"`)
  * - the leaf value is outside [0, 1] (e.g. fidelity 1.1 → error −0.1)
  */
@@ -169,12 +172,15 @@ function probabilities(
   name: string,
   field: readonly string[],
 ): number[] {
-  if (!isObject(collection)) {
-    throw new Error(`${name} must be a JSON object, got ${preview(collection)}`);
+  const isArray = Array.isArray(collection);
+  if (!isArray && !isObject(collection)) {
+    throw new Error(
+      `${name} must be an array or a JSON object, got ${preview(collection)}`,
+    );
   }
   const values: number[] = [];
   for (const [key, entry] of Object.entries(collection)) {
-    let path = `${name}[${JSON.stringify(key)}]`;
+    let path = `${name}[${isArray ? key : JSON.stringify(key)}]`;
     let v: unknown = entry;
     for (const prop of field) {
       if (v == null) break;
