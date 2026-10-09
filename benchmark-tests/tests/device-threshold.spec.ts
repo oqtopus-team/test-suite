@@ -24,8 +24,8 @@ import {
 } from '../helpers/device-info';
 import { recordThresholdResult } from '../helpers/threshold-results';
 
-const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
-const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN;
+const API_BASE = process.env.USER_API_ENDPOINT || process.env.E2E_API_BASE_URL;
+const API_TOKEN = process.env.Q_API_TOKEN || process.env.E2E_API_TOKEN;
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
 
 /**

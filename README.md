@@ -12,7 +12,7 @@ This repository contains external testing tools for the OQTOPUS quantum computin
 - **[scenario-tests/](scenario-tests/README.md)** - Scenario tests for quantum job execution using runn framework
 - **[endurance-test/](endurance-test/README.md)** - Endurance tests for long-term stability of the OQTOPUS platform
 - **[e2e/](e2e/README.md)** - Browser-based end-to-end tests for the OQTOPUS frontend using Playwright
-- **[benchmark-tests/](benchmark-tests/README.md)** - Playwright-based benchmark of the target device's gate error rate
+- **[benchmark-tests/](benchmark-tests/README.md)** - Playwright-based benchmarks of the target device's calibration quality (error rates, calibration freshness)
 
 ## Developer Guidelines
 
