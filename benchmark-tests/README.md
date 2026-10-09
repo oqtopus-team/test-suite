@@ -44,9 +44,10 @@ and checks each value against the `[threshold]` section of `thresholds.toml`:
 
 - `device_info` may be inline JSON or an HTTP(S)/`file://` URL to JSON or to a
   ZIP containing `device_info.json`, as in the scenario-tests setup. Retrieval
-  or decoding errors, a value that is not a JSON object, an out-of-range
-  fidelity / readout error (outside [0, 1]) and an unparseable or future
-  `calibrated_at` fail the test.
+  or decoding errors, a value that is not a JSON object, a non-numeric or
+  out-of-range fidelity / readout error (outside [0, 1]), an unparseable
+  `calibrated_at`, and a `calibrated_at` more than 5 minutes in the future
+  (the tolerance for clock skew) fail the test.
 - Missing calibration data is treated as a pass.
 - Calibration freshness is skipped for `device_type: simulator`, whose
   `calibrated_at` is static.
