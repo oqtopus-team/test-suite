@@ -55,6 +55,13 @@ function unzipDeviceInfo(zip: Buffer): string {
       execFileSync('unzip', ['-p', zipPath, 'device_info.json'], {
         stdio: ['ignore', fd, 'pipe'],
       });
+    } catch (e) {
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new Error(
+          'device_info is a ZIP archive but the `unzip` command was not found on PATH',
+        );
+      }
+      throw e;
     } finally {
       closeSync(fd);
     }
@@ -81,7 +88,7 @@ async function decodeDeviceInfo(raw: string): Promise<unknown> {
  * Resolve the raw `device_info` field into a `DeviceInfo`.
  *
  * Unlike `parseDeviceInfo`, this follows the same rules as the scenario setup
- * (`scenario-tests/setup/runn_setup/setup.yml`): an HTTP(S)/file URL is
+ * (`scenario-tests/setup/runn/setup.yml`): an HTTP(S)/file URL is
  * fetched, and a ZIP payload is unpacked to its `device_info.json`. Only an
  * absent/empty/`null` value yields `null` (no calibration data); retrieval or
  * decoding failures, and a resolved value that is not a JSON object (an array
