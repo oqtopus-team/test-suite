@@ -9,7 +9,14 @@
  */
 
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  closeSync,
+  mkdtempSync,
+  openSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -32,15 +39,26 @@ async function fetchPayload(url: string): Promise<Buffer> {
   return Buffer.from(await res.arrayBuffer());
 }
 
-/** Extract `device_info.json` from a ZIP archive, mirroring the runn setup. */
+/**
+ * Extract `device_info.json` from a ZIP archive, mirroring the runn setup.
+ * `unzip -p` writes straight to a temp file rather than a stdout pipe, so the
+ * payload size is not capped by `execFileSync`'s 1 MiB `maxBuffer`.
+ */
 function unzipDeviceInfo(zip: Buffer): string {
   const dir = mkdtempSync(join(tmpdir(), 'device-info-'));
   try {
-    const path = join(dir, 'device_info.zip');
-    writeFileSync(path, zip);
-    return execFileSync('unzip', ['-p', path, 'device_info.json'], {
-      encoding: 'utf-8',
-    });
+    const zipPath = join(dir, 'device_info.zip');
+    const jsonPath = join(dir, 'device_info.json');
+    writeFileSync(zipPath, zip);
+    const fd = openSync(jsonPath, 'w');
+    try {
+      execFileSync('unzip', ['-p', zipPath, 'device_info.json'], {
+        stdio: ['ignore', fd, 'pipe'],
+      });
+    } finally {
+      closeSync(fd);
+    }
+    return readFileSync(jsonPath, 'utf-8');
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
