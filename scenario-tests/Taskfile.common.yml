@@ -11,7 +11,7 @@ tasks:
       # An empty token is a supported setup (User-APIs without auth), so say so
       # once up front. Kept silent so the check itself is not echoed when the
       # token is present.
-      - cmd: '[ -n "$Q_API_TOKEN" ] || echo "WARNING: Q_API_TOKEN is empty; requests are sent with an empty q-api-token header"'
+      - cmd: '[ -n "$Q_API_TOKEN" ] || echo "WARNING: Q_API_TOKEN is empty; requests are sent with empty q-api-token and Authorization headers"'
         silent: true
       - runn run setup/runn/setup.yml --verbose --fail-fast --scopes run:exec,read:parent
   runn-sampling:
