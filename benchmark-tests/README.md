@@ -76,7 +76,7 @@ token, target device). Benchmark **thresholds** are kept out of `.env` — see
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `USER_API_ENDPOINT` | User-API base URL | (required) |
-| `Q_API_TOKEN` | API token sent as the `q-api-token` header | (optional; empty for APIs without auth) |
+| `Q_API_TOKEN` | API token sent as the `q-api-token` and `Authorization` headers | (optional; empty for APIs without auth) |
 | `DEVICE_ID` | Target device id | `qulacs` |
 
 `USER_API_ENDPOINT` / `Q_API_TOKEN` fall back to `E2E_API_BASE_URL` /

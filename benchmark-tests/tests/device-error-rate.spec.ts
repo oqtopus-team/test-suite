@@ -27,7 +27,10 @@ async function fetchDeviceErrorRate(): Promise<{
   const ctx = await request.newContext();
   try {
     const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
-      headers: { 'q-api-token': API_TOKEN ?? '' },
+      headers: {
+        'q-api-token': API_TOKEN ?? '',
+        Authorization: API_TOKEN ?? '',
+      },
     });
     expect(res.status(), `GET /devices/${DEVICE_ID} should return 200`).toBe(
       200,
