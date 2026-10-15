@@ -28,6 +28,9 @@ async function fetchDeviceErrorRate(): Promise<{
   try {
     const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
       headers: {
+        // LambdaAuth caches results keyed on Authorization, so it must carry
+        // the same value as q-api-token. oqtopus-cloud plans to unify these
+        // into one header.
         'q-api-token': API_TOKEN ?? '',
         Authorization: API_TOKEN ?? '',
       },

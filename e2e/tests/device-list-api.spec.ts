@@ -18,6 +18,9 @@ test('GET /devices returns a non-empty device list', async ({ request }) => {
 
   const response = await request.get(`${USER_API_ENDPOINT}/devices`, {
     headers: {
+      // LambdaAuth caches results keyed on Authorization, so it must carry
+      // the same value as q-api-token. oqtopus-cloud plans to unify these
+      // into one header.
       'q-api-token': Q_API_TOKEN ?? '',
       Authorization: Q_API_TOKEN ?? '',
     },

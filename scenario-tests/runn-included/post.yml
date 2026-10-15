@@ -35,6 +35,8 @@ steps:
       /jobs:
         post:
           headers:
+            # LambdaAuth caches results keyed on Authorization, so it must carry the same
+            # value as q-api-token. oqtopus-cloud plans to unify these into one header.
             q-api-token: "${Q_API_TOKEN}"
             Authorization: "${Q_API_TOKEN}"
           body:
@@ -70,6 +72,8 @@ steps:
       /jobs/{{ steps.register.res.body.job_id }}/submit:
         post:
           headers:
+            # LambdaAuth caches results keyed on Authorization, so it must carry the same
+            # value as q-api-token. oqtopus-cloud plans to unify these into one header.
             q-api-token: "${Q_API_TOKEN}"
             Authorization: "${Q_API_TOKEN}"
           body:
@@ -97,6 +101,8 @@ steps:
       /jobs/{{ steps.register.res.body.job_id }}:
         get:
           headers:
+            # LambdaAuth caches results keyed on Authorization, so it must carry the same
+            # value as q-api-token. oqtopus-cloud plans to unify these into one header.
             q-api-token: "${Q_API_TOKEN}"
             Authorization: "${Q_API_TOKEN}"
     dump:
