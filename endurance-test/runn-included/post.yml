@@ -32,7 +32,10 @@ steps:
       /jobs:
         post:
           headers:
+            # LambdaAuth caches results keyed on Authorization, so it must carry the same
+            # value as q-api-token. oqtopus-cloud plans to unify these into one header.
             q-api-token: "${Q_API_TOKEN}"
+            Authorization: "${Q_API_TOKEN}"
           body:
             application/json: {}
     test: |
@@ -63,7 +66,10 @@ steps:
       /jobs/{{ steps.register.res.body.job_id }}/submit:
         post:
           headers:
+            # LambdaAuth caches results keyed on Authorization, so it must carry the same
+            # value as q-api-token. oqtopus-cloud plans to unify these into one header.
             q-api-token: "${Q_API_TOKEN}"
+            Authorization: "${Q_API_TOKEN}"
           body:
             application/json: "{{ vars.submit_request_body }}"
     test: |
@@ -84,7 +90,10 @@ steps:
       /jobs/{{steps.register.res.body.job_id}}:
         get:
           headers:
+            # LambdaAuth caches results keyed on Authorization, so it must carry the same
+            # value as q-api-token. oqtopus-cloud plans to unify these into one header.
             q-api-token: "${Q_API_TOKEN}"
+            Authorization: "${Q_API_TOKEN}"
     dump:
       expr: '"[" + now().Format("2006-01-02 15:04:05") + "]" + steps.register.res.body.job_id + "(" + vars.job_name + ") is in " + current.res.body.status'
     test: |

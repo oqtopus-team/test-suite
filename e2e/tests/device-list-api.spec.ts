@@ -5,9 +5,9 @@ import { test, expect } from '@playwright/test';
  * `scenario-tests/setup/runn/setup.yml`.
  *
  * Verifies that the User-API `/devices` endpoint returns 200 and a non-empty
- * device list. The `q-api-token` header carries `Q_API_TOKEN`, or an empty
- * value when it is unset, so both token-authenticated APIs and APIs without
- * auth are covered. This is intended as a probe to see whether Playwright's
+ * device list. The `q-api-token` and `Authorization` headers carry
+ * `Q_API_TOKEN`, or an empty value when it is unset, so both
+ * token-authenticated APIs and APIs without auth are covered. This is intended as a probe to see whether Playwright's
  * APIRequestContext is a viable way to cover API checks from the e2e suite
  * alongside the browser-based tests.
  */
@@ -17,7 +17,13 @@ test('GET /devices returns a non-empty device list', async ({ request }) => {
   test.skip(!USER_API_ENDPOINT, 'USER_API_ENDPOINT is not set');
 
   const response = await request.get(`${USER_API_ENDPOINT}/devices`, {
-    headers: { 'q-api-token': Q_API_TOKEN ?? '' },
+    headers: {
+      // LambdaAuth caches results keyed on Authorization, so it must carry
+      // the same value as q-api-token. oqtopus-cloud plans to unify these
+      // into one header.
+      'q-api-token': Q_API_TOKEN ?? '',
+      Authorization: Q_API_TOKEN ?? '',
+    },
   });
 
   expect(response.status()).toBe(200);
