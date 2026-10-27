@@ -2,7 +2,8 @@
   "name": "oqtopus-benchmark-tests",
   "private": true,
   "scripts": {
-    "chart": "node scripts/render-chart.mjs"
+    "chart": "node scripts/render-chart.mjs",
+    "bell-map": "node scripts/render-bell-map.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.54.0",

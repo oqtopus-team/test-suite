@@ -141,3 +141,62 @@ export function bestCoupling(deviceInfo: unknown): BestCoupling | null {
   }
   return best;
 }
+
+// ── Device topology (for the qubit map) ────────────────────────────
+
+/** A qubit and its on-chip position, as reported in `device_info.qubits`. */
+export interface TopologyQubit {
+  id: number;
+  physical_id?: number;
+  x?: number;
+  y?: number;
+}
+
+/** Qubits and couplings of a device, reduced to what the qubit map draws. */
+export interface Topology {
+  qubits: TopologyQubit[];
+  couplings: QubitPair[];
+}
+
+const isInt = (v: unknown): v is number => Number.isInteger(v);
+const isNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/**
+ * Extract qubit ids, positions (`position: { x, y }`) and coupling edges from
+ * `device_info`. Malformed entries are skipped rather than thrown on, because
+ * the map is informational. Returns `null` when there are no qubits.
+ */
+export function extractTopology(deviceInfo: unknown): Topology | null {
+  if (deviceInfo == null || typeof deviceInfo !== 'object') return null;
+  const { qubits, couplings } = deviceInfo as { qubits?: unknown; couplings?: unknown };
+
+  const outQubits: TopologyQubit[] = [];
+  if (qubits != null && typeof qubits === 'object') {
+    for (const entry of Object.values(qubits)) {
+      if (entry == null || typeof entry !== 'object') continue;
+      const { id, physical_id, position } = entry as Record<string, unknown>;
+      if (!isInt(id)) continue;
+      const q: TopologyQubit = { id };
+      if (isInt(physical_id)) q.physical_id = physical_id;
+      if (position != null && typeof position === 'object') {
+        const { x, y } = position as Record<string, unknown>;
+        if (isNum(x) && isNum(y)) {
+          q.x = x;
+          q.y = y;
+        }
+      }
+      outQubits.push(q);
+    }
+  }
+  if (outQubits.length === 0) return null;
+
+  const outCouplings: QubitPair[] = [];
+  if (couplings != null && typeof couplings === 'object') {
+    for (const entry of Object.values(couplings)) {
+      if (entry == null || typeof entry !== 'object') continue;
+      const { control, target } = entry as Record<string, unknown>;
+      if (isInt(control) && isInt(target)) outCouplings.push([control, target]);
+    }
+  }
+  return { qubits: outQubits, couplings: outCouplings };
+}

@@ -111,6 +111,10 @@ jobs:
             cat results/bell-fidelity.json
           fi
 
+      - name: Render Bell qubit map
+        if: always()
+        run: npm run bell-map
+
       - name: Upload Bell fidelity results
         if: always()
         uses: actions/upload-artifact@v7
@@ -119,6 +123,7 @@ jobs:
           path: |
             benchmark-tests/results/bell-fidelity.json
             benchmark-tests/results/bell-fidelity-summary.md
+            benchmark-tests/results/bell-qubit-map.svg
           if-no-files-found: ignore
           retention-days: 7
 

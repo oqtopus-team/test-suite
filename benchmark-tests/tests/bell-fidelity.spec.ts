@@ -33,8 +33,10 @@ import {
   bellCircuit,
   bellFidelity,
   bestCoupling,
+  extractTopology,
   parseQubitPairs,
   type BestCoupling,
+  type Topology,
   type QubitPair,
 } from '../helpers/bell-fidelity';
 
@@ -59,6 +61,8 @@ const RESULT_SUMMARY = join(RESULTS_DIR, 'bell-fidelity-summary.md');
 let skipReason = '';
 // Coupling picked from device_info when BELL_QUBIT_PAIRS=auto.
 let selected: BestCoupling | null = null;
+// Qubit positions and couplings from device_info, used to draw the qubit map.
+let topology: Topology | null = null;
 
 // Accumulated results for summary table.
 interface QubitMapping {
@@ -184,7 +188,7 @@ function writeResults(): void {
   // JSON (for artifact download).
   writeFileSync(
     RESULT_JSON,
-    `${JSON.stringify({ device: DEVICE_ID, qubit_mode: QUBIT_MODE, shots: SHOTS, results: allResults }, null, 2)}\n`,
+    `${JSON.stringify({ device: DEVICE_ID, qubit_mode: QUBIT_MODE, shots: SHOTS, selected, topology, results: allResults }, null, 2)}\n`,
   );
 
   // Markdown summary table (for GITHUB_STEP_SUMMARY).
@@ -261,11 +265,22 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
 
       const body = await res.json();
 
+      // device_info is required to auto-select a pair, so its errors fail the
+      // run there; otherwise it only feeds the qubit map and is best effort.
+      let deviceInfo: unknown = null;
+      try {
+        deviceInfo = await resolveDeviceInfo(body?.device_info);
+      } catch (e) {
+        if (AUTO) throw e;
+        console.warn(`[bell] could not resolve device_info for the qubit map: ${e}`);
+      }
+      topology = extractTopology(deviceInfo);
+
       if (AUTO) {
         if (process.env.BELL_QUBIT_MODE === 'logical') {
           console.warn('[bell] BELL_QUBIT_PAIRS=auto always runs in physical mode');
         }
-        selected = bestCoupling(await resolveDeviceInfo(body?.device_info));
+        selected = bestCoupling(deviceInfo);
         if (!selected) {
           skipReason =
             `device_info of "${DEVICE_ID}" has no coupling with a calibrated fidelity — ` +
