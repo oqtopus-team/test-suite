@@ -7,8 +7,9 @@
  *   - `results/bell-qubit-map.svg` — every qubit at its on-chip position, all
  *     couplings in grey, and each measured pair highlighted in green (pass) or
  *     red (fail) with its fidelity (uploaded as a CI artifact).
- *   - a Markdown grid of the chip appended to `$GITHUB_STEP_SUMMARY` when
- *     running in GitHub Actions, so the measured qubits show on the run page.
+ *   - a Mermaid block diagram of the chip (plus a text fallback) appended to
+ *     `$GITHUB_STEP_SUMMARY` when running in GitHub Actions, so the measured
+ *     qubits show as a picture on the run page.
  *
  * When `device_info` has no qubit positions, qubits are laid out row-major by
  * id on a square grid.
@@ -172,29 +173,75 @@ function renderSvg(result, placed, pairs) {
 }
 
 /**
- * Render the chip as a Markdown table: one cell per grid position, measured
- * qubits marked 🟢 (pass) / 🔴 (fail) with their pair label. Returns `null`
- * when the positions do not fit a reasonably sized grid.
+ * Snap the placed qubits onto a row/column grid (one cell per distinct x / y
+ * coordinate). Returns `null` when the layout does not fit a reasonably sized
+ * grid.
  */
-function renderGrid(placed, pairs) {
+function toGrid(placed) {
   const key = (v) => Math.round(v * 1000) / 1000;
   const xs = [...new Set(placed.qubits.map((q) => key(q.px)))].sort((a, b) => a - b);
   const ys = [...new Set(placed.qubits.map((q) => key(q.py)))].sort((a, b) => a - b);
   if (xs.length > 32 || ys.length > 32) return null;
 
-  const pairOf = new Map();
-  for (const p of pairs) for (const id of p.qubits) pairOf.set(id, p);
-
-  const cells = ys.map(() => xs.map(() => ''));
+  const cells = ys.map(() => xs.map(() => null));
   for (const q of placed.qubits) {
-    const p = pairOf.get(q.id);
-    cells[ys.indexOf(key(q.py))][xs.indexOf(key(q.px))] = p
-      ? `${p.pass ? '🟢' : '🔴'} **${q.id}**<sub>${p.label}</sub>`
-      : `${q.id}`;
+    cells[ys.indexOf(key(q.py))][xs.indexOf(key(q.px))] = q;
   }
-  const header = `| ${xs.map(() => ' ').join(' | ')} |`;
-  const sep = `| ${xs.map(() => ':-:').join(' | ')} |`;
-  return [header, sep, ...cells.map((row) => `| ${row.join(' | ')} |`)].join('\n');
+  return cells;
+}
+
+/**
+ * Render the chip as a Mermaid block diagram, which GitHub draws on the run
+ * page: one block per qubit at its grid position, measured qubits filled green
+ * (pass) / red (fail) and labelled with their pair.
+ */
+function renderMermaid(cells, pairOf) {
+  const rows = cells.map(
+    (row) =>
+      '  ' +
+      row
+        .map((q) => {
+          if (!q) return 'space';
+          const p = pairOf.get(q.id);
+          return `q${q.id}["${q.id}${p ? ` (${p.label})` : ''}"]`;
+        })
+        .join(' '),
+  );
+  const ids = (pass) =>
+    [...pairOf.entries()].filter(([, p]) => p.pass === pass).map(([id]) => `q${id}`);
+  const classes = [
+    `  classDef qubit fill:#ffffff,stroke:#9ca3af,color:#374151`,
+    `  classDef pass fill:${PASS},stroke:${PASS},color:#ffffff`,
+    `  classDef fail fill:${FAIL},stroke:${FAIL},color:#ffffff`,
+  ];
+  const all = cells.flat().filter(Boolean).map((q) => `q${q.id}`);
+  const assign = [
+    `  class ${all.join(',')} qubit`,
+    ids(true).length ? `  class ${ids(true).join(',')} pass` : '',
+    ids(false).length ? `  class ${ids(false).join(',')} fail` : '',
+  ].filter(Boolean);
+
+  return ['```mermaid', 'block-beta', `  columns ${cells[0].length}`, ...rows, ...classes, ...assign, '```'].join(
+    '\n',
+  );
+}
+
+/**
+ * Render the chip as a Markdown table: one cell per grid position, measured
+ * qubits marked 🟢 (pass) / 🔴 (fail) with their pair label. Used as a
+ * text fallback below the diagram.
+ */
+function renderTable(cells, pairOf) {
+  const text = cells.map((row) =>
+    row.map((q) => {
+      if (!q) return '';
+      const p = pairOf.get(q.id);
+      return p ? `${p.pass ? '🟢' : '🔴'} **${q.id}**<sub>${p.label}</sub>` : `${q.id}`;
+    }),
+  );
+  const header = `| ${text[0].map(() => ' ').join(' | ')} |`;
+  const sep = `| ${text[0].map(() => ':-:').join(' | ')} |`;
+  return [header, sep, ...text.map((row) => `| ${row.join(' | ')} |`)].join('\n');
 }
 
 /** Append the qubit map to the CI run page. */
@@ -202,7 +249,19 @@ function writeStepSummary(placed, pairs) {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (!summaryPath) return;
 
-  const grid = renderGrid(placed, pairs);
+  const pairOf = new Map();
+  for (const p of pairs) for (const id of p.qubits) pairOf.set(id, p);
+
+  const cells = toGrid(placed);
+  const map = cells
+    ? `${renderMermaid(cells, pairOf)}
+
+<details><summary>Text view</summary>
+
+${renderTable(cells, pairOf)}
+
+</details>`
+    : '> Chip layout is too large for an inline grid; see the SVG artifact.';
   const legend = pairs
     .map(
       (p) =>
@@ -215,7 +274,7 @@ function writeStepSummary(placed, pairs) {
 
   const md = `### Bell pair qubit map
 ${note}
-${grid ?? '> Chip layout is too large for an inline grid; see the SVG artifact.'}
+${map}
 
 ${legend}
 
