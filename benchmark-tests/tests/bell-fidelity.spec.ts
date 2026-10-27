@@ -230,7 +230,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
     const ctx = await request.newContext();
     try {
       const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
-        headers: { 'q-api-token': API_TOKEN },
+        headers: { 'q-api-token': API_TOKEN, Authorization: API_TOKEN },
       });
       if (res.status() !== 200) {
         skipReason =

@@ -75,7 +75,10 @@ const API_BASE =
 const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN ?? '';
 
 function headers(): Record<string, string> {
-  return { 'q-api-token': API_TOKEN };
+  // LambdaAuth caches results keyed on Authorization, so it must carry
+  // the same value as q-api-token. oqtopus-cloud plans to unify these
+  // into one header.
+  return { 'q-api-token': API_TOKEN, Authorization: API_TOKEN };
 }
 
 /** Create a zip archive containing a single JSON file. */
