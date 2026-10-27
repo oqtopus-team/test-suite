@@ -5,8 +5,9 @@
  * carries the device topology (qubit positions and couplings from
  * `device_info`) next to the per-pair results, and emits:
  *   - `results/bell-qubit-map.svg` — every qubit at its on-chip position, all
- *     couplings in grey, and each measured pair highlighted in green (pass) or
- *     red (fail) with its fidelity (uploaded as a CI artifact).
+ *     couplings in grey, each measured pair joined by a thick orange edge and
+ *     its qubits filled green (pass) or red (fail), with its fidelity in the
+ *     legend (uploaded as a CI artifact).
  *   - a Mermaid block diagram of the chip (plus a text fallback) appended to
  *     `$GITHUB_STEP_SUMMARY` when running in GitHub Actions, so the measured
  *     qubits show as a picture on the run page.
@@ -28,6 +29,8 @@ const SVG_PATH = join(RESULTS_DIR, 'bell-qubit-map.svg');
 
 const PASS = '#16a34a';
 const FAIL = '#dc2626';
+// Edge between the two qubits of a measured pair.
+const PAIR_EDGE = '#f59e0b';
 const PAIR_LABELS = 'abcdefghijklmnopqrstuvwxyz';
 
 /** Read the result file, or exit cleanly when the run produced none. */
@@ -125,7 +128,7 @@ function renderSvg(result, placed, pairs) {
   const measuredEdges = pairs
     .map((p) => {
       const dash = coupled.has(`${p.qubits[0]}-${p.qubits[1]}`) ? '' : ' stroke-dasharray="6 4"';
-      return edge(p.qubits, `stroke="${p.color}" stroke-width="7" stroke-linecap="round"${dash}`);
+      return edge(p.qubits, `stroke="${PAIR_EDGE}" stroke-width="7" stroke-linecap="round"${dash}`);
     })
     .join('');
 
@@ -194,21 +197,31 @@ function toGrid(placed) {
  * Render the chip as a Mermaid block diagram, which GitHub draws on the run
  * page: one circle per qubit at its grid position, couplings drawn as lines,
  * and measured qubits filled green (pass) / red (fail).
+ *
+ * Measured pairs use Mermaid's thick link (`===`), coloured via `themeCSS`.
+ * If a renderer ignores the init directive the pair edges still stand out as
+ * thick lines.
  */
 function renderMermaid(cells, pairOf, couplings, pairs) {
   const present = new Set(cells.flat().filter(Boolean).map((q) => q.id));
-  const rows = cells.map(
-    (row) => '  ' + row.map((q) => (q ? `q${q.id}(("${q.id}"))` : 'space')).join(' '),
-  );
+  // Leave an empty cell between neighbours so coupling lines are long enough
+  // to see.
+  const spacer = `  ${Array(cells[0].length * 2 - 1).fill('space').join(' ')}`;
+  const rows = cells.flatMap((row, i) => {
+    const line = `  ${row.map((q) => (q ? `q${q.id}(("${q.id}"))` : 'space')).join(' space ')}`;
+    return i === 0 ? [line] : [spacer, line];
+  });
+
+  const paired = new Set(pairs.map(([a, b]) => (a < b ? `${a}-${b}` : `${b}-${a}`)));
 
   // Every coupling once, plus measured pairs that are not couplings.
   const seen = new Set();
   const edges = [];
-  for (const [a, b] of [...couplings, ...pairs.map((p) => p.qubits)]) {
+  for (const [a, b] of [...couplings, ...pairs]) {
     const k = a < b ? `${a}-${b}` : `${b}-${a}`;
     if (seen.has(k) || !present.has(a) || !present.has(b)) continue;
     seen.add(k);
-    edges.push(`  q${a} --- q${b}`);
+    edges.push(`  q${a} ${paired.has(k) ? '===' : '---'} q${b}`);
   }
 
   const ids = (pass) =>
@@ -222,9 +235,20 @@ function renderMermaid(cells, pairOf, couplings, pairs) {
     ids(false).length ? `  class ${ids(false).join(',')} fail` : '',
   ].filter(Boolean);
 
-  return ['```mermaid', 'block-beta', `  columns ${cells[0].length}`, ...rows, ...edges, ...classes, '```'].join(
-    '\n',
-  );
+  const css =
+    '.flowchart-link { stroke: #9ca3af; } ' +
+    `.edge-thickness-thick { stroke: ${PAIR_EDGE} !important; stroke-width: 8px !important; }`;
+
+  return [
+    '```mermaid',
+    `%%{init: {"themeCSS": "${css}"}}%%`,
+    'block-beta',
+    `  columns ${cells[0].length * 2 - 1}`,
+    ...rows,
+    ...edges,
+    ...classes,
+    '```',
+  ].join('\n');
 }
 
 /**
@@ -255,7 +279,7 @@ function writeStepSummary(placed, pairs, couplings) {
 
   const cells = toGrid(placed);
   const map = cells
-    ? `${renderMermaid(cells, pairOf, couplings, pairs)}
+    ? `${renderMermaid(cells, pairOf, couplings, pairs.map((p) => p.qubits))}
 
 <details><summary>Text view</summary>
 
