@@ -103,3 +103,41 @@ export function parseQubitPairs(value: string): QubitPair[] {
       return parts as QubitPair;
     });
 }
+
+/** Value of `BELL_QUBIT_PAIRS` that selects the best-calibrated coupling. */
+export const AUTO_PAIR = 'auto';
+
+/** A coupling chosen from `device_info.couplings`. */
+export interface BestCoupling {
+  pair: QubitPair;
+  /** Calibrated two-qubit gate fidelity reported in `device_info`. */
+  fidelity: number;
+}
+
+/**
+ * Pick the coupling with the highest calibrated fidelity from
+ * `device_info.couplings` (an array, as the User-API returns, or a keyed
+ * object). Each entry is `{ control, target, fidelity }`.
+ *
+ * Entries without a finite `fidelity` in [0, 1] or without integer
+ * `control` / `target` are ignored. Ties keep the first entry. Returns `null`
+ * when no usable coupling exists.
+ */
+export function bestCoupling(deviceInfo: unknown): BestCoupling | null {
+  if (deviceInfo == null || typeof deviceInfo !== 'object') return null;
+  const couplings = (deviceInfo as { couplings?: unknown }).couplings;
+  if (couplings == null || typeof couplings !== 'object') return null;
+
+  let best: BestCoupling | null = null;
+  for (const entry of Object.values(couplings)) {
+    if (entry == null || typeof entry !== 'object') continue;
+    const { control, target, fidelity } = entry as Record<string, unknown>;
+    if (!Number.isInteger(control) || !Number.isInteger(target)) continue;
+    if (typeof fidelity !== 'number' || !Number.isFinite(fidelity)) continue;
+    if (fidelity < 0 || fidelity > 1) continue;
+    if (best === null || fidelity > best.fidelity) {
+      best = { pair: [control as number, target as number], fidelity };
+    }
+  }
+  return best;
+}

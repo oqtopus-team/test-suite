@@ -14,7 +14,7 @@ on:
       bell_qubit_pairs:
         type: string
         required: false
-        description: "Comma-separated qubit pairs for Bell fidelity (e.g. '0-1,2-3')"
+        description: "Comma-separated qubit pairs for Bell fidelity (e.g. '0-1,2-3'), or 'auto' to measure only the coupling with the highest calibrated fidelity"
       bell_qubit_mode:
         type: string
         required: false
