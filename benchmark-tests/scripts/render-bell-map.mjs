@@ -192,36 +192,37 @@ function toGrid(placed) {
 
 /**
  * Render the chip as a Mermaid block diagram, which GitHub draws on the run
- * page: one block per qubit at its grid position, measured qubits filled green
- * (pass) / red (fail) and labelled with their pair.
+ * page: one circle per qubit at its grid position, couplings drawn as lines,
+ * and measured qubits filled green (pass) / red (fail).
  */
-function renderMermaid(cells, pairOf) {
+function renderMermaid(cells, pairOf, couplings, pairs) {
+  const present = new Set(cells.flat().filter(Boolean).map((q) => q.id));
   const rows = cells.map(
-    (row) =>
-      '  ' +
-      row
-        .map((q) => {
-          if (!q) return 'space';
-          const p = pairOf.get(q.id);
-          return `q${q.id}["${q.id}${p ? ` (${p.label})` : ''}"]`;
-        })
-        .join(' '),
+    (row) => '  ' + row.map((q) => (q ? `q${q.id}(("${q.id}"))` : 'space')).join(' '),
   );
+
+  // Every coupling once, plus measured pairs that are not couplings.
+  const seen = new Set();
+  const edges = [];
+  for (const [a, b] of [...couplings, ...pairs.map((p) => p.qubits)]) {
+    const k = a < b ? `${a}-${b}` : `${b}-${a}`;
+    if (seen.has(k) || !present.has(a) || !present.has(b)) continue;
+    seen.add(k);
+    edges.push(`  q${a} --- q${b}`);
+  }
+
   const ids = (pass) =>
     [...pairOf.entries()].filter(([, p]) => p.pass === pass).map(([id]) => `q${id}`);
   const classes = [
-    `  classDef qubit fill:#ffffff,stroke:#9ca3af,color:#374151`,
+    '  classDef qubit fill:#ffffff,stroke:#9ca3af,color:#374151',
     `  classDef pass fill:${PASS},stroke:${PASS},color:#ffffff`,
     `  classDef fail fill:${FAIL},stroke:${FAIL},color:#ffffff`,
-  ];
-  const all = cells.flat().filter(Boolean).map((q) => `q${q.id}`);
-  const assign = [
-    `  class ${all.join(',')} qubit`,
+    `  class ${[...present].map((id) => `q${id}`).join(',')} qubit`,
     ids(true).length ? `  class ${ids(true).join(',')} pass` : '',
     ids(false).length ? `  class ${ids(false).join(',')} fail` : '',
   ].filter(Boolean);
 
-  return ['```mermaid', 'block-beta', `  columns ${cells[0].length}`, ...rows, ...classes, ...assign, '```'].join(
+  return ['```mermaid', 'block-beta', `  columns ${cells[0].length}`, ...rows, ...edges, ...classes, '```'].join(
     '\n',
   );
 }
@@ -245,7 +246,7 @@ function renderTable(cells, pairOf) {
 }
 
 /** Append the qubit map to the CI run page. */
-function writeStepSummary(placed, pairs) {
+function writeStepSummary(placed, pairs, couplings) {
   const summaryPath = process.env.GITHUB_STEP_SUMMARY;
   if (!summaryPath) return;
 
@@ -254,7 +255,7 @@ function writeStepSummary(placed, pairs) {
 
   const cells = toGrid(placed);
   const map = cells
-    ? `${renderMermaid(cells, pairOf)}
+    ? `${renderMermaid(cells, pairOf, couplings, pairs)}
 
 <details><summary>Text view</summary>
 
@@ -300,7 +301,7 @@ function main() {
   mkdirSync(RESULTS_DIR, { recursive: true });
   writeFileSync(SVG_PATH, renderSvg(result, placed, pairs));
   console.log(`[bell-map] wrote ${SVG_PATH}`);
-  writeStepSummary(placed, pairs);
+  writeStepSummary(placed, pairs, result.topology?.couplings ?? []);
 }
 
 main();
