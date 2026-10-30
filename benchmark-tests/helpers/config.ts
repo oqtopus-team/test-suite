@@ -23,6 +23,10 @@ export interface Thresholds {
     /** Max allowed calibration age in hours. */
     maxCalibrationAgeHours: number;
   };
+  bellFidelity: {
+    /** Minimum Bell pair fidelity F(|Φ+⟩) below which the benchmark fails. */
+    minFidelity: number;
+  };
 }
 
 /** Built-in fallbacks used when the file or a key is missing. */
@@ -34,6 +38,7 @@ const DEFAULTS: Thresholds = {
     maxReadoutError: 0.3,
     maxCalibrationAgeHours: 24,
   },
+  bellFidelity: { minFidelity: 0.5 },
 };
 
 const CONFIG_PATH = join(__dirname, '..', 'thresholds.toml');
@@ -78,6 +83,12 @@ export function loadThresholds(path: string = CONFIG_PATH): Thresholds {
       maxCalibrationAgeHours: num(
         threshold.max_calibration_age_hours,
         DEFAULTS.threshold.maxCalibrationAgeHours,
+      ),
+    },
+    bellFidelity: {
+      minFidelity: num(
+        ((raw.bell_fidelity ?? {}) as Record<string, unknown>).min_fidelity,
+        DEFAULTS.bellFidelity.minFidelity,
       ),
     },
   };
