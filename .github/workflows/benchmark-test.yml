@@ -26,7 +26,7 @@ on:
       test_files:
         type: string
         required: false
-        description: "Space-separated test file paths to run (default: all tests)"
+        description: "Space-separated test file paths to run (default: all tests except tests/bell-fidelity.spec.ts, which runs only when listed here)"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -49,6 +49,7 @@ jobs:
       BELL_QUBIT_PAIRS: ${{ inputs.bell_qubit_pairs || vars.BELL_QUBIT_PAIRS || '0-1,2-3' }}
       BELL_QUBIT_MODE: ${{ inputs.bell_qubit_mode || vars.BELL_QUBIT_MODE || 'physical' }}
       BELL_SHOTS: ${{ inputs.bell_shots || vars.BELL_SHOTS || '1000' }}
+      RUN_BELL_FIDELITY: ${{ contains(inputs.test_files, 'bell-fidelity.spec.ts') }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7.0.1
