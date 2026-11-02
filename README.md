@@ -5,7 +5,20 @@
 [![All Tests (Scheduled)](https://github.com/oqtopus-team/test-suite/actions/workflows/scheduled-tests.yml/badge.svg)](https://github.com/oqtopus-team/test-suite/actions/workflows/scheduled-tests.yml)
 [![Benchmark Test](https://github.com/oqtopus-team/test-suite/actions/workflows/benchmark-test.yml/badge.svg)](https://github.com/oqtopus-team/test-suite/actions/workflows/benchmark-test.yml)
 
-This repository contains external testing tools for the OQTOPUS quantum computing platform.
+This repository provides **synthetic monitoring** for the OQTOPUS quantum computing platform. It runs scenario, end-to-end, and benchmark tests that mimic real user operations against a deployed OQTOPUS environment from the outside, on a schedule, to continuously monitor its availability, functional health, and device quality.
+
+## Purpose
+
+The tests act as a synthetic user of OQTOPUS. They exercise the platform only through its public interfaces (User-API and frontend), so a failure reflects what an actual user would experience.
+
+| What is monitored | Tests | What a failure tells you |
+| --- | --- | --- |
+| API availability and quantum job execution (submit, run, fetch results) | [scenario-tests/](scenario-tests/README.md) | The User-API or the job execution pipeline is unavailable or behaving incorrectly |
+| User-facing frontend flows (sign-in with MFA, device and job pages, job submission from the composer) | [e2e/](e2e/README.md) | Users cannot complete key operations through the web UI |
+| Device calibration quality (error rates, calibration freshness) | [benchmark-tests/](benchmark-tests/README.md) | The target device's calibration data is stale or exceeds the thresholds in `thresholds.toml` |
+| Long-term stability under continuous job submission | [endurance-test/](endurance-test/README.md) | The platform degrades over a long run (run manually, not scheduled) |
+
+The [`scheduled-tests.yml`](.github/workflows/scheduled-tests.yml) workflow ("All Tests (Scheduled)") runs scenario, E2E, and benchmark tests in sequence once a day (`cron: "0 15 * * *"`, 15:00 UTC) and can also be triggered manually. It is exposed as a reusable workflow (`workflow_call`), so other repositories can run the same checks against their own OQTOPUS environments and devices. The individual workflows (`scenario-test.yml`, `e2e-test.yml`, `benchmark-test.yml`) also run on pull requests to validate changes to the tests themselves.
 
 ## Contents
 
