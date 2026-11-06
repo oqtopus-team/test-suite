@@ -16,8 +16,12 @@
  *
  * Circuit: H → CX → measure
  *
- * In physical mode the circuit uses OpenQASM 3 hardware-qubit syntax (`$n`);
- * otherwise a virtual register sized to `max(q0, q1) + 1` is declared.
+ * In physical mode the circuit uses OpenQASM 3 hardware-qubit syntax (`$n`)
+ * and skips the transpiler, so it is written in native gates only: H is
+ * emitted as `rz(pi/2); sx; rz(pi/2)` (equal to H up to a global phase) —
+ * the same decomposition the device transpiler produces for `rz`/`sx`/`cx`
+ * hardware such as A-II. Otherwise a virtual register sized to
+ * `max(q0, q1) + 1` is declared and the transpiler handles `h` itself.
  */
 export function bellCircuit(pair: QubitPair, physical = false): string {
   const [q0, q1] = pair;
@@ -32,7 +36,9 @@ export function bellCircuit(pair: QubitPair, physical = false): string {
     'include "stdgates.inc";',
     ...decls,
     '',
-    `h ${ref(q0)};`,
+    ...(physical
+      ? [`rz(pi/2) ${ref(q0)};`, `sx ${ref(q0)};`, `rz(pi/2) ${ref(q0)};`]
+      : [`h ${ref(q0)};`]),
     `cx ${ref(q0)}, ${ref(q1)};`,
     '',
     `c[0] = measure ${ref(q0)};`,

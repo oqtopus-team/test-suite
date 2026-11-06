@@ -264,6 +264,12 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
       }
 
       const body = await res.json();
+      // Physical mode skips the transpiler, so the circuit must use gates the
+      // device accepts natively — log what the device reports for reference.
+      console.log(
+        `[bell] device basis_gates=${JSON.stringify(body?.basis_gates ?? null)} ` +
+          `instructions=${JSON.stringify(body?.instructions ?? null)}`,
+      );
 
       // device_info is required to auto-select a pair, so its errors fail the
       // run there; otherwise it only feeds the qubit map and is best effort.
