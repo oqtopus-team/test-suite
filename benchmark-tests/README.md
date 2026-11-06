@@ -77,6 +77,9 @@ $EDITOR .env    # set USER_API_ENDPOINT / Q_API_TOKEN / DEVICE_ID
 # 3. Run the benchmark
 npx playwright test
 
+# The Bell pair fidelity benchmark is opt-in (it is skipped by default)
+RUN_BELL_FIDELITY=true npx playwright test tests/bell-fidelity.spec.ts
+
 # 4. Open the HTML report
 npx playwright show-report
 ```
