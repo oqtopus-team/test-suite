@@ -54,6 +54,48 @@ and checks each value against the `[threshold]` section of `thresholds.toml`:
 - Results are written per test to `results/threshold/` and aggregated into
   `results/threshold.json` after the run (the final retry wins).
 
+## Layer-2 Bell pair fidelity
+
+`bell-fidelity.spec.ts` prepares the Bell state |Φ+⟩ (H → CX) on a qubit pair,
+measures it in the Z basis and reports fidelity = P(00) + P(11). It is opt-in:
+it runs only with `RUN_BELL_FIDELITY=true`, which CI sets when
+`tests/bell-fidelity.spec.ts` is passed via the `benchmark-test.yml`
+`test_files` input. Results go to `results/bell-fidelity.json`,
+`results/bell-fidelity-summary.md` (appended to the Job Summary) and
+`results/bell-qubit-map.svg`.
+
+The pair is chosen in one of two ways, set by `BELL_QUBIT_PAIRS`. The log and
+the Job Summary show which one was used as `Pair selection: auto` or
+`Pair selection: manual (<pairs>)`.
+
+| Pair selection | `BELL_QUBIT_PAIRS` | Behavior |
+| --- | --- | --- |
+| auto | `auto` | Picks the single coupling in `device_info.couplings` with the highest calibrated 2Q fidelity and measures it in physical mode (`BELL_QUBIT_MODE` is ignored). |
+| manual | `control-target` pairs, comma-separated (e.g. `0-1` or `0-1,2-3`) | Measures the listed pairs in `BELL_QUBIT_MODE` (`physical` by default, or `logical`). |
+
+Manual pairs are checked before any job is submitted, and a failed check fails
+the run (it is not a skip):
+
+- Every entry must be `<int>-<int>`, and control and target must differ.
+- In physical mode, every pair must be a coupling in `device_info.couplings`.
+  Couplings are **directed**: `2-1` passes only when a coupling with control 2
+  and target 1 exists, and `1-2` is rejected, because physical mode sends
+  `cx control, target` to the hardware without a transpiler. The failure
+  message and the Job Summary list the available pairs.
+- Devices whose `device_info` has no couplings (e.g. `qulacs`) skip the
+  coupling check, and so does logical mode, where the transpiler places the
+  qubits.
+
+In physical mode the circuit uses native gates only (H is emitted as
+`rz(pi/2); sx; rz(pi/2)`) since no transpiler runs. Pairs whose qubit numbers
+exceed the device's `n_qubits` are skipped rather than failed.
+
+| Variable | Purpose | Default |
+| --- | --- | --- |
+| `BELL_QUBIT_PAIRS` | `auto`, or manual `control-target` pairs | (unset: the spec is skipped) |
+| `BELL_QUBIT_MODE` | `physical` or `logical` (manual only) | `physical` |
+| `BELL_SHOTS` | Shots per measurement | `1000` |
+
 ## Prerequisites
 
 - Node.js 20 or later (LTS recommended)

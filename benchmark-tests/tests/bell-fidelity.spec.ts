@@ -20,6 +20,18 @@
  *                        logical:  transpiler maps logical → physical qubits
  *   BELL_SHOTS        — shots per measurement (default: 1000)
  *   DEVICE_ID         — target device (default: "qulacs")
+ *
+ * Pair selection:
+ *   auto   — BELL_QUBIT_PAIRS=auto (see above).
+ *   manual — BELL_QUBIT_PAIRS lists the pairs as `control-target`. Each entry
+ *            must be `<int>-<int>` with control ≠ target, otherwise the run
+ *            fails. In physical mode on a device whose device_info reports
+ *            couplings, every pair must also be a directed coupling
+ *            (`2-1` passes only if control=2 → target=1 exists; `1-2` does
+ *            not), because `cx control, target` is sent to the hardware as is.
+ *            A pair that is not a coupling fails the run and the summary lists
+ *            the available pairs. Devices without couplings (e.g. qulacs) and
+ *            logical mode skip this coupling check.
  */
 
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -33,8 +45,11 @@ import {
   bellCircuit,
   bellFidelity,
   bestCoupling,
+  checkPairsAgainstCouplings,
+  directedCouplings,
   extractTopology,
-  parseQubitPairs,
+  formatPairs,
+  parseManualPairs,
   type BestCoupling,
   type Topology,
   type QubitPair,
@@ -52,6 +67,10 @@ const QUBIT_MODE = (AUTO ? 'physical' : process.env.BELL_QUBIT_MODE ?? 'physical
   | 'physical'
   | 'logical';
 const USE_PHYSICAL = QUBIT_MODE === 'physical' && DEVICE_ID !== 'qulacs';
+// Manual mode: pairs are listed explicitly rather than auto-selected.
+const MANUAL = !AUTO && QUBIT_PAIRS_RAW.trim() !== '';
+const MANUAL_PARSE = MANUAL ? parseManualPairs(QUBIT_PAIRS_RAW) : { pairs: [] as QubitPair[] };
+const PAIR_SELECTION = AUTO ? 'auto' : `manual (${QUBIT_PAIRS_RAW.trim()})`;
 
 const RESULTS_DIR = join(__dirname, '..', 'results');
 const RESULT_JSON = join(RESULTS_DIR, 'bell-fidelity.json');
@@ -59,6 +78,10 @@ const RESULT_SUMMARY = join(RESULTS_DIR, 'bell-fidelity-summary.md');
 
 // Shared state: set by beforeAll, checked by each test.
 let skipReason = '';
+// Why the manually specified pairs were rejected (fails the run, not a skip).
+let pairError = MANUAL_PARSE.error ?? '';
+// Directed couplings from device_info, when the manual pair check ran.
+let availablePairs: QubitPair[] = [];
 // Coupling picked from device_info when BELL_QUBIT_PAIRS=auto.
 let selected: BestCoupling | null = null;
 // Qubit positions and couplings from device_info, used to draw the qubit map.
@@ -188,7 +211,7 @@ function writeResults(): void {
   // JSON (for artifact download).
   writeFileSync(
     RESULT_JSON,
-    `${JSON.stringify({ device: DEVICE_ID, qubit_mode: QUBIT_MODE, shots: SHOTS, selected, topology, results: allResults }, null, 2)}\n`,
+    `${JSON.stringify({ device: DEVICE_ID, qubit_mode: QUBIT_MODE, pair_selection: PAIR_SELECTION, shots: SHOTS, selected, pair_error: pairError || null, available_pairs: availablePairs, topology, results: allResults }, null, 2)}\n`,
   );
 
   // Markdown summary table (for GITHUB_STEP_SUMMARY).
@@ -199,6 +222,8 @@ function writeResults(): void {
     `**Device**: \`${DEVICE_ID}\` | **Qubit mode**: ${QUBIT_MODE} | **Shots**: ${SHOTS}`,
   );
   lines.push('');
+  lines.push(`**Pair selection**: ${PAIR_SELECTION}`);
+  lines.push('');
 
   if (selected) {
     lines.push(
@@ -208,7 +233,9 @@ function writeResults(): void {
     lines.push('');
   }
 
-  if (skipReason) {
+  if (pairError) {
+    lines.push(`> **Qubit pair check failed**: ${pairError}`);
+  } else if (skipReason) {
     lines.push(`> **Skipped**: ${skipReason}`);
   } else if (allResults.length === 0) {
     lines.push('> No results collected.');
@@ -247,10 +274,12 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
   // Extend timeout — job polling can take a while.
   test.setTimeout(600_000);
 
-  const pairs = QUBIT_PAIRS_RAW && !AUTO ? parseQubitPairs(QUBIT_PAIRS_RAW) : [];
+  const pairs = MANUAL_PARSE.pairs ?? [];
 
   // Validate qubit availability before any Bell fidelity test runs.
   test.beforeAll(async () => {
+    console.log(`[bell] Pair selection: ${PAIR_SELECTION}`);
+    if (pairError) console.error(`[bell] qubit pair check failed: ${pairError}`);
     const ctx = await request.newContext();
     try {
       const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
@@ -281,6 +310,31 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         console.warn(`[bell] could not resolve device_info for the qubit map: ${e}`);
       }
       topology = extractTopology(deviceInfo);
+
+      // Manual physical mode: `cx control, target` goes to the hardware as is,
+      // so each pair must be a directed coupling of the device.
+      if (MANUAL && USE_PHYSICAL) {
+        const couplings = directedCouplings(deviceInfo);
+        if (couplings.length === 0) {
+          console.warn(
+            `[bell] device_info of "${DEVICE_ID}" has no couplings — skipping the qubit pair check`,
+          );
+        } else {
+          availablePairs = couplings;
+          if (pairError) {
+            pairError += ` Available pairs: ${formatPairs(couplings)}`;
+          } else {
+            pairError = checkPairsAgainstCouplings(pairs, couplings) ?? '';
+            if (pairError) {
+              console.error(`[bell] qubit pair check failed: ${pairError}`);
+            } else {
+              console.log(
+                `[bell] qubit pair check passed: ${formatPairs(pairs)} are couplings of ${DEVICE_ID}`,
+              );
+            }
+          }
+        }
+      }
 
       if (AUTO) {
         if (process.env.BELL_QUBIT_MODE === 'logical') {
@@ -417,8 +471,16 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
     });
   }
 
+  if (MANUAL) {
+    test('Bell qubit pair check (manual)', async () => {
+      if (pairError) throw new Error(`Qubit pair check failed: ${pairError}`);
+      test.skip(!!skipReason, skipReason);
+    });
+  }
+
   for (const pair of pairs) {
     test(`Bell fidelity for ${QUBIT_MODE} qubits ${pair[0]}-${pair[1]}`, async () => {
+      test.skip(!!pairError, 'qubit pair check failed');
       test.skip(!!skipReason, skipReason);
       await measure(pair);
     });

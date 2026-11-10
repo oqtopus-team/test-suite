@@ -148,6 +148,85 @@ export function bestCoupling(deviceInfo: unknown): BestCoupling | null {
   return best;
 }
 
+// ── Manual pair validation ─────────────────────────────────────────
+
+const MANUAL_PAIR_RE = /^\d+-\d+$/;
+
+/** Format a pair list as `` `0-1`, `2-3` `` for messages and summaries. */
+export function formatPairs(pairs: QubitPair[]): string {
+  return pairs.map(([c, t]) => `\`${c}-${t}\``).join(', ');
+}
+
+/**
+ * Strictly parse a manually specified `BELL_QUBIT_PAIRS` value
+ * (`control-target`, comma-separated). Returns the pairs, or the reason the
+ * value is rejected: empty, malformed entries, or control equal to target.
+ */
+export function parseManualPairs(
+  value: string,
+): { pairs: QubitPair[]; error?: undefined } | { pairs?: undefined; error: string } {
+  if (value.trim() === '') {
+    return { error: 'BELL_QUBIT_PAIRS is empty. Set `control-target` qubit numbers, e.g. `0-1` or `0-1,2-3`.' };
+  }
+  const tokens = value.split(',').map((s) => s.trim());
+  const bad = tokens.filter((s) => !MANUAL_PAIR_RE.test(s));
+  if (bad.length > 0) {
+    return {
+      error:
+        `BELL_QUBIT_PAIRS has invalid entries: ${bad.map((s) => `\`${s}\``).join(', ')}. ` +
+        'Use `control-target` with qubit numbers, comma-separated, e.g. `0-1,2-3`.',
+    };
+  }
+  const pairs = tokens.map((s) => s.split('-').map(Number) as QubitPair);
+  const same = pairs.filter(([c, t]) => c === t);
+  if (same.length > 0) {
+    return { error: `control and target must differ: ${formatPairs(same)}.` };
+  }
+  return { pairs };
+}
+
+/**
+ * Directed `control → target` couplings in `device_info.couplings` (an array
+ * or a keyed object). Entries without integer `control` / `target` are
+ * skipped; the calibrated fidelity is not required here.
+ */
+export function directedCouplings(deviceInfo: unknown): QubitPair[] {
+  if (deviceInfo == null || typeof deviceInfo !== 'object') return [];
+  const couplings = (deviceInfo as { couplings?: unknown }).couplings;
+  if (couplings == null || typeof couplings !== 'object') return [];
+  const out: QubitPair[] = [];
+  for (const entry of Object.values(couplings)) {
+    if (entry == null || typeof entry !== 'object') continue;
+    const { control, target } = entry as Record<string, unknown>;
+    if (Number.isInteger(control) && Number.isInteger(target)) {
+      out.push([control as number, target as number]);
+    }
+  }
+  return out;
+}
+
+/**
+ * Check manually specified pairs against the device's directed couplings.
+ * Physical mode sends `cx control, target` to the hardware as is, so `2-1`
+ * passes only when a coupling with control 2 and target 1 exists — `1-2`
+ * does not. Returns `null` when every pair is a coupling, or the reason
+ * (including the list of valid pairs) otherwise. Callers skip the check when
+ * the device reports no couplings at all.
+ */
+export function checkPairsAgainstCouplings(
+  pairs: QubitPair[],
+  couplings: QubitPair[],
+): string | null {
+  const known = new Set(couplings.map(([c, t]) => `${c}-${t}`));
+  const missing = pairs.filter(([c, t]) => !known.has(`${c}-${t}`));
+  if (missing.length === 0) return null;
+  return (
+    `${formatPairs(missing)} ${missing.length === 1 ? 'is' : 'are'} not in device_info.couplings ` +
+    '(couplings are directed: `control-target`). ' +
+    `Available pairs: ${formatPairs(couplings)}`
+  );
+}
+
 // ── Device topology (for the qubit map) ────────────────────────────
 
 /** A qubit and its on-chip position, as reported in `device_info.qubits`. */
