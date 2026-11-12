@@ -37,8 +37,6 @@ export interface BellBasisResult {
   counts: unknown;
   /** ⟨PP⟩ = P(even) − P(odd); `null` when the counts were rejected. */
   expectation: number | null;
-  /** Shots actually returned (sum of the counts); `null` for malformed counts. */
-  shots: number | null;
   job_id?: string;
   /**
    * Physical pair (`control-target`) this basis ran on, from its transpile
@@ -55,8 +53,8 @@ export interface BellResult {
    * unknown — a logical run whose transpile result had no usable mapping.
    */
   physical_pair: string | null;
-  /** Shots requested per basis; the returned totals are in `bases[b].shots`. */
-  shots_requested: number;
+  /** Shots per basis. */
+  shots: number;
   /**
    * Fidelity with |Φ+⟩, F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4; `null` when the
    * result could not be evaluated (see `error`).
@@ -82,7 +80,7 @@ export interface BellRun {
   pair_selection: string;
   /** Requested pairs (`control-target`), in the order they are measured. */
   pairs: string[];
-  /** Shots requested per basis. */
+  /** Shots per basis. */
   shots: number;
   selected: BestCoupling | null;
   /** Why the run could not start (device lookup failed); fails the run. */
@@ -134,7 +132,7 @@ function readResults(run: BellRun): BellResult[] {
       results.push({
         pair,
         physical_pair: null,
-        shots_requested: run.shots,
+        shots: run.shots,
         fidelity: null,
         expectations: null,
         threshold: Number.NaN,
@@ -158,7 +156,7 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
   lines.push('## Bell Pair Fidelity Results');
   lines.push('');
   lines.push(
-    `**Device**: \`${run.device}\` | **Qubit mode**: ${run.qubit_mode} | **Requested shots**: ${run.shots} per basis (ZZ, XX, YY)`,
+    `**Device**: \`${run.device}\` | **Qubit mode**: ${run.qubit_mode} | **Shots**: ${run.shots} per basis (ZZ, XX, YY)`,
   );
   lines.push('');
   lines.push(`**Pair selection**: ${run.pair_selection}`);
@@ -183,14 +181,11 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
   } else {
     const num = (v: number | null | undefined) => (v == null ? '—' : v.toFixed(4));
     lines.push(
-      '| Logical Qubit Pair | Physical Qubit Pair | Fidelity F | ⟨ZZ⟩ | ⟨XX⟩ | ⟨YY⟩ | Shots (ZZ / XX / YY) | Threshold | Result |',
+      '| Logical Qubit Pair | Physical Qubit Pair | Fidelity F | ⟨ZZ⟩ | ⟨XX⟩ | ⟨YY⟩ | Threshold | Result |',
     );
     lines.push(
-      '|:------------------:|:-------------------:|:----------:|:----:|:----:|:----:|:--------------------:|:---------:|:------:|',
+      '|:------------------:|:-------------------:|:----------:|:----:|:----:|:----:|:---------:|:------:|',
     );
-    // Shots actually returned per basis (sum of the counts), not the request.
-    const shotsOf = (r: BellResult) =>
-      (['ZZ', 'XX', 'YY'] as const).map((b) => r.bases[b]?.shots ?? '—').join(' / ');
     // When the bases ran on different physical pairs (logical mode), show
     // each basis's pair instead of a single one.
     const physicalOf = (r: BellResult) => {
@@ -207,7 +202,7 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
       lines.push(
         `| ${r.pair} | ${physicalOf(r)} | ${num(r.fidelity)} | ` +
           `${num(e?.zz ?? r.bases.ZZ?.expectation)} | ${num(e?.xx ?? r.bases.XX?.expectation)} | ` +
-          `${num(e?.yy ?? r.bases.YY?.expectation)} | ${shotsOf(r)} | ${Number.isFinite(r.threshold) ? r.threshold : '—'} | ${icon} |`,
+          `${num(e?.yy ?? r.bases.YY?.expectation)} | ${Number.isFinite(r.threshold) ? r.threshold : '—'} | ${icon} |`,
       );
     }
     lines.push('');

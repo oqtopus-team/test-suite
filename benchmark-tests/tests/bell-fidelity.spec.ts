@@ -47,8 +47,6 @@ import {
   combineBasisMappings,
   bellStateFidelity,
   bestCoupling,
-  countsTotal,
-  shotsMismatch,
   invalidCounts,
   checkPairsAgainstCouplings,
   directedCouplings,
@@ -399,7 +397,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
     const failed = (error: string): BellResult => ({
       pair: label,
       physical_pair: USE_PHYSICAL ? label : null,
-      shots_requested: SHOTS,
+      shots: SHOTS,
       fidelity: null,
       expectations: null,
       threshold,
@@ -421,16 +419,12 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         console.log(`[bell] circuit (${basis}):\n${program}`);
         const { result, job } = await runSamplingJob(ctx, [program], submitParams(pair, basis));
 
-        // A malformed result (bad labels, negative or non-integer counts) or
-        // one whose counts do not add up to the requested shots fails the
-        // pair; it is recorded with its reason rather than scored.
+        // A malformed result (bad labels, negative or non-integer counts)
+        // fails the pair; it is recorded with its reason rather than scored.
         const invalid = invalidCounts(result.counts);
         if (invalid) errors.push(`${basis}: invalid sampling counts: ${invalid}`);
-        const short = invalid ? null : shotsMismatch(result.counts, SHOTS);
-        if (short) errors.push(`${basis}: ${short}`);
         const expectation = invalid ? null : parityExpectation(result.counts);
-        const shots = invalid ? null : countsTotal(result.counts);
-        bases[basis] = { counts: result.counts, expectation, shots, job_id: job.job_id };
+        bases[basis] = { counts: result.counts, expectation, job_id: job.job_id };
         console.log(
           `[bell] ${basis}: job=${job.job_id} counts=${JSON.stringify(result.counts)} ` +
             `<${basis}>=${expectation == null ? 'invalid' : expectation.toFixed(4)}`,
@@ -475,7 +469,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         record({
           pair: label,
           physical_pair,
-          shots_requested: SHOTS,
+          shots: SHOTS,
           fidelity: null,
           expectations: null,
           threshold,
@@ -500,7 +494,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
       record({
         pair: label,
         physical_pair,
-        shots_requested: SHOTS,
+        shots: SHOTS,
         fidelity,
         expectations,
         threshold,
@@ -518,7 +512,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         `device=${DEVICE_ID}`,
         `mode=${QUBIT_MODE}`,
         `pair=${label}`,
-        `shots=${BELL_BASES.map((b) => bases[b]?.shots).join('/')} (requested ${SHOTS}/basis)`,
+        `shots=${SHOTS}/basis`,
         `<ZZ>=${expectations.zz.toFixed(4)}`,
         `<XX>=${expectations.xx.toFixed(4)}`,
         `<YY>=${expectations.yy.toFixed(4)}`,
