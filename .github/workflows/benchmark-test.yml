@@ -14,15 +14,15 @@ on:
       bell_qubit_pairs:
         type: string
         required: false
-        description: "Comma-separated qubit pairs for Bell fidelity (e.g. '0-1,2-3'), or 'auto' to measure only the coupling with the highest calibrated fidelity"
+        description: "Bell fidelity pair selection: 'auto' measures the coupling with the highest calibrated 2Q fidelity (physical mode); otherwise manual control-target pairs, comma-separated (e.g. '0-1,2-3'), checked against the device's directed couplings in physical mode. Used only when test_files includes tests/bell-fidelity.spec.ts"
       bell_qubit_mode:
         type: string
         required: false
-        description: "'physical' (default) or 'logical' — physical disables transpiler, logical uses default transpiler"
+        description: "Bell fidelity mode for manual pairs: 'physical' (default) disables the transpiler and emits native rz/sx/cx gates; 'logical' uses the default transpiler. Ignored for 'auto'. Used only when test_files includes tests/bell-fidelity.spec.ts"
       bell_shots:
         type: string
         required: false
-        description: "Number of shots per Bell fidelity measurement (default: 1000)"
+        description: "Number of shots per Bell fidelity measurement (default: 1000). Used only when test_files includes tests/bell-fidelity.spec.ts"
       test_files:
         type: string
         required: false

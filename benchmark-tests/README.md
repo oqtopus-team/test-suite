@@ -57,7 +57,9 @@ and checks each value against the `[threshold]` section of `thresholds.toml`:
 ## Layer-2 Bell pair fidelity
 
 `bell-fidelity.spec.ts` prepares the Bell state |Φ+⟩ (H → CX) on a qubit pair,
-measures it in the Z basis and reports fidelity = P(00) + P(11). It is opt-in:
+measures it in the Z basis and reports fidelity = P(00) + P(11) (the
+probability of correlated outcomes; it does not see the relative phase, so
+|Φ−⟩ would also score 1). It is opt-in:
 it runs only with `RUN_BELL_FIDELITY=true`, which CI sets when
 `tests/bell-fidelity.spec.ts` is passed via the `benchmark-test.yml`
 `test_files` input. Results go to `results/bell-fidelity.json`,
@@ -87,8 +89,22 @@ the run (it is not a skip):
   qubits.
 
 In physical mode the circuit uses native gates only (H is emitted as
-`rz(pi/2); sx; rz(pi/2)`) since no transpiler runs. Pairs whose qubit numbers
-exceed the device's `n_qubits` are skipped rather than failed.
+`rz(pi/2); sx; rz(pi/2)`) since no transpiler runs.
+
+The device is read from `GET /devices/{DEVICE_ID}` before any job is submitted:
+
+- A failed request (any non-2xx status) fails the run. So does an unreadable
+  `device_info` (download or decode error) when it is needed — for `auto`, and
+  for manual pairs in physical mode, where it guards the untranspiled CX.
+- A device that was read but cannot run the measurement is a skip: no coupling
+  with a calibrated fidelity for `auto`, or a requested qubit that the device
+  does not have. Physical qubits are checked against the ids in
+  `device_info.qubits` (falling back to `0..n_qubits-1` only when the device
+  reports no qubits); logical pairs only need to fit within `n_qubits`.
+
+Each measured pair is saved to `results/bell/` and global teardown merges them
+into the outputs above, so a worker restart after a failing pair does not drop
+earlier pairs.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
