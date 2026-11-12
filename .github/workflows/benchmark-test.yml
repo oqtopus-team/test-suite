@@ -22,7 +22,7 @@ on:
       bell_shots:
         type: string
         required: false
-        description: "Number of shots per Bell fidelity measurement (default: 1000). Used only when test_files includes tests/bell-fidelity.spec.ts"
+        description: "Shots per measurement basis for Bell fidelity (ZZ, XX and YY are each run with this many shots; default: 1000). Used only when test_files includes tests/bell-fidelity.spec.ts"
       test_files:
         type: string
         required: false

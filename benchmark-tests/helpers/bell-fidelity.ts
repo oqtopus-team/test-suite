@@ -1,46 +1,79 @@
 /**
  * Bell pair fidelity measurement — circuit generation and analysis.
  *
- * Prepares a Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2 on two qubits and measures
- * in the computational (Z) basis.
+ * Prepares the Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2 on two qubits and measures
+ * it in three bases: ZZ, XX and YY. Each basis gives a parity expectation
+ * ⟨PP⟩ = P(even) − P(odd), and the state fidelity with |Φ+⟩ is
  *
- * For a perfect Bell state, P(00) = P(11) = 0.5, so:
- *   Fidelity = P(00) + P(11)
+ *   F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4
+ *
+ * since |Φ+⟩⟨Φ+| = (II + XX − YY + ZZ) / 4. An ideal |Φ+⟩ gives ⟨XX⟩ = +1,
+ * ⟨YY⟩ = −1, ⟨ZZ⟩ = +1 and F = 1; |Φ−⟩ gives F = 0. F > 0.5 certifies that
+ * the pair is entangled.
  */
 
 // ── Circuit generation ─────────────────────────────────────────────
 
+/** Measurement basis applied to both qubits of the pair. */
+export type BellBasis = 'ZZ' | 'XX' | 'YY';
+
+/** The three bases measured per pair, in the order the jobs are submitted. */
+export const BELL_BASES: readonly BellBasis[] = ['ZZ', 'XX', 'YY'];
+
+/**
+ * H in native gates: `rz(pi/2); sx; rz(pi/2)` equals H up to a global phase.
+ * It is the decomposition the device transpiler produces for `rz`/`sx`/`cx`
+ * hardware such as A-II.
+ */
+const nativeH = (q: string): string[] => [`rz(pi/2) ${q};`, `sx ${q};`, `rz(pi/2) ${q};`];
+
+/**
+ * Gates that rotate one qubit so that the Z-basis measurement after them
+ * measures X (H) or Y (S† then H). In physical mode they are written in native
+ * gates; S† is `rz(-pi/2)` up to a global phase.
+ */
+function basisChange(basis: BellBasis, q: string, physical: boolean): string[] {
+  if (basis === 'ZZ') return [];
+  if (basis === 'XX') return physical ? nativeH(q) : [`h ${q};`];
+  return physical ? [`rz(-pi/2) ${q};`, ...nativeH(q)] : [`sdg ${q};`, `h ${q};`];
+}
+
 /**
  * Generate an OpenQASM 3 circuit that prepares |Φ+⟩ on the given qubit pair
- * and measures in the computational (Z) basis.
- *
- * Circuit: H → CX → measure
+ * (H on the control, then CX control → target) and measures both qubits in
+ * `basis`: control into c[0], target into c[1].
  *
  * In physical mode the circuit uses OpenQASM 3 hardware-qubit syntax (`$n`)
- * and skips the transpiler, so it is written in native gates only: H is
- * emitted as `rz(pi/2); sx; rz(pi/2)` (equal to H up to a global phase) —
- * the same decomposition the device transpiler produces for `rz`/`sx`/`cx`
- * hardware such as A-II. Otherwise a virtual register sized to
- * `max(q0, q1) + 1` is declared and the transpiler handles `h` itself.
+ * and skips the transpiler, so it is written in native gates only (`rz`,
+ * `sx`, `cx`). Otherwise a virtual register sized to `max(q0, q1) + 1` is
+ * declared and the transpiler handles the standard gates (`h`, `sdg`).
  */
-export function bellCircuit(pair: QubitPair, physical = false): string {
+export function bellCircuit(
+  pair: QubitPair,
+  physical = false,
+  basis: BellBasis = 'ZZ',
+): string {
   const [q0, q1] = pair;
 
   const decls = physical
     ? ['bit[2] c;']
     : [`qubit[${Math.max(q0, q1) + 1}] q;`, 'bit[2] c;'];
   const ref = (q: number) => (physical ? `$${q}` : `q[${q}]`);
+  const change = [
+    ...basisChange(basis, ref(q0), physical),
+    ...basisChange(basis, ref(q1), physical),
+  ];
 
   const lines = [
     'OPENQASM 3;',
     'include "stdgates.inc";',
     ...decls,
     '',
-    ...(physical
-      ? [`rz(pi/2) ${ref(q0)};`, `sx ${ref(q0)};`, `rz(pi/2) ${ref(q0)};`]
-      : [`h ${ref(q0)};`]),
+    ...(physical ? nativeH(ref(q0)) : [`h ${ref(q0)};`]),
     `cx ${ref(q0)}, ${ref(q1)};`,
     '',
+    // No comments: physical-mode circuits go to the device untranspiled.
+    ...(change.length > 0 ? [...change, ''] : []),
     `c[0] = measure ${ref(q0)};`,
     `c[1] = measure ${ref(q1)};`,
     '',
@@ -59,7 +92,8 @@ const OUTCOME_RE = /^[01]{1,2}$/;
  * Every label must be a 2-bit binary outcome (`00`..`11`; a 1-bit label is
  * read with its leading zero dropped), every count a non-negative integer, and
  * the total positive — so a malformed API result fails the benchmark instead
- * of producing a fidelity such as 1 (`{foo: 1000}`) or 2 (negative counts).
+ * of producing an out-of-range expectation (e.g. from `{foo: 1000}` or
+ * negative counts).
  */
 export function invalidCounts(counts: unknown): string | null {
   if (counts == null || typeof counts !== 'object' || Array.isArray(counts)) {
@@ -82,30 +116,34 @@ export function invalidCounts(counts: unknown): string | null {
 }
 
 /**
- * Compute Bell pair fidelity as P(00) + P(11) from measurement counts.
- * Throws when the counts are malformed (see `invalidCounts`).
- *
- * |Φ+⟩ = (|00⟩ + |11⟩)/√2 — a perfect Bell state yields P(00) = P(11) = 0.5.
- * Fidelity = P(00) + P(11) measures how well the correlated outcomes are preserved.
+ * Parity expectation ⟨PP⟩ = P(even) − P(odd) of a two-qubit measurement:
+ * outcomes 00 / 11 count +1 and 01 / 10 count −1, so the bit order does not
+ * matter. Throws when the counts are malformed (see `invalidCounts`).
  */
-export function bellFidelity(counts: Record<string, number>): number {
+export function parityExpectation(counts: Record<string, number>): number {
   const invalid = invalidCounts(counts);
-  if (invalid) throw new Error(`bellFidelity: invalid sampling counts: ${invalid}`);
-  let total = 0;
-  let countCorrelated = 0;
+  if (invalid) throw new Error(`parityExpectation: invalid sampling counts: ${invalid}`);
 
+  let total = 0;
+  let even = 0;
   for (const [bitstring, count] of Object.entries(counts)) {
     total += count;
     const bits = bitstring.padStart(2, '0');
-    const b0 = bits[bits.length - 2];
-    const b1 = bits[bits.length - 1];
-    if (b0 === b1) {
-      countCorrelated += count;
-    }
+    if (bits[0] === bits[1]) even += count;
   }
+  return (2 * even - total) / total;
+}
 
-  if (total === 0) return 0;
-  return countCorrelated / total;
+/** Parity expectations of the three measured bases. */
+export interface BellExpectations {
+  zz: number;
+  xx: number;
+  yy: number;
+}
+
+/** Fidelity with |Φ+⟩: F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4. */
+export function bellStateFidelity({ zz, xx, yy }: BellExpectations): number {
+  return (1 + xx - yy + zz) / 4;
 }
 
 // ── Configuration parsing ──────────────────────────────────────────

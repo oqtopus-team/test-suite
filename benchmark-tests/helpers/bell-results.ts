@@ -19,7 +19,7 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { join } from 'node:path';
-import type { BestCoupling, QubitPair, Topology } from './bell-fidelity';
+import type { BellBasis, BellExpectations, BestCoupling, QubitPair, Topology } from './bell-fidelity';
 
 const RESULTS_DIR = join(__dirname, '..', 'results');
 const ENTRY_DIR = join(RESULTS_DIR, 'bell');
@@ -32,6 +32,14 @@ export interface QubitMapping {
   physical: number;
 }
 
+/** One measurement basis of a pair. */
+export interface BellBasisResult {
+  counts: unknown;
+  /** ⟨PP⟩ = P(even) − P(odd); `null` when the counts were rejected. */
+  expectation: number | null;
+  job_id?: string;
+}
+
 /** One measured pair. `qubit_mapping` is ordered control, target. */
 export interface BellResult {
   pair: string;
@@ -40,12 +48,19 @@ export interface BellResult {
    * unknown — a logical run whose transpile result had no usable mapping.
    */
   physical_pair: string | null;
+  /** Shots per basis. */
   shots: number;
-  /** `null` when the result could not be evaluated (see `error`). */
+  /**
+   * Fidelity with |Φ+⟩, F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4; `null` when the
+   * result could not be evaluated (see `error`).
+   */
   fidelity: number | null;
+  /** Parity expectations of the three bases; `null` with `error`. */
+  expectations: BellExpectations | null;
   threshold: number;
   pass: boolean;
-  counts: unknown;
+  /** Counts and expectation per measured basis. */
+  bases: Partial<Record<BellBasis, BellBasisResult>>;
   qubit_mapping?: QubitMapping[];
   /** Why the sampling result was rejected (e.g. malformed counts). */
   error?: string;
@@ -60,6 +75,7 @@ export interface BellRun {
   pair_selection: string;
   /** Requested pairs (`control-target`), in the order they are measured. */
   pairs: string[];
+  /** Shots per basis. */
   shots: number;
   selected: BestCoupling | null;
   /** Why the run could not start (device lookup failed); fails the run. */
@@ -113,7 +129,7 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
   lines.push('## Bell Pair Fidelity Results');
   lines.push('');
   lines.push(
-    `**Device**: \`${run.device}\` | **Qubit mode**: ${run.qubit_mode} | **Shots**: ${run.shots}`,
+    `**Device**: \`${run.device}\` | **Qubit mode**: ${run.qubit_mode} | **Shots**: ${run.shots} per basis (ZZ, XX, YY)`,
   );
   lines.push('');
   lines.push(`**Pair selection**: ${run.pair_selection}`);
@@ -136,22 +152,45 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
   } else if (results.length === 0) {
     lines.push('> No results collected.');
   } else {
-    lines.push('| Logical Qubit Pair | Physical Qubit Pair | Fidelity | Threshold | Counts | Result |');
-    lines.push('|:------------------:|:-------------------:|:--------:|:---------:|:------:|:------:|');
+    const num = (v: number | null | undefined) => (v == null ? '—' : v.toFixed(4));
+    lines.push(
+      '| Logical Qubit Pair | Physical Qubit Pair | Fidelity F | ⟨ZZ⟩ | ⟨XX⟩ | ⟨YY⟩ | Threshold | Result |',
+    );
+    lines.push(
+      '|:------------------:|:-------------------:|:----------:|:----:|:----:|:----:|:---------:|:------:|',
+    );
     for (const r of results) {
       const icon = r.error ? `❌ ${r.error}` : r.pass ? '✅' : '❌';
-      const counts =
-        r.counts != null && typeof r.counts === 'object' && !Array.isArray(r.counts)
-          ? Object.entries(r.counts as Record<string, unknown>)
-              .sort(([a], [b]) => a.localeCompare(b))
-              .map(([k, v]) => `${k}: ${v}`)
-              .join(', ')
-          : JSON.stringify(r.counts);
-      const fidelity = r.fidelity == null ? '—' : r.fidelity.toFixed(4);
+      const e = r.expectations;
       lines.push(
-        `| ${r.pair} | ${r.physical_pair ?? 'unknown'} | ${fidelity} | ${r.threshold} | ${counts} | ${icon} |`,
+        `| ${r.pair} | ${r.physical_pair ?? 'unknown'} | ${num(r.fidelity)} | ` +
+          `${num(e?.zz ?? r.bases.ZZ?.expectation)} | ${num(e?.xx ?? r.bases.XX?.expectation)} | ` +
+          `${num(e?.yy ?? r.bases.YY?.expectation)} | ${r.threshold} | ${icon} |`,
       );
     }
+    lines.push('');
+    lines.push('F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4 is the fidelity with |Φ+⟩; F > 0.5 means the pair is entangled.');
+    lines.push('');
+    lines.push('<details><summary>Counts per basis</summary>');
+    lines.push('');
+    lines.push('| Logical Qubit Pair | ZZ | XX | YY |');
+    lines.push('|:------------------:|:--:|:--:|:--:|');
+    const fmt = (c: unknown) =>
+      c != null && typeof c === 'object' && !Array.isArray(c)
+        ? Object.entries(c as Record<string, unknown>)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .map(([k, v]) => `${k}: ${v}`)
+            .join(', ')
+        : c === undefined
+          ? '—'
+          : JSON.stringify(c);
+    for (const r of results) {
+      lines.push(
+        `| ${r.pair} | ${fmt(r.bases.ZZ?.counts)} | ${fmt(r.bases.XX?.counts)} | ${fmt(r.bases.YY?.counts)} |`,
+      );
+    }
+    lines.push('');
+    lines.push('</details>');
   }
   lines.push('');
   return lines.join('\n');

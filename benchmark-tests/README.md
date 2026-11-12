@@ -56,10 +56,10 @@ and checks each value against the `[threshold]` section of `thresholds.toml`:
 
 ## Layer-2 Bell pair fidelity
 
-`bell-fidelity.spec.ts` prepares the Bell state |Φ+⟩ (H → CX) on a qubit pair,
-measures it in the Z basis and reports fidelity = P(00) + P(11) (the
-probability of correlated outcomes; it does not see the relative phase, so
-|Φ−⟩ would also score 1). It is opt-in:
+`bell-fidelity.spec.ts` prepares the Bell state |Φ+⟩ = (|00⟩ + |11⟩)/√2
+(H on the control, then CX control → target) on a qubit pair and measures its
+fidelity with |Φ+⟩ (see [How fidelity is measured](#how-fidelity-is-measured)).
+It is opt-in:
 it runs only with `RUN_BELL_FIDELITY=true`, which CI sets when
 `tests/bell-fidelity.spec.ts` is passed via the `benchmark-test.yml`
 `test_files` input. Results go to `results/bell-fidelity.json`,
@@ -88,8 +88,8 @@ the run (it is not a skip):
   coupling check, and so does logical mode, where the transpiler places the
   qubits.
 
-In physical mode the circuit uses native gates only (H is emitted as
-`rz(pi/2); sx; rz(pi/2)`) since no transpiler runs.
+In physical mode the circuits use native gates only (see above) since no
+transpiler runs.
 
 The device is read from `GET /devices/{DEVICE_ID}` before any job is submitted:
 
@@ -106,10 +106,10 @@ Each measured pair is saved to `results/bell/` and global teardown merges them
 into the outputs above, so a worker restart after a failing pair does not drop
 earlier pairs.
 
-A sampling result is validated before it is scored: every outcome label must be
-a 2-bit binary string and every count a non-negative integer (with a positive
-total). A malformed result fails the test and its reason is shown in the
-summary. In logical mode the Physical Qubit Pair comes from the transpile
+Every basis's sampling result is validated before it is scored: every outcome
+label must be a 2-bit binary string and every count a non-negative integer
+(with a positive total). A malformed result in any basis fails the pair and
+its reason is shown in the summary. In logical mode the Physical Qubit Pair comes from the transpile
 mapping; when no usable mapping is returned it is shown as `unknown` (and left
 off the qubit map) instead of reusing the logical indices.
 
@@ -117,7 +117,94 @@ off the qubit map) instead of reusing the logical indices.
 | --- | --- | --- |
 | `BELL_QUBIT_PAIRS` | `auto`, or manual `control-target` pairs | (unset: the spec is skipped) |
 | `BELL_QUBIT_MODE` | `physical` or `logical` (manual only) | `physical` |
-| `BELL_SHOTS` | Shots per measurement | `1000` |
+| `BELL_SHOTS` | Shots per basis (each pair runs 3 jobs) | `1000` |
+
+### How fidelity is measured
+
+Each pair is prepared three times, once per measurement basis, and each circuit
+is submitted as its own sampling job with `BELL_SHOTS` shots:
+
+| Basis | Gates before measuring both qubits | Logical mode | Physical mode (native) |
+| --- | --- | --- | --- |
+| ZZ | none | — | — |
+| XX | H | `h` | `rz(pi/2); sx; rz(pi/2)` |
+| YY | S† then H | `sdg; h` | `rz(-pi/2); rz(pi/2); sx; rz(pi/2)` |
+
+For each basis the parity expectation is ⟨PP⟩ = P(even) − P(odd), where 00 and
+11 are even and 01 and 10 are odd. The fidelity with |Φ+⟩ is
+
+```text
+F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4
+```
+
+An ideal |Φ+⟩ gives ⟨ZZ⟩ = +1, ⟨XX⟩ = +1, ⟨YY⟩ = −1 and F = 1; |Φ−⟩ gives
+F = 0 and a maximally mixed state F = 0.25. The threshold
+`[bell_fidelity] min_fidelity = 0.5` is the separable bound: **F > 0.5 means
+the pair is entangled.** The Job Summary shows F together with ⟨ZZ⟩, ⟨XX⟩
+and ⟨YY⟩ (counts per basis in a collapsible table), and `bell-fidelity.json`
+stores the counts, expectation and job id of every basis. The counts check
+below applies to all three bases; one malformed basis fails the pair.
+
+In physical mode H is written as `rz(pi/2); sx; rz(pi/2)` (equal to H up to a
+global phase) and S† as `rz(-pi/2)`, so only `rz` / `sx` / `cx` reach the
+device. The circuits for the pair `2-1` are:
+
+```qasm
+// ZZ
+OPENQASM 3;
+include "stdgates.inc";
+bit[2] c;
+rz(pi/2) $2;
+sx $2;
+rz(pi/2) $2;
+cx $2, $1;
+c[0] = measure $2;
+c[1] = measure $1;
+```
+
+```qasm
+// XX
+OPENQASM 3;
+include "stdgates.inc";
+bit[2] c;
+rz(pi/2) $2;
+sx $2;
+rz(pi/2) $2;
+cx $2, $1;
+rz(pi/2) $2;
+sx $2;
+rz(pi/2) $2;
+rz(pi/2) $1;
+sx $1;
+rz(pi/2) $1;
+c[0] = measure $2;
+c[1] = measure $1;
+```
+
+```qasm
+// YY
+OPENQASM 3;
+include "stdgates.inc";
+bit[2] c;
+rz(pi/2) $2;
+sx $2;
+rz(pi/2) $2;
+cx $2, $1;
+rz(-pi/2) $2;
+rz(pi/2) $2;
+sx $2;
+rz(pi/2) $2;
+rz(-pi/2) $1;
+rz(pi/2) $1;
+sx $1;
+rz(pi/2) $1;
+c[0] = measure $2;
+c[1] = measure $1;
+```
+
+`tests/bell-fidelity-math.spec.ts` checks these with a state-vector simulator
+(ideal |Φ+⟩ → F = 1, |Φ−⟩ → F = 0, native circuits equal to the standard-gate
+ones). It needs no API and runs with the other benchmark tests.
 
 ## Prerequisites
 

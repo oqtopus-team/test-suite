@@ -2,8 +2,10 @@
  * Layer-2 benchmark: Bell pair fidelity measurement.
  *
  * For each specified qubit pair, prepares a Bell state |Φ+⟩ = (|00⟩+|11⟩)/√2
- * using H → CX and measures in the computational (Z) basis.
- * Fidelity = P(00) + P(11) — correlation fidelity of the Bell state.
+ * using H → CX and measures it in the ZZ, XX and YY bases (one sampling job
+ * per basis). Each basis gives ⟨PP⟩ = P(even) − P(odd), and the fidelity with
+ * |Φ+⟩ is F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4; F > 0.5 means the pair is
+ * entangled.
  *
  * Before running any circuit, the test validates that the target device
  * has enough qubits to support the requested physical qubit indices.
@@ -18,7 +20,7 @@
  *   BELL_QUBIT_MODE   — "physical" (default) or "logical"
  *                        physical: gates target physical qubits directly (transpiler disabled)
  *                        logical:  transpiler maps logical → physical qubits
- *   BELL_SHOTS        — shots per measurement (default: 1000)
+ *   BELL_SHOTS        — shots per basis (default: 1000)
  *   DEVICE_ID         — target device (default: "qulacs")
  *
  * Pair selection:
@@ -40,15 +42,18 @@ import { runSamplingJob, fetchTranspileResult, type SubmitParams } from '../help
 import { resolveDeviceInfo } from '../helpers/device-info';
 import {
   AUTO_PAIR,
+  BELL_BASES,
   bellCircuit,
-  bellFidelity,
+  bellStateFidelity,
   bestCoupling,
   invalidCounts,
   checkPairsAgainstCouplings,
   directedCouplings,
   extractTopology,
   formatPairs,
+  parityExpectation,
   parseManualPairs,
+  type BellBasis,
   type BestCoupling,
   type Topology,
   type QubitPair,
@@ -56,6 +61,7 @@ import {
 import {
   recordBellResult,
   recordBellRun,
+  type BellBasisResult,
   type QubitMapping,
 } from '../helpers/bell-results';
 
@@ -164,12 +170,12 @@ function measuredPhysicalQubits(qasm: string): (number | undefined)[] {
 }
 
 /** Build submission params for a Bell fidelity measurement. */
-function submitParams(pair: QubitPair): SubmitParams {
+function submitParams(pair: QubitPair, basis: BellBasis): SubmitParams {
   const transpiler_info = USE_PHYSICAL ? { transpiler_lib: null } : {};
 
   return {
-    name: `bell-fidelity-${pair[0]}-${pair[1]}`,
-    description: `Bell fidelity for ${QUBIT_MODE} qubits ${pair[0]}-${pair[1]}`,
+    name: `bell-fidelity-${pair[0]}-${pair[1]}-${basis.toLowerCase()}`,
+    description: `Bell fidelity (${basis} basis) for ${QUBIT_MODE} qubits ${pair[0]}-${pair[1]}`,
     device_id: DEVICE_ID,
     job_type: 'sampling',
     shots: SHOTS,
@@ -190,7 +196,8 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
   );
 
   // Extend timeout — job polling can take a while.
-  test.setTimeout(600_000);
+  // Each pair runs one job per basis (3 jobs), each polled for up to 300 s.
+  test.setTimeout(1_000_000);
 
   const pairs = MANUAL_PARSE.pairs ?? [];
 
@@ -339,90 +346,126 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
     }
   }
 
+  /** Logical→physical mapping of `pair` for one basis job, if available. */
+  async function mappingOf(
+    ctx: APIRequestContext,
+    job: Parameters<typeof fetchTranspileResult>[1],
+    pair: QubitPair,
+    basis: BellBasis,
+  ): Promise<QubitMapping[] | undefined> {
+    const transpileResult = await fetchTranspileResult(ctx, job);
+    if (!transpileResult) {
+      console.log(`[bell] ${basis}: no transpile result available`);
+      return undefined;
+    }
+    // Detect the transpiler removing the entangling gate.
+    const stats = transpileResult.stats as { after?: { n_gates_2q?: number } } | undefined;
+    if (stats?.after?.n_gates_2q === 0) {
+      console.warn(
+        `[bell] WARNING: ${basis}: transpiled circuit has 0 two-qubit gates — ` +
+          `the result does not measure an entangled pair.`,
+      );
+    }
+    const mapping = extractQubitMapping(transpileResult, pair);
+    if (mapping) {
+      console.log(
+        `[bell] ${basis}: qubit mapping ${mapping.map((m) => `L${m.logical}→P${m.physical}`).join(', ')}`,
+      );
+    } else {
+      console.warn(`[bell] ${basis}: could not extract qubit mapping from transpile result`);
+    }
+    return mapping;
+  }
+
   async function measure(pair: QubitPair): Promise<void> {
     const label = `${pair[0]}-${pair[1]}`;
     const threshold = loadThresholds().bellFidelity.minFidelity;
     const ctx = await request.newContext();
 
     try {
-      const program = bellCircuit(pair, USE_PHYSICAL);
-      const params = submitParams(pair);
+      // One sampling job per basis; `BELL_SHOTS` shots each.
+      const bases: Partial<Record<BellBasis, BellBasisResult>> = {};
+      const mappings: (QubitMapping[] | undefined)[] = [];
+      const errors: string[] = [];
+      for (const basis of BELL_BASES) {
+        const program = bellCircuit(pair, USE_PHYSICAL, basis);
+        console.log(`[bell] submitting ${basis} job for ${QUBIT_MODE} qubits ${label}...`);
+        console.log(`[bell] circuit (${basis}):\n${program}`);
+        const { result, job } = await runSamplingJob(ctx, [program], submitParams(pair, basis));
 
-      console.log(`[bell] submitting job for ${QUBIT_MODE} qubits ${label}...`);
-      console.log(`[bell] circuit:\n${program}`);
-      const { result, job } = await runSamplingJob(ctx, [program], params);
-
-      // A malformed result (bad labels, negative or non-integer counts) fails
-      // the test and is recorded with its reason rather than scored.
-      const invalid = invalidCounts(result.counts);
-      if (invalid) {
-        const error = `invalid sampling counts: ${invalid}`;
-        recordBellResult({
-          pair: label,
-          physical_pair: USE_PHYSICAL ? label : null,
-          shots: SHOTS,
-          fidelity: null,
-          threshold,
-          pass: false,
-          counts: result.counts,
-          error,
-          retry: test.info().retry,
-        });
-        throw new Error(`Bell result for ${QUBIT_MODE} qubits ${label}: ${error}`);
+        // A malformed result (bad labels, negative or non-integer counts)
+        // fails the pair; it is recorded with its reason rather than scored.
+        const invalid = invalidCounts(result.counts);
+        if (invalid) errors.push(`${basis}: invalid sampling counts: ${invalid}`);
+        const expectation = invalid ? null : parityExpectation(result.counts);
+        bases[basis] = { counts: result.counts, expectation, job_id: job.job_id };
+        console.log(
+          `[bell] ${basis}: job=${job.job_id} counts=${JSON.stringify(result.counts)} ` +
+            `<${basis}>=${expectation == null ? 'invalid' : expectation.toFixed(4)}`,
+        );
+        if (QUBIT_MODE === 'logical') mappings.push(await mappingOf(ctx, job, pair, basis));
       }
-      const fidelity = bellFidelity(result.counts);
-      const pass = fidelity >= threshold;
 
-      // Fetch transpile result to extract logical→physical qubit mapping.
+      // The physical pair is the transpile mapping (logical mode; it must be
+      // the same for all three bases, or F does not describe one pair), or
+      // the requested pair itself when the circuit ran untranspiled.
+      // Otherwise it is reported as unknown rather than guessed.
       let qubit_mapping: QubitMapping[] | undefined;
       if (QUBIT_MODE === 'logical') {
-        const transpileResult = await fetchTranspileResult(ctx, job);
-        if (transpileResult) {
-          // Detect transpiler folding the identity circuit.
-          const stats = transpileResult.stats as
-            | { after?: { n_gates_2q?: number } }
-            | undefined;
-          if (stats?.after?.n_gates_2q === 0) {
-            console.warn(
-              `[bell] WARNING: transpiled circuit has 0 two-qubit gates. ` +
-              `The transpiler likely folded the round-trip (identity) circuit. ` +
-              `Fidelity measures readout error, not Bell pair entanglement.`,
-            );
-          }
-          qubit_mapping = extractQubitMapping(transpileResult, pair);
-          if (qubit_mapping) {
-            const mappingStr = qubit_mapping
-              .map((m) => `L${m.logical}→P${m.physical}`)
-              .join(', ');
-            console.log(`[bell] qubit mapping: ${mappingStr}`);
-          } else {
-            console.warn(`[bell] Could not extract qubit mapping from transpile result`);
-          }
-        } else {
-          console.log(`[bell] No transpile result available`);
+        const keys = mappings.map((m) => (m ? m.map((e) => e.physical).join('-') : ''));
+        if (mappings[0] && keys.every((k) => k === keys[0])) {
+          qubit_mapping = mappings[0];
+        } else if (mappings.some(Boolean)) {
+          console.warn(
+            `[bell] qubit mapping differs between bases (${BELL_BASES.map((b, i) => `${b}: ${keys[i] || 'unknown'}`).join(', ')}) — physical pair reported as unknown`,
+          );
         }
       } else if (USE_PHYSICAL) {
         qubit_mapping = pair.map((q) => ({ logical: q, physical: q }));
         console.log(`[bell] physical mode: qubits ${label} target hardware directly`);
       }
-
-      // Persist per pair (a retry replaces it); global teardown aggregates.
-      // The physical pair is known from the transpile mapping, or is the
-      // requested pair itself when the circuit ran untranspiled; otherwise
-      // it is reported as unknown rather than guessed from logical indices.
       const physical_pair = qubit_mapping
         ? qubit_mapping.map((m) => m.physical).join('-')
         : USE_PHYSICAL
           ? label
           : null;
+
+      if (errors.length > 0) {
+        const error = errors.join('; ');
+        recordBellResult({
+          pair: label,
+          physical_pair,
+          shots: SHOTS,
+          fidelity: null,
+          expectations: null,
+          threshold,
+          pass: false,
+          bases,
+          qubit_mapping,
+          error,
+          retry: test.info().retry,
+        });
+        throw new Error(`Bell result for ${QUBIT_MODE} qubits ${label}: ${error}`);
+      }
+
+      const expectations = {
+        zz: bases.ZZ!.expectation!,
+        xx: bases.XX!.expectation!,
+        yy: bases.YY!.expectation!,
+      };
+      const fidelity = bellStateFidelity(expectations);
+      const pass = fidelity >= threshold;
+
+      // Persist per pair (a retry replaces it); global teardown aggregates.
       recordBellResult({
         pair: label,
         physical_pair,
         shots: SHOTS,
         fidelity,
+        expectations,
         threshold,
         pass,
-        counts: result.counts,
+        bases,
         qubit_mapping,
         retry: test.info().retry,
       });
@@ -435,7 +478,10 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         `device=${DEVICE_ID}`,
         `mode=${QUBIT_MODE}`,
         `pair=${label}`,
-        `shots=${SHOTS}`,
+        `shots=${SHOTS}/basis`,
+        `<ZZ>=${expectations.zz.toFixed(4)}`,
+        `<XX>=${expectations.xx.toFixed(4)}`,
+        `<YY>=${expectations.yy.toFixed(4)}`,
         `fidelity=${fidelity.toFixed(4)}`,
         `threshold=${threshold}`,
       ].join(' ') + mappingInfo;
