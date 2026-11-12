@@ -116,11 +116,33 @@ export function clearBellResults(): void {
 }
 
 /** Read the per-pair entries in the order they were requested. */
-function readResults(order: string[]): BellResult[] {
+function readResults(run: BellRun): BellResult[] {
+  const order = run.pairs;
   const files = readdirSync(ENTRY_DIR).filter((f) => f.startsWith('pair-') && f.endsWith('.json'));
   const results = files.map(
     (f) => JSON.parse(readFileSync(join(ENTRY_DIR, f), 'utf-8')) as BellResult,
   );
+  // A requested pair without any result file (its test never started, e.g.
+  // the run was interrupted) is shown as missing rather than dropped. Pairs
+  // the run never measured on purpose (setup error, rejected pairs, skip)
+  // are explained by the run-level message instead.
+  if (!run.setup_error && !run.pair_error && !run.skip_reason) {
+    const have = new Set(results.map((r) => r.pair));
+    for (const pair of order.filter((p) => !have.has(p))) {
+      results.push({
+        pair,
+        physical_pair: null,
+        shots: run.shots,
+        fidelity: null,
+        expectations: null,
+        threshold: Number.NaN,
+        pass: false,
+        bases: {},
+        error: 'missing result: no attempt recorded a result for this pair',
+        retry: 0,
+      });
+    }
+  }
   const rank = (pair: string) => {
     const i = order.indexOf(pair);
     return i === -1 ? Number.MAX_SAFE_INTEGER : i;
@@ -180,7 +202,7 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
       lines.push(
         `| ${r.pair} | ${physicalOf(r)} | ${num(r.fidelity)} | ` +
           `${num(e?.zz ?? r.bases.ZZ?.expectation)} | ${num(e?.xx ?? r.bases.XX?.expectation)} | ` +
-          `${num(e?.yy ?? r.bases.YY?.expectation)} | ${r.threshold} | ${icon} |`,
+          `${num(e?.yy ?? r.bases.YY?.expectation)} | ${Number.isFinite(r.threshold) ? r.threshold : '—'} | ${icon} |`,
       );
     }
     lines.push('');
@@ -218,7 +240,7 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
 export function aggregateBellResults(): void {
   if (!existsSync(RUN_PATH)) return;
   const run = JSON.parse(readFileSync(RUN_PATH, 'utf-8')) as BellRun;
-  const results = readResults(run.pairs);
+  const results = readResults(run);
   writeFileSync(RESULT_JSON, `${JSON.stringify({ ...run, results }, null, 2)}\n`);
   writeFileSync(RESULT_SUMMARY, renderSummary(run, results));
 }

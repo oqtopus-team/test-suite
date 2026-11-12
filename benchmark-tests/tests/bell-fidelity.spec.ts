@@ -63,6 +63,7 @@ import {
   recordBellResult,
   recordBellRun,
   type BellBasisResult,
+  type BellResult,
   type QubitMapping,
 } from '../helpers/bell-results';
 
@@ -381,11 +382,35 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
   async function measure(pair: QubitPair): Promise<void> {
     const label = `${pair[0]}-${pair[1]}`;
     const threshold = loadThresholds().bellFidelity.minFidelity;
-    const ctx = await request.newContext();
+    const retry = test.info().retry;
+    const bases: Partial<Record<BellBasis, BellBasisResult>> = {};
 
+    // Every attempt (re)writes this pair's result file, so the summary always
+    // reflects the last attempt. A placeholder goes first: if the attempt is
+    // cut off (test timeout, worker stop) it stays as the pair's result
+    // instead of an earlier attempt's measurement — or no row at all.
+    let recorded = false;
+    const record = (result: BellResult) => {
+      recordBellResult(result);
+      recorded = true;
+    };
+    const failed = (error: string): BellResult => ({
+      pair: label,
+      physical_pair: USE_PHYSICAL ? label : null,
+      shots: SHOTS,
+      fidelity: null,
+      expectations: null,
+      threshold,
+      pass: false,
+      bases,
+      error,
+      retry,
+    });
+    recordBellResult(failed(`attempt ${retry + 1} did not finish (timed out or the worker stopped)`));
+
+    const ctx = await request.newContext();
     try {
       // One sampling job per basis; `BELL_SHOTS` shots each.
-      const bases: Partial<Record<BellBasis, BellBasisResult>> = {};
       const mappings: Partial<Record<BellBasis, QubitMapping[] | undefined>> = {};
       const errors: string[] = [];
       for (const basis of BELL_BASES) {
@@ -441,7 +466,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
 
       if (errors.length > 0) {
         const error = errors.join('; ');
-        recordBellResult({
+        record({
           pair: label,
           physical_pair,
           shots: SHOTS,
@@ -466,7 +491,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
       const pass = fidelity >= threshold;
 
       // Persist per pair (a retry replaces it); global teardown aggregates.
-      recordBellResult({
+      record({
         pair: label,
         physical_pair,
         shots: SHOTS,
@@ -504,6 +529,11 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         fidelity,
         `Bell fidelity ${fidelity.toFixed(4)} for ${QUBIT_MODE} qubits ${label} is below threshold ${threshold}`,
       ).toBeGreaterThanOrEqual(threshold);
+    } catch (e) {
+      // An exception (API error, job failure or timeout, ...) still replaces
+      // the result with this attempt's error, keeping any bases measured so far.
+      if (!recorded) record(failed(e instanceof Error ? e.message.split('\n')[0] : String(e)));
+      throw e;
     } finally {
       await ctx.dispose();
     }
