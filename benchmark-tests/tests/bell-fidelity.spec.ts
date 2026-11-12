@@ -44,6 +44,7 @@ import {
   AUTO_PAIR,
   BELL_BASES,
   bellCircuit,
+  combineBasisMappings,
   bellStateFidelity,
   bestCoupling,
   invalidCounts,
@@ -385,7 +386,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
     try {
       // One sampling job per basis; `BELL_SHOTS` shots each.
       const bases: Partial<Record<BellBasis, BellBasisResult>> = {};
-      const mappings: (QubitMapping[] | undefined)[] = [];
+      const mappings: Partial<Record<BellBasis, QubitMapping[] | undefined>> = {};
       const errors: string[] = [];
       for (const basis of BELL_BASES) {
         const program = bellCircuit(pair, USE_PHYSICAL, basis);
@@ -403,21 +404,29 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
           `[bell] ${basis}: job=${job.job_id} counts=${JSON.stringify(result.counts)} ` +
             `<${basis}>=${expectation == null ? 'invalid' : expectation.toFixed(4)}`,
         );
-        if (QUBIT_MODE === 'logical') mappings.push(await mappingOf(ctx, job, pair, basis));
+        if (QUBIT_MODE === 'logical') mappings[basis] = await mappingOf(ctx, job, pair, basis);
       }
 
-      // The physical pair is the transpile mapping (logical mode; it must be
-      // the same for all three bases, or F does not describe one pair), or
-      // the requested pair itself when the circuit ran untranspiled.
-      // Otherwise it is reported as unknown rather than guessed.
+      // The physical pair is the transpile mapping in logical mode, or the
+      // requested pair itself when the circuit ran untranspiled; otherwise it
+      // is reported as unknown rather than guessed. In logical mode the three
+      // bases must land on the same physical pair: if their known mappings
+      // disagree, F would mix different hardware, so the pair fails.
       let qubit_mapping: QubitMapping[] | undefined;
       if (QUBIT_MODE === 'logical') {
-        const keys = mappings.map((m) => (m ? m.map((e) => e.physical).join('-') : ''));
-        if (mappings[0] && keys.every((k) => k === keys[0])) {
-          qubit_mapping = mappings[0];
-        } else if (mappings.some(Boolean)) {
+        const combined = combineBasisMappings(mappings);
+        for (const basis of BELL_BASES) {
+          if (bases[basis]) bases[basis]!.physical_pair = combined.perBasis[basis];
+        }
+        if (combined.mismatch) {
+          errors.push(combined.mismatch);
+          console.error(`[bell] ${combined.mismatch}`);
+        } else if (combined.mapping) {
+          qubit_mapping = combined.mapping;
+        } else {
           console.warn(
-            `[bell] qubit mapping differs between bases (${BELL_BASES.map((b, i) => `${b}: ${keys[i] || 'unknown'}`).join(', ')}) — physical pair reported as unknown`,
+            `[bell] physical pair unknown: no usable qubit mapping for ` +
+              `${BELL_BASES.filter((b) => !combined.perBasis[b]).join(', ')}`,
           );
         }
       } else if (USE_PHYSICAL) {

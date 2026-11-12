@@ -12,6 +12,7 @@ import { test, expect } from '@playwright/test';
 import {
   BELL_BASES,
   bellCircuit,
+  combineBasisMappings,
   bellStateFidelity,
   invalidCounts,
   parityExpectation,
@@ -158,6 +159,36 @@ test.describe('Bell fidelity math (unit)', () => {
     // A mixed state (no coherence) stays at the separable bound F = 0.5.
     expect(bellStateFidelity({ zz: 1, xx: 0, yy: 0 })).toBeCloseTo(0.5, 9);
     expect(bellStateFidelity({ zz: 0, xx: 0, yy: 0 })).toBeCloseTo(0.25, 9);
+  });
+
+  test('logical-mode mappings: all bases agree → one physical pair', () => {
+    const m = [{ logical: 2, physical: 1 }, { logical: 3, physical: 2 }];
+    const c = combineBasisMappings({ ZZ: m, XX: m, YY: m });
+    expect(c.mismatch).toBeUndefined();
+    expect(c.mapping).toEqual(m);
+    expect(c.perBasis).toEqual({ ZZ: '1-2', XX: '1-2', YY: '1-2' });
+  });
+
+  test('logical-mode mappings: bases disagree → mismatch (pair fails)', () => {
+    const a = [{ logical: 2, physical: 1 }, { logical: 3, physical: 2 }];
+    const b = [{ logical: 2, physical: 4 }, { logical: 3, physical: 5 }];
+    const c = combineBasisMappings({ ZZ: a, XX: b, YY: undefined });
+    expect(c.mapping).toBeUndefined();
+    expect(c.mismatch).toContain('ZZ: 1-2, XX: 4-5, YY: unknown');
+    // Same qubits in the opposite control/target order is also a different placement.
+    const r = [{ logical: 2, physical: 2 }, { logical: 3, physical: 1 }];
+    expect(combineBasisMappings({ ZZ: a, XX: a, YY: r }).mismatch).toBeDefined();
+  });
+
+  test('logical-mode mappings: some bases unknown, the rest agree → unknown', () => {
+    const m = [{ logical: 0, physical: 0 }, { logical: 1, physical: 3 }];
+    const partial = combineBasisMappings({ ZZ: m, XX: undefined, YY: m });
+    expect(partial.mismatch).toBeUndefined();
+    expect(partial.mapping).toBeUndefined();
+    expect(partial.perBasis).toEqual({ ZZ: '0-3', XX: null, YY: '0-3' });
+    const none = combineBasisMappings({});
+    expect(none.mismatch).toBeUndefined();
+    expect(none.mapping).toBeUndefined();
   });
 
   test('malformed counts are rejected', () => {

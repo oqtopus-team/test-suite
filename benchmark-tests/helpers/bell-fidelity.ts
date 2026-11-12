@@ -146,6 +146,50 @@ export function bellStateFidelity({ zz, xx, yy }: BellExpectations): number {
   return (1 + xx - yy + zz) / 4;
 }
 
+// ── Mapping consistency across bases (logical mode) ─────────────────
+
+/** Logical → physical placement of one qubit of the pair. */
+export interface PairMapping {
+  logical: number;
+  physical: number;
+}
+
+/**
+ * Outcome of combining the transpiled placement of the three basis jobs.
+ * - `mapping`: all bases report the same physical pair.
+ * - `mismatch`: at least two bases report different physical pairs, so the
+ *   three expectations were measured on different hardware and F describes
+ *   no single pair — the caller fails the pair with this reason.
+ * - neither: some bases have no usable mapping and the known ones agree; the
+ *   physical pair is unknown but not contradictory.
+ * `perBasis` gives each basis's physical pair (`control-target`) or `null`.
+ */
+export interface CombinedMapping {
+  mapping?: PairMapping[];
+  mismatch?: string;
+  perBasis: Record<BellBasis, string | null>;
+}
+
+export function combineBasisMappings(
+  mappings: Partial<Record<BellBasis, PairMapping[] | undefined>>,
+): CombinedMapping {
+  const perBasis = Object.fromEntries(
+    BELL_BASES.map((b) => [b, mappings[b] ? mappings[b]!.map((m) => m.physical).join('-') : null]),
+  ) as Record<BellBasis, string | null>;
+  const known = BELL_BASES.map((b) => perBasis[b]).filter((k): k is string => k !== null);
+  if (new Set(known).size > 1) {
+    return {
+      perBasis,
+      mismatch:
+        'qubit mapping differs between bases ' +
+        `(${BELL_BASES.map((b) => `${b}: ${perBasis[b] ?? 'unknown'}`).join(', ')}) — ` +
+        'the bases did not measure the same physical pair, so F is not computed',
+    };
+  }
+  if (known.length === BELL_BASES.length) return { perBasis, mapping: mappings.ZZ };
+  return { perBasis };
+}
+
 // ── Configuration parsing ──────────────────────────────────────────
 
 export type QubitPair = [number, number];

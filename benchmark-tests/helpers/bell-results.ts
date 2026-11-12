@@ -38,6 +38,11 @@ export interface BellBasisResult {
   /** ⟨PP⟩ = P(even) − P(odd); `null` when the counts were rejected. */
   expectation: number | null;
   job_id?: string;
+  /**
+   * Physical pair (`control-target`) this basis ran on, from its transpile
+   * result (logical mode); `null` when unknown.
+   */
+  physical_pair?: string | null;
 }
 
 /** One measured pair. `qubit_mapping` is ordered control, target. */
@@ -159,11 +164,21 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
     lines.push(
       '|:------------------:|:-------------------:|:----------:|:----:|:----:|:----:|:---------:|:------:|',
     );
+    // When the bases ran on different physical pairs (logical mode), show
+    // each basis's pair instead of a single one.
+    const physicalOf = (r: BellResult) => {
+      if (r.physical_pair) return r.physical_pair;
+      const perBasis = (['ZZ', 'XX', 'YY'] as const).map((b) => [b, r.bases[b]?.physical_pair] as const);
+      const known = new Set(perBasis.map(([, p]) => p).filter(Boolean));
+      return known.size > 1
+        ? perBasis.map(([b, p]) => `${b}: ${p ?? 'unknown'}`).join('<br>')
+        : 'unknown';
+    };
     for (const r of results) {
       const icon = r.error ? `❌ ${r.error}` : r.pass ? '✅' : '❌';
       const e = r.expectations;
       lines.push(
-        `| ${r.pair} | ${r.physical_pair ?? 'unknown'} | ${num(r.fidelity)} | ` +
+        `| ${r.pair} | ${physicalOf(r)} | ${num(r.fidelity)} | ` +
           `${num(e?.zz ?? r.bases.ZZ?.expectation)} | ${num(e?.xx ?? r.bases.XX?.expectation)} | ` +
           `${num(e?.yy ?? r.bases.YY?.expectation)} | ${r.threshold} | ${icon} |`,
       );

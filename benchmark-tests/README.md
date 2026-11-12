@@ -110,8 +110,20 @@ Every basis's sampling result is validated before it is scored: every outcome
 label must be a 2-bit binary string and every count a non-negative integer
 (with a positive total). A malformed result in any basis fails the pair and
 its reason is shown in the summary. In logical mode the Physical Qubit Pair comes from the transpile
-mapping; when no usable mapping is returned it is shown as `unknown` (and left
-off the qubit map) instead of reusing the logical indices.
+mapping of each basis job, and the transpiler places each of the three jobs on
+its own:
+
+- All three bases map to the same physical pair: that pair is shown.
+- The known mappings disagree (e.g. ZZ on `1-2` but XX on `4-5`): the three
+  expectations were measured on different hardware, so F describes no single
+  pair. The pair **fails**, F is not computed (`—`), and the summary lists the
+  physical pair of each basis with the reason.
+- Some bases return no usable mapping and the known ones agree: the pair is
+  shown as `unknown` (and left off the qubit map) with a warning, instead of
+  reusing the logical indices.
+
+To pin the placement of all three bases, use manual pairs in physical mode
+(`BELL_QUBIT_MODE=physical`), where the requested pair runs untranspiled.
 
 | Variable | Purpose | Default |
 | --- | --- | --- |
