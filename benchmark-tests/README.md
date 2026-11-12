@@ -117,9 +117,13 @@ match, or more than one, is an error rather than a guess. A ZIP `device_info`
 is read from its `device_info.json` entry.
 
 Every basis's sampling result is validated before it is scored: every outcome
-label must be a 2-bit binary string and every count a non-negative integer
-(with a positive total). A malformed result in any basis fails the pair and
-its reason is shown in the summary. In logical mode the Physical Qubit Pair comes from the transpile
+label must be a 2-bit binary string, every count a non-negative integer, and
+the counts must add up to exactly the requested shots (`BELL_SHOTS`). A
+malformed or incomplete result in any basis fails the pair (e.g.
+`XX: counts total 3 != requested shots 1000`), F is not computed, and the
+reason is shown in the summary. The summary and `bell-fidelity.json` report
+the shots actually returned per basis (`bases.<basis>.shots`) next to the
+requested value (`shots_requested`). In logical mode the Physical Qubit Pair comes from the transpile
 mapping of each basis job, and the transpiler places each of the three jobs on
 its own:
 

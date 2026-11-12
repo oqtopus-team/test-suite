@@ -115,6 +115,21 @@ export function invalidCounts(counts: unknown): string | null {
   return null;
 }
 
+/** Sum of the counts of a sampling result (validate with `invalidCounts` first). */
+export function countsTotal(counts: Record<string, number>): number {
+  return Object.values(counts).reduce((sum, v) => sum + v, 0);
+}
+
+/**
+ * Why the counts do not add up to the requested shots, or `null` when they
+ * do. An incomplete (or inflated) result fails the pair rather than producing
+ * a fidelity from fewer — or more — shots than the job asked for.
+ */
+export function shotsMismatch(counts: Record<string, number>, requested: number): string | null {
+  const total = countsTotal(counts);
+  return total === requested ? null : `counts total ${total} != requested shots ${requested}`;
+}
+
 /**
  * Parity expectation ⟨PP⟩ = P(even) − P(odd) of a two-qubit measurement:
  * outcomes 00 / 11 count +1 and 01 / 10 count −1, so the bit order does not

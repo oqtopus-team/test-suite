@@ -13,9 +13,11 @@ import {
   BELL_BASES,
   bellCircuit,
   combineBasisMappings,
+  countsTotal,
   bellStateFidelity,
   invalidCounts,
   parityExpectation,
+  shotsMismatch,
   type BellBasis,
   type QubitPair,
 } from '../helpers/bell-fidelity';
@@ -189,6 +191,26 @@ test.describe('Bell fidelity math (unit)', () => {
     const none = combineBasisMappings({});
     expect(none.mismatch).toBeUndefined();
     expect(none.mapping).toBeUndefined();
+  });
+
+  test('counts that add up to fewer shots than requested are rejected', () => {
+    // Valid labels and counts, and a perfect-looking parity — but only 3 of
+    // the 1000 requested shots came back.
+    expect(invalidCounts({ '00': 3 })).toBeNull();
+    expect(shotsMismatch({ '00': 3 }, 1000)).toBe('counts total 3 != requested shots 1000');
+  });
+
+  test('counts that add up to more shots than requested are rejected', () => {
+    expect(shotsMismatch({ '00': 600, '11': 500 }, 1000)).toBe(
+      'counts total 1100 != requested shots 1000',
+    );
+  });
+
+  test('counts that add up to the requested shots pass', () => {
+    const counts = { '00': 480, '01': 20, '10': 20, '11': 480 };
+    expect(countsTotal(counts)).toBe(1000);
+    expect(shotsMismatch(counts, 1000)).toBeNull();
+    expect(shotsMismatch({ '0': 400, '11': 1600 }, 2000)).toBeNull();
   });
 
   test('malformed counts are rejected', () => {
