@@ -66,8 +66,88 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Browsers come from the Playwright CDN and are cached, so this job does
+      # not depend on the Ubuntu apt mirrors for anything it strictly needs.
+      # (`--with-deps` used to hang for ~10 min when *.ubuntu.com failed to resolve.)
+      - name: Resolve Playwright version
+        id: playwright
+        run: |
+          echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "os=$(. /etc/os-release && echo "${ID}-${VERSION_ID}")" >> "$GITHUB_OUTPUT"
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.playwright.outputs.os }}-${{ steps.playwright.outputs.version }}-chromium
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        timeout-minutes: 5
+        run: |
+          for i in 1 2 3; do
+            npx playwright install chromium && exit 0
+            echo "::warning::playwright install failed (attempt $i/3)"
+            sleep $((i * 10))
+          done
+          exit 1
+
+      # The runner image already ships every shared library Chromium needs, so
+      # install-deps (apt) only runs when ldd actually reports a missing one.
+      - name: Install missing shared libraries
+        timeout-minutes: 5
+        run: |
+          missing=0
+          bins=$(find ~/.cache/ms-playwright -maxdepth 3 -type f \
+            \( -name chrome -o -name chrome-headless-shell \) -perm -u+x)
+          if [ -z "$bins" ]; then
+            echo "::error::No Chromium binary found under ~/.cache/ms-playwright"
+            exit 1
+          fi
+          for bin in $bins; do
+            dir=$(dirname "$bin")
+            out=$(LD_LIBRARY_PATH="$dir" ldd "$bin" "$dir"/*.so 2>/dev/null | grep 'not found' | sort -u || true)
+            if [ -n "$out" ]; then
+              echo "Missing libraries for $bin:"; echo "$out"
+              missing=1
+            fi
+          done
+          if [ "$missing" -eq 0 ]; then
+            echo "All shared libraries are present; skipping install-deps."
+            exit 0
+          fi
+          for i in 1 2 3; do
+            npx playwright install-deps chromium && exit 0
+            echo "::warning::playwright install-deps failed (attempt $i/3)"
+            sleep $((i * 10))
+          done
+          exit 1
+
+      # Fonts only affect how failure screenshots/traces render; the tests
+      # assert on DOM text, not pixels. Fetching them is therefore best effort
+      # and never fails the job if the apt mirrors are unreachable.
+      - name: Install fonts (best effort)
+        timeout-minutes: 4
+        continue-on-error: true
+        env:
+          # Font packages Playwright's `install-deps` pulls in on Ubuntu
+          # (the "tools" list in playwright-core's nativeDeps).
+          FONT_PACKAGES: >-
+            fonts-ipafont-gothic fonts-wqy-zenhei fonts-tlwg-loma-otf
+            fonts-freefont-ttf fonts-liberation fonts-noto-color-emoji
+            fonts-unifont xfonts-cyrillic xfonts-scalable
+        run: |
+          fonts="$FONT_PACKAGES"
+          apt_opts="-o Acquire::Retries=1 -o Acquire::http::Timeout=20 -o Acquire::https::Timeout=20"
+          for i in 1 2; do
+            if timeout 90 sudo apt-get $apt_opts update -qq \
+              && timeout 90 sudo DEBIAN_FRONTEND=noninteractive apt-get $apt_opts install -y --no-install-recommends $fonts; then
+              exit 0
+            fi
+            echo "::warning::Font installation failed (attempt $i/2)"
+            sleep 10
+          done
+          echo "::warning::Fonts could not be installed; continuing without them (only failure screenshots are affected)."
+          exit 1
 
       - name: Verify required secrets
         run: |
