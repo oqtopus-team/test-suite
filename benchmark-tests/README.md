@@ -106,6 +106,13 @@ Each measured pair is saved to `results/bell/` and global teardown merges them
 into the outputs above, so a worker restart after a failing pair does not drop
 earlier pairs.
 
+A sampling result is validated before it is scored: every outcome label must be
+a 2-bit binary string and every count a non-negative integer (with a positive
+total). A malformed result fails the test and its reason is shown in the
+summary. In logical mode the Physical Qubit Pair comes from the transpile
+mapping; when no usable mapping is returned it is shown as `unknown` (and left
+off the qubit map) instead of reusing the logical indices.
+
 | Variable | Purpose | Default |
 | --- | --- | --- |
 | `BELL_QUBIT_PAIRS` | `auto`, or manual `control-target` pairs | (unset: the spec is skipped) |

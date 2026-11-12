@@ -35,12 +35,20 @@ export interface QubitMapping {
 /** One measured pair. `qubit_mapping` is ordered control, target. */
 export interface BellResult {
   pair: string;
+  /**
+   * Physical qubits the pair ran on (`control-target`), or `null` when
+   * unknown — a logical run whose transpile result had no usable mapping.
+   */
+  physical_pair: string | null;
   shots: number;
-  fidelity: number;
+  /** `null` when the result could not be evaluated (see `error`). */
+  fidelity: number | null;
   threshold: number;
   pass: boolean;
-  counts: Record<string, number>;
+  counts: unknown;
   qubit_mapping?: QubitMapping[];
+  /** Why the sampling result was rejected (e.g. malformed counts). */
+  error?: string;
   /** Playwright retry index of the attempt that produced this entry. */
   retry: number;
 }
@@ -131,16 +139,17 @@ function renderSummary(run: BellRun, results: BellResult[]): string {
     lines.push('| Logical Qubit Pair | Physical Qubit Pair | Fidelity | Threshold | Counts | Result |');
     lines.push('|:------------------:|:-------------------:|:--------:|:---------:|:------:|:------:|');
     for (const r of results) {
-      const icon = r.pass ? '✅' : '❌';
-      const counts = Object.entries(r.counts)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(', ');
-      const physicalPair = r.qubit_mapping
-        ? r.qubit_mapping.map((m) => `${m.physical}`).join('-')
-        : r.pair;
+      const icon = r.error ? `❌ ${r.error}` : r.pass ? '✅' : '❌';
+      const counts =
+        r.counts != null && typeof r.counts === 'object' && !Array.isArray(r.counts)
+          ? Object.entries(r.counts as Record<string, unknown>)
+              .sort(([a], [b]) => a.localeCompare(b))
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(', ')
+          : JSON.stringify(r.counts);
+      const fidelity = r.fidelity == null ? '—' : r.fidelity.toFixed(4);
       lines.push(
-        `| ${r.pair} | ${physicalPair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
+        `| ${r.pair} | ${r.physical_pair ?? 'unknown'} | ${fidelity} | ${r.threshold} | ${counts} | ${icon} |`,
       );
     }
   }

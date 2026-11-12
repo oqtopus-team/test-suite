@@ -43,6 +43,7 @@ import {
   bellCircuit,
   bellFidelity,
   bestCoupling,
+  invalidCounts,
   checkPairsAgainstCouplings,
   directedCouplings,
   extractTopology,
@@ -350,6 +351,25 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
       console.log(`[bell] submitting job for ${QUBIT_MODE} qubits ${label}...`);
       console.log(`[bell] circuit:\n${program}`);
       const { result, job } = await runSamplingJob(ctx, [program], params);
+
+      // A malformed result (bad labels, negative or non-integer counts) fails
+      // the test and is recorded with its reason rather than scored.
+      const invalid = invalidCounts(result.counts);
+      if (invalid) {
+        const error = `invalid sampling counts: ${invalid}`;
+        recordBellResult({
+          pair: label,
+          physical_pair: USE_PHYSICAL ? label : null,
+          shots: SHOTS,
+          fidelity: null,
+          threshold,
+          pass: false,
+          counts: result.counts,
+          error,
+          retry: test.info().retry,
+        });
+        throw new Error(`Bell result for ${QUBIT_MODE} qubits ${label}: ${error}`);
+      }
       const fidelity = bellFidelity(result.counts);
       const pass = fidelity >= threshold;
 
@@ -387,8 +407,17 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
       }
 
       // Persist per pair (a retry replaces it); global teardown aggregates.
+      // The physical pair is known from the transpile mapping, or is the
+      // requested pair itself when the circuit ran untranspiled; otherwise
+      // it is reported as unknown rather than guessed from logical indices.
+      const physical_pair = qubit_mapping
+        ? qubit_mapping.map((m) => m.physical).join('-')
+        : USE_PHYSICAL
+          ? label
+          : null;
       recordBellResult({
         pair: label,
+        physical_pair,
         shots: SHOTS,
         fidelity,
         threshold,

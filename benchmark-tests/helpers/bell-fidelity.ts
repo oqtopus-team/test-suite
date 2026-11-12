@@ -51,18 +51,46 @@ export function bellCircuit(pair: QubitPair, physical = false): string {
 
 // ── Fidelity computation ───────────────────────────────────────────
 
+/** A measured outcome of the two-qubit circuit (leading zeros may be dropped). */
+const OUTCOME_RE = /^[01]{1,2}$/;
+
+/**
+ * Why `counts` is not a valid two-qubit sampling result, or `null` when it is.
+ * Every label must be a 2-bit binary outcome (`00`..`11`; a 1-bit label is
+ * read with its leading zero dropped), every count a non-negative integer, and
+ * the total positive — so a malformed API result fails the benchmark instead
+ * of producing a fidelity such as 1 (`{foo: 1000}`) or 2 (negative counts).
+ */
+export function invalidCounts(counts: unknown): string | null {
+  if (counts == null || typeof counts !== 'object' || Array.isArray(counts)) {
+    return `expected a counts object, got ${JSON.stringify(counts)}`;
+  }
+  const entries = Object.entries(counts as Record<string, unknown>);
+  if (entries.length === 0) return 'counts is empty';
+  const badLabels = entries.filter(([k]) => !OUTCOME_RE.test(k)).map(([k]) => JSON.stringify(k));
+  if (badLabels.length > 0) {
+    return `outcome labels must be 2-bit binary strings (00, 01, 10, 11), got ${badLabels.join(', ')}`;
+  }
+  const badCounts = entries
+    .filter(([, v]) => !Number.isInteger(v) || (v as number) < 0)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`);
+  if (badCounts.length > 0) {
+    return `counts must be non-negative integers, got ${badCounts.join(', ')}`;
+  }
+  if (entries.reduce((sum, [, v]) => sum + (v as number), 0) === 0) return 'total count is 0';
+  return null;
+}
+
 /**
  * Compute Bell pair fidelity as P(00) + P(11) from measurement counts.
+ * Throws when the counts are malformed (see `invalidCounts`).
  *
  * |Φ+⟩ = (|00⟩ + |11⟩)/√2 — a perfect Bell state yields P(00) = P(11) = 0.5.
  * Fidelity = P(00) + P(11) measures how well the correlated outcomes are preserved.
  */
 export function bellFidelity(counts: Record<string, number>): number {
-  if (counts == null || typeof counts !== 'object') {
-    throw new Error(
-      `bellFidelity: expected counts object, got ${JSON.stringify(counts)}`,
-    );
-  }
+  const invalid = invalidCounts(counts);
+  if (invalid) throw new Error(`bellFidelity: invalid sampling counts: ${invalid}`);
   let total = 0;
   let countCorrelated = 0;
 

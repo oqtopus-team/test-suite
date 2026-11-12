@@ -50,12 +50,16 @@ const esc = (s) =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-/** The physical qubits a result ran on: the transpiler mapping, else the pair. */
+/**
+ * The physical qubits a result ran on, from `physical_pair` (set by the spec:
+ * the transpiler mapping in logical mode, the requested pair in physical
+ * mode). `null` when unknown — such results are left off the chip map rather
+ * than drawn at their logical indices.
+ */
 function physicalPair(r) {
-  if (Array.isArray(r.qubit_mapping) && r.qubit_mapping.length >= 2) {
-    return [r.qubit_mapping[0].physical, r.qubit_mapping[1].physical];
-  }
-  return r.pair.split('-').map(Number);
+  if (typeof r.physical_pair !== 'string') return null;
+  const qubits = r.physical_pair.split('-').map(Number);
+  return qubits.length === 2 && qubits.every(Number.isInteger) ? qubits : null;
 }
 
 /**
@@ -312,7 +316,15 @@ function main() {
   const result = loadResult();
   if (!result || !Array.isArray(result.results) || result.results.length === 0) return;
 
-  const pairs = result.results.map((r, i) => ({
+  const drawable = result.results.filter((r) => {
+    if (typeof r.fidelity !== 'number') return false;
+    if (physicalPair(r)) return true;
+    console.log(`[bell-map] ${r.pair}: physical qubits unknown — not drawn on the chip map`);
+    return false;
+  });
+  if (drawable.length === 0) return;
+
+  const pairs = drawable.map((r, i) => ({
     label: PAIR_LABELS[i % PAIR_LABELS.length],
     qubits: physicalPair(r),
     fidelity: r.fidelity,
