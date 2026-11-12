@@ -1,0 +1,162 @@
+/**
+ * Persistence for Layer-2 Bell pair fidelity results.
+ *
+ * A failing test makes Playwright restart its worker, so state held in the
+ * spec module does not survive a run. The spec therefore writes the run
+ * context (`_run.json`) and one entry per measured pair (`pair-<c>-<t>.json`)
+ * to `results/bell/`; a retry overwrites the same file so the final attempt
+ * wins. Global setup clears the directory and global teardown merges the
+ * entries into `results/bell-fidelity.json` (read by `render-bell-map.mjs`)
+ * and `results/bell-fidelity-summary.md` (appended to the Job Summary).
+ */
+
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { join } from 'node:path';
+import type { BestCoupling, QubitPair, Topology } from './bell-fidelity';
+
+const RESULTS_DIR = join(__dirname, '..', 'results');
+const ENTRY_DIR = join(RESULTS_DIR, 'bell');
+const RUN_PATH = join(ENTRY_DIR, '_run.json');
+const RESULT_JSON = join(RESULTS_DIR, 'bell-fidelity.json');
+const RESULT_SUMMARY = join(RESULTS_DIR, 'bell-fidelity-summary.md');
+
+export interface QubitMapping {
+  logical: number;
+  physical: number;
+}
+
+/** One measured pair. `qubit_mapping` is ordered control, target. */
+export interface BellResult {
+  pair: string;
+  shots: number;
+  fidelity: number;
+  threshold: number;
+  pass: boolean;
+  counts: Record<string, number>;
+  qubit_mapping?: QubitMapping[];
+  /** Playwright retry index of the attempt that produced this entry. */
+  retry: number;
+}
+
+/** Context of the run, written once the device has been inspected. */
+export interface BellRun {
+  device: string;
+  qubit_mode: 'physical' | 'logical';
+  pair_selection: string;
+  /** Requested pairs (`control-target`), in the order they are measured. */
+  pairs: string[];
+  shots: number;
+  selected: BestCoupling | null;
+  /** Why the run could not start (device lookup failed); fails the run. */
+  setup_error: string | null;
+  /** Why the manually specified pairs were rejected; fails the run. */
+  pair_error: string | null;
+  /** Why the measurement is not possible on this device; a skip. */
+  skip_reason: string | null;
+  available_pairs: QubitPair[];
+  topology: Topology | null;
+}
+
+/** Record (or replace) the run context. */
+export function recordBellRun(run: BellRun): void {
+  mkdirSync(ENTRY_DIR, { recursive: true });
+  writeFileSync(RUN_PATH, `${JSON.stringify(run, null, 2)}\n`);
+}
+
+/** Record (or replace on retry) the result for a single pair. */
+export function recordBellResult(result: BellResult): void {
+  mkdirSync(ENTRY_DIR, { recursive: true });
+  writeFileSync(
+    join(ENTRY_DIR, `pair-${result.pair}.json`),
+    `${JSON.stringify(result, null, 2)}\n`,
+  );
+}
+
+/** Drop entries and outputs left over from a previous run. */
+export function clearBellResults(): void {
+  rmSync(ENTRY_DIR, { recursive: true, force: true });
+  rmSync(RESULT_JSON, { force: true });
+  rmSync(RESULT_SUMMARY, { force: true });
+}
+
+/** Read the per-pair entries in the order they were requested. */
+function readResults(order: string[]): BellResult[] {
+  const files = readdirSync(ENTRY_DIR).filter((f) => f.startsWith('pair-') && f.endsWith('.json'));
+  const results = files.map(
+    (f) => JSON.parse(readFileSync(join(ENTRY_DIR, f), 'utf-8')) as BellResult,
+  );
+  const rank = (pair: string) => {
+    const i = order.indexOf(pair);
+    return i === -1 ? Number.MAX_SAFE_INTEGER : i;
+  };
+  return results.sort((a, b) => rank(a.pair) - rank(b.pair) || a.pair.localeCompare(b.pair));
+}
+
+/** Markdown summary for GITHUB_STEP_SUMMARY. */
+function renderSummary(run: BellRun, results: BellResult[]): string {
+  const lines: string[] = [];
+  lines.push('## Bell Pair Fidelity Results');
+  lines.push('');
+  lines.push(
+    `**Device**: \`${run.device}\` | **Qubit mode**: ${run.qubit_mode} | **Shots**: ${run.shots}`,
+  );
+  lines.push('');
+  lines.push(`**Pair selection**: ${run.pair_selection}`);
+  lines.push('');
+
+  if (run.selected) {
+    lines.push(
+      `**Auto-selected pair**: \`${run.selected.pair.join('-')}\` ` +
+        `(highest calibrated 2Q fidelity: ${run.selected.fidelity.toFixed(4)})`,
+    );
+    lines.push('');
+  }
+
+  if (run.setup_error) {
+    lines.push(`> **Failed**: ${run.setup_error}`);
+  } else if (run.pair_error) {
+    lines.push(`> **Qubit pair check failed**: ${run.pair_error}`);
+  } else if (run.skip_reason) {
+    lines.push(`> **Skipped**: ${run.skip_reason}`);
+  } else if (results.length === 0) {
+    lines.push('> No results collected.');
+  } else {
+    lines.push('| Logical Qubit Pair | Physical Qubit Pair | Fidelity | Threshold | Counts | Result |');
+    lines.push('|:------------------:|:-------------------:|:--------:|:---------:|:------:|:------:|');
+    for (const r of results) {
+      const icon = r.pass ? '✅' : '❌';
+      const counts = Object.entries(r.counts)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([k, v]) => `${k}: ${v}`)
+        .join(', ');
+      const physicalPair = r.qubit_mapping
+        ? r.qubit_mapping.map((m) => `${m.physical}`).join('-')
+        : r.pair;
+      lines.push(
+        `| ${r.pair} | ${physicalPair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
+      );
+    }
+  }
+  lines.push('');
+  return lines.join('\n');
+}
+
+/**
+ * Merge the run context and per-pair entries into `bell-fidelity.json` and
+ * `bell-fidelity-summary.md`; no-op when the Bell spec did not run.
+ */
+export function aggregateBellResults(): void {
+  if (!existsSync(RUN_PATH)) return;
+  const run = JSON.parse(readFileSync(RUN_PATH, 'utf-8')) as BellRun;
+  const results = readResults(run.pairs);
+  writeFileSync(RESULT_JSON, `${JSON.stringify({ ...run, results }, null, 2)}\n`);
+  writeFileSync(RESULT_SUMMARY, renderSummary(run, results));
+}
+

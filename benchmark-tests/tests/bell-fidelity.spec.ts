@@ -34,9 +34,7 @@
  *            logical mode skip this coupling check.
  */
 
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { test, expect, request } from '@playwright/test';
+import { test, expect, request, type APIRequestContext } from '@playwright/test';
 import { loadThresholds } from '../helpers/config';
 import { runSamplingJob, fetchTranspileResult, type SubmitParams } from '../helpers/job-runner';
 import { resolveDeviceInfo } from '../helpers/device-info';
@@ -54,6 +52,11 @@ import {
   type Topology,
   type QubitPair,
 } from '../helpers/bell-fidelity';
+import {
+  recordBellResult,
+  recordBellRun,
+  type QubitMapping,
+} from '../helpers/bell-results';
 
 const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
 const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN ?? '';
@@ -72,12 +75,11 @@ const MANUAL = !AUTO && QUBIT_PAIRS_RAW.trim() !== '';
 const MANUAL_PARSE = MANUAL ? parseManualPairs(QUBIT_PAIRS_RAW) : { pairs: [] as QubitPair[] };
 const PAIR_SELECTION = AUTO ? 'auto' : `manual (${QUBIT_PAIRS_RAW.trim()})`;
 
-const RESULTS_DIR = join(__dirname, '..', 'results');
-const RESULT_JSON = join(RESULTS_DIR, 'bell-fidelity.json');
-const RESULT_SUMMARY = join(RESULTS_DIR, 'bell-fidelity-summary.md');
-
-// Shared state: set by beforeAll, checked by each test.
+// Shared state: set by beforeAll, checked by each test. A failed test
+// restarts the worker and beforeAll runs again, so these are recomputed.
 let skipReason = '';
+// Why the device could not be inspected (fails the run, not a skip).
+let setupError = '';
 // Why the manually specified pairs were rejected (fails the run, not a skip).
 let pairError = MANUAL_PARSE.error ?? '';
 // Directed couplings from device_info, when the manual pair check ran.
@@ -87,26 +89,11 @@ let selected: BestCoupling | null = null;
 // Qubit positions and couplings from device_info, used to draw the qubit map.
 let topology: Topology | null = null;
 
-// Accumulated results for summary table.
-interface QubitMapping {
-  logical: number;
-  physical: number;
-}
-
-interface BellResult {
-  pair: string;
-  shots: number;
-  fidelity: number;
-  threshold: number;
-  pass: boolean;
-  counts: Record<string, number>;
-  qubit_mapping?: QubitMapping[];
-}
-const allResults: BellResult[] = [];
-
 /**
- * Extract logical→physical qubit mapping from a transpile result.
- * Tries multiple known formats (Qiskit layout, OQTOPUS mapping).
+ * Extract the logical→physical mapping of the measured pair from a transpile
+ * result. Returns exactly two entries, ordered control then target, so the
+ * summary and the qubit map show the pair rather than every mapped qubit.
+ * Returns `undefined` when the pair cannot be located.
  */
 function extractQubitMapping(
   transpileResult: Record<string, unknown>,
@@ -115,6 +102,13 @@ function extractQubitMapping(
   console.log(`[bell] transpile result keys: ${JSON.stringify(Object.keys(transpileResult))}`);
   console.log(`[bell] transpile result: ${JSON.stringify(transpileResult, null, 2).slice(0, 2000)}`);
 
+  const fromLookup = (lookup: Map<number, number>): QubitMapping[] | undefined => {
+    const mapped = pair.map((l) => ({ logical: l, physical: lookup.get(l) }));
+    return mapped.every((m) => Number.isInteger(m.physical))
+      ? (mapped as QubitMapping[])
+      : undefined;
+  };
+
   // OQTOPUS returns { virtual_physical_mapping: { qubit_mapping: {...}, bit_mapping: {...} } },
   // so unwrap one level before falling back to a top-level qubit_mapping.
   const vpm = transpileResult.virtual_physical_mapping as
@@ -122,70 +116,50 @@ function extractQubitMapping(
     | undefined;
   const qm = transpileResult.qubit_mapping ?? vpm?.qubit_mapping ?? vpm;
   if (qm && typeof qm === 'object') {
-    if (Array.isArray(qm)) {
-      return qm.map((entry: unknown) => {
-        const arr = entry as number[];
-        return { logical: arr[0], physical: arr[1] };
-      });
+    const entries: [unknown, unknown][] = Array.isArray(qm)
+      ? qm.map((entry: unknown) => (entry as unknown[]).slice(0, 2) as [unknown, unknown])
+      : Object.entries(qm as Record<string, unknown>);
+    const lookup = new Map<number, number>();
+    for (const [l, p] of entries) {
+      if (Number.isInteger(Number(l)) && Number.isInteger(p)) lookup.set(Number(l), p as number);
     }
-    return Object.entries(qm as Record<string, number>).map(([l, p]) => ({
-      logical: Number(l),
-      physical: p,
-    }));
+    const mapping = fromLookup(lookup);
+    if (mapping) return mapping;
   }
 
   // Try: { layout: { initial_layout: [5, 3, ...] } } — index = logical, value = physical
   const layout = transpileResult.layout as Record<string, unknown> | undefined;
   const initialLayout = (layout?.initial_layout ?? transpileResult.initial_layout) as number[] | undefined;
   if (Array.isArray(initialLayout)) {
-    return pair.map((logicalIdx) => ({
-      logical: logicalIdx,
-      physical: initialLayout[logicalIdx] ?? logicalIdx,
-    }));
+    const mapping = fromLookup(new Map(initialLayout.map((p, l) => [l, p])));
+    if (mapping) return mapping;
   }
 
-  // Try: embedded in transpiled QASM — parse physical qubit indices from the circuit
+  // Try: the transpiled QASM. The source circuit measures control into c[0]
+  // and target into c[1], so `c[i] = measure $n` gives the physical qubit of
+  // pair[i].
   const transpiledQasm = (transpileResult.transpiled_program ?? transpileResult.transpiled_qasm
     ?? transpileResult.program ?? transpileResult.qasm) as string | undefined;
   if (typeof transpiledQasm === 'string') {
     console.log(`[bell] transpiled circuit:\n${transpiledQasm.slice(0, 1000)}`);
-    const physicalQubits = extractPhysicalQubitsFromQasm(transpiledQasm);
-    if (physicalQubits.length >= 2) {
-      return pair.map((logicalIdx, i) => ({
-        logical: logicalIdx,
-        physical: physicalQubits[i] ?? logicalIdx,
-      }));
+    const physical = measuredPhysicalQubits(transpiledQasm);
+    if (physical[0] !== undefined && physical[1] !== undefined) {
+      return pair.map((l, i) => ({ logical: l, physical: physical[i] as number }));
     }
   }
 
   return undefined;
 }
 
-/**
- * Extract the physical qubit indices used in a transpiled QASM circuit.
- * Handles both virtual-register syntax (`q[n]`) and hardware-qubit syntax (`$n`).
- */
-function extractPhysicalQubitsFromQasm(qasm: string): number[] {
-  const qubits = new Set<number>();
-  const patterns = [
-    /cx\s+q\[(\d+)\]\s*,\s*q\[(\d+)\]/gi,
-    /cx\s+\$(\d+)\s*,\s*\$(\d+)/gi,
-  ];
-  for (const pattern of patterns) {
-    let match: RegExpExecArray | null;
-    while ((match = pattern.exec(qasm)) !== null) {
-      qubits.add(Number(match[1]));
-      qubits.add(Number(match[2]));
-    }
+/** Physical qubit measured into each classical bit, from `c[i] = measure $n`. */
+function measuredPhysicalQubits(qasm: string): (number | undefined)[] {
+  const out: (number | undefined)[] = [];
+  const pattern = /c\[(\d+)\]\s*=\s*measure\s+\$(\d+)/gi;
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(qasm)) !== null) {
+    out[Number(match[1])] = Number(match[2]);
   }
-  if (qubits.size === 0) {
-    const measurePattern = /measure\s+\$(\d+)/gi;
-    let match: RegExpExecArray | null;
-    while ((match = measurePattern.exec(qasm)) !== null) {
-      qubits.add(Number(match[1]));
-    }
-  }
-  return [...qubits].sort((a, b) => a - b);
+  return out;
 }
 
 /** Build submission params for a Bell fidelity measurement. */
@@ -204,63 +178,6 @@ function submitParams(pair: QubitPair): SubmitParams {
   };
 }
 
-/** Write all accumulated results to JSON and Markdown summary. */
-function writeResults(): void {
-  mkdirSync(RESULTS_DIR, { recursive: true });
-
-  // JSON (for artifact download).
-  writeFileSync(
-    RESULT_JSON,
-    `${JSON.stringify({ device: DEVICE_ID, qubit_mode: QUBIT_MODE, pair_selection: PAIR_SELECTION, shots: SHOTS, selected, pair_error: pairError || null, available_pairs: availablePairs, topology, results: allResults }, null, 2)}\n`,
-  );
-
-  // Markdown summary table (for GITHUB_STEP_SUMMARY).
-  const lines: string[] = [];
-  lines.push('## Bell Pair Fidelity Results');
-  lines.push('');
-  lines.push(
-    `**Device**: \`${DEVICE_ID}\` | **Qubit mode**: ${QUBIT_MODE} | **Shots**: ${SHOTS}`,
-  );
-  lines.push('');
-  lines.push(`**Pair selection**: ${PAIR_SELECTION}`);
-  lines.push('');
-
-  if (selected) {
-    lines.push(
-      `**Auto-selected pair**: \`${selected.pair.join('-')}\` ` +
-        `(highest calibrated 2Q fidelity: ${selected.fidelity.toFixed(4)})`,
-    );
-    lines.push('');
-  }
-
-  if (pairError) {
-    lines.push(`> **Qubit pair check failed**: ${pairError}`);
-  } else if (skipReason) {
-    lines.push(`> **Skipped**: ${skipReason}`);
-  } else if (allResults.length === 0) {
-    lines.push('> No results collected.');
-  } else {
-    lines.push('| Logical Qubit Pair | Physical Qubit Pair | Fidelity | Threshold | Counts | Result |');
-    lines.push('|:------------------:|:-------------------:|:--------:|:---------:|:------:|:------:|');
-    for (const r of allResults) {
-      const icon = r.pass ? '✅' : '❌';
-      const counts = Object.entries(r.counts)
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(', ');
-      const physicalPair = r.qubit_mapping
-        ? r.qubit_mapping.map((m) => `${m.physical}`).join('-')
-        : r.pair;
-      lines.push(
-        `| ${r.pair} | ${physicalPair} | ${r.fidelity.toFixed(4)} | ${r.threshold} | ${counts} | ${icon} |`,
-      );
-    }
-  }
-  lines.push('');
-
-  writeFileSync(RESULT_SUMMARY, lines.join('\n'));
-}
-
 test.describe('Bell pair fidelity (Layer 2)', () => {
   test.skip(
     !API_BASE,
@@ -276,107 +193,150 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
 
   const pairs = MANUAL_PARSE.pairs ?? [];
 
-  // Validate qubit availability before any Bell fidelity test runs.
+  // Inspect the device before any Bell fidelity test runs. Failing to read it
+  // fails the run; a skip is reserved for a device that was read and cannot
+  // run the requested measurement.
   test.beforeAll(async () => {
     console.log(`[bell] Pair selection: ${PAIR_SELECTION}`);
     if (pairError) console.error(`[bell] qubit pair check failed: ${pairError}`);
     const ctx = await request.newContext();
     try {
-      const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
-        headers: { 'q-api-token': API_TOKEN, Authorization: API_TOKEN },
-      });
-      if (res.status() !== 200) {
-        skipReason =
-          `GET /devices/${DEVICE_ID} returned ${res.status()} — cannot validate qubit capacity`;
-        console.warn(`[bell] ${skipReason}`);
-        return;
-      }
-
-      const body = await res.json();
-      // Physical mode skips the transpiler, so the circuit must use gates the
-      // device accepts natively — log what the device reports for reference.
-      console.log(
-        `[bell] device basis_gates=${JSON.stringify(body?.basis_gates ?? null)} ` +
-          `instructions=${JSON.stringify(body?.instructions ?? null)}`,
-      );
-
-      // device_info is required to auto-select a pair, so its errors fail the
-      // run there; otherwise it only feeds the qubit map and is best effort.
-      let deviceInfo: unknown = null;
-      try {
-        deviceInfo = await resolveDeviceInfo(body?.device_info);
-      } catch (e) {
-        if (AUTO) throw e;
-        console.warn(`[bell] could not resolve device_info for the qubit map: ${e}`);
-      }
-      topology = extractTopology(deviceInfo);
-
-      // Manual physical mode: `cx control, target` goes to the hardware as is,
-      // so each pair must be a directed coupling of the device.
-      if (MANUAL && USE_PHYSICAL) {
-        const couplings = directedCouplings(deviceInfo);
-        if (couplings.length === 0) {
-          console.warn(
-            `[bell] device_info of "${DEVICE_ID}" has no couplings — skipping the qubit pair check`,
-          );
-        } else {
-          availablePairs = couplings;
-          if (pairError) {
-            pairError += ` Available pairs: ${formatPairs(couplings)}`;
-          } else {
-            pairError = checkPairsAgainstCouplings(pairs, couplings) ?? '';
-            if (pairError) {
-              console.error(`[bell] qubit pair check failed: ${pairError}`);
-            } else {
-              console.log(
-                `[bell] qubit pair check passed: ${formatPairs(pairs)} are couplings of ${DEVICE_ID}`,
-              );
-            }
-          }
-        }
-      }
-
-      if (AUTO) {
-        if (process.env.BELL_QUBIT_MODE === 'logical') {
-          console.warn('[bell] BELL_QUBIT_PAIRS=auto always runs in physical mode');
-        }
-        selected = bestCoupling(deviceInfo);
-        if (!selected) {
-          skipReason =
-            `device_info of "${DEVICE_ID}" has no coupling with a calibrated fidelity — ` +
-            `cannot auto-select a qubit pair`;
-          console.warn(`[bell] SKIP: ${skipReason}`);
-          return;
-        }
-        console.log(
-          `[bell] auto-selected pair ${selected.pair.join('-')} ` +
-            `(calibrated 2Q fidelity ${selected.fidelity})`,
-        );
-      }
-
-      const nQubits = body?.n_qubits ?? body?.qubit_count ?? null;
-      const maxIndex = Math.max(...(selected ? selected.pair : pairs.flat()));
-
-      console.log(
-        `[bell] device=${DEVICE_ID} n_qubits=${nQubits ?? 'unknown'} max_requested_index=${maxIndex}`,
-      );
-
-      if (nQubits != null && maxIndex >= nQubits) {
-        skipReason =
-          `Qubit index ${maxIndex} exceeds device capacity (n_qubits=${nQubits}). ` +
-          `The device "${DEVICE_ID}" only has qubits 0..${nQubits - 1}. ` +
-          `Use a device with more qubits or adjust BELL_QUBIT_PAIRS.`;
-        console.warn(`[bell] SKIP: ${skipReason}`);
-      }
+      await inspectDevice(ctx);
+    } catch (e) {
+      setupError = e instanceof Error ? e.message : String(e);
+      console.error(`[bell] ${setupError}`);
+      throw e;
     } finally {
       await ctx.dispose();
+      recordBellRun({
+        device: DEVICE_ID,
+        qubit_mode: QUBIT_MODE,
+        pair_selection: PAIR_SELECTION,
+        pairs: (selected ? [selected.pair] : pairs).map(([c, t]) => `${c}-${t}`),
+        shots: SHOTS,
+        selected,
+        setup_error: setupError || null,
+        pair_error: pairError || null,
+        skip_reason: skipReason || null,
+        available_pairs: availablePairs,
+        topology,
+      });
     }
   });
 
-  // Write summary after all tests complete.
-  test.afterAll(() => {
-    writeResults();
-  });
+  async function inspectDevice(ctx: APIRequestContext): Promise<void> {
+    const res = await ctx.get(`${API_BASE}/devices/${DEVICE_ID}`, {
+      headers: { 'q-api-token': API_TOKEN, Authorization: API_TOKEN },
+    });
+    if (!res.ok()) {
+      throw new Error(
+        `GET /devices/${DEVICE_ID} returned ${res.status()}: ${(await res.text()).slice(0, 500)}`,
+      );
+    }
+
+    const body = await res.json();
+    // Physical mode skips the transpiler, so the circuit must use gates the
+    // device accepts natively — log what the device reports for reference.
+    console.log(
+      `[bell] device basis_gates=${JSON.stringify(body?.basis_gates ?? null)} ` +
+        `instructions=${JSON.stringify(body?.instructions ?? null)}`,
+    );
+
+    // device_info selects the pair (auto) and guards untranspiled CX gates
+    // (manual physical), so a retrieval or decoding error fails those runs.
+    // Otherwise it only feeds the qubit map and is best effort. Absent
+    // device_info (null) is not an error: it takes the no-couplings path.
+    let deviceInfo: unknown = null;
+    try {
+      deviceInfo = await resolveDeviceInfo(body?.device_info);
+    } catch (e) {
+      if (AUTO || (MANUAL && USE_PHYSICAL)) {
+        throw new Error(`could not resolve device_info of "${DEVICE_ID}": ${e}`);
+      }
+      console.warn(`[bell] could not resolve device_info for the qubit map: ${e}`);
+    }
+    topology = extractTopology(deviceInfo);
+
+    // Manual physical mode: `cx control, target` goes to the hardware as is,
+    // so each pair must be a directed coupling of the device.
+    if (MANUAL && USE_PHYSICAL) {
+      const couplings = directedCouplings(deviceInfo);
+      if (couplings.length === 0) {
+        console.warn(
+          `[bell] device_info of "${DEVICE_ID}" has no couplings — skipping the qubit pair check`,
+        );
+      } else {
+        availablePairs = couplings;
+        if (pairError) {
+          pairError += ` Available pairs: ${formatPairs(couplings)}`;
+        } else {
+          pairError = checkPairsAgainstCouplings(pairs, couplings) ?? '';
+          if (pairError) {
+            console.error(`[bell] qubit pair check failed: ${pairError}`);
+          } else {
+            console.log(
+              `[bell] qubit pair check passed: ${formatPairs(pairs)} are couplings of ${DEVICE_ID}`,
+            );
+          }
+        }
+      }
+    }
+
+    if (AUTO) {
+      if (process.env.BELL_QUBIT_MODE === 'logical') {
+        console.warn('[bell] BELL_QUBIT_PAIRS=auto always runs in physical mode');
+      }
+      selected = bestCoupling(deviceInfo);
+      if (!selected) {
+        skipReason =
+          `device_info of "${DEVICE_ID}" has no coupling with a calibrated fidelity — ` +
+          `cannot auto-select a qubit pair`;
+        console.warn(`[bell] SKIP: ${skipReason}`);
+        return;
+      }
+      console.log(
+        `[bell] auto-selected pair ${selected.pair.join('-')} ` +
+          `(calibrated 2Q fidelity ${selected.fidelity})`,
+      );
+    }
+
+    const requested = (selected ? selected.pair : pairs.flat());
+    if (requested.length === 0) return;
+    const nQubits = body?.n_qubits ?? body?.qubit_count ?? null;
+
+    // Physical qubits are addressed by the ids in device_info.qubits, which
+    // need not be 0..n_qubits-1; fall back to that contiguous range only
+    // when the device reports no qubit metadata. Logical qubits index a
+    // virtual register, so only its size has to fit within n_qubits.
+    if (USE_PHYSICAL) {
+      const ids = topology?.qubits.map((q) => q.id) ?? null;
+      const known = ids ?? (nQubits != null ? [...Array(nQubits).keys()] : null);
+      console.log(
+        `[bell] device=${DEVICE_ID} qubit ids=${ids ? 'device_info.qubits' : `0..${nQubits == null ? '?' : nQubits - 1} (n_qubits)`} requested=${[...new Set(requested)].join(',')}`,
+      );
+      const missing = known ? [...new Set(requested)].filter((q) => !known.includes(q)) : [];
+      if (missing.length > 0) {
+        skipReason =
+          `Qubit ${missing.join(', ')} ${missing.length === 1 ? 'is' : 'are'} not a qubit of ` +
+          `"${DEVICE_ID}" (${ids ? 'device_info.qubits ids' : `n_qubits=${nQubits}`}: ` +
+          `${known!.join(', ')}). Use a device with these qubits or adjust BELL_QUBIT_PAIRS.`;
+        console.warn(`[bell] SKIP: ${skipReason}`);
+      }
+      return;
+    }
+
+    const maxIndex = Math.max(...requested);
+    console.log(
+      `[bell] device=${DEVICE_ID} n_qubits=${nQubits ?? 'unknown'} max_requested_index=${maxIndex}`,
+    );
+    if (nQubits != null && maxIndex >= nQubits) {
+      skipReason =
+        `Qubit index ${maxIndex} exceeds device capacity (n_qubits=${nQubits}). ` +
+        `The device "${DEVICE_ID}" only has qubits 0..${nQubits - 1}. ` +
+        `Use a device with more qubits or adjust BELL_QUBIT_PAIRS.`;
+      console.warn(`[bell] SKIP: ${skipReason}`);
+    }
+  }
 
   async function measure(pair: QubitPair): Promise<void> {
     const label = `${pair[0]}-${pair[1]}`;
@@ -426,8 +386,8 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         console.log(`[bell] physical mode: qubits ${label} target hardware directly`);
       }
 
-      // Accumulate for summary.
-      allResults.push({
+      // Persist per pair (a retry replaces it); global teardown aggregates.
+      recordBellResult({
         pair: label,
         shots: SHOTS,
         fidelity,
@@ -435,6 +395,7 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         pass,
         counts: result.counts,
         qubit_mapping,
+        retry: test.info().retry,
       });
 
       // Report.
