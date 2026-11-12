@@ -14,6 +14,7 @@ import {
   writeFileSync,
   readFileSync,
   mkdtempSync,
+  readdirSync,
   rmSync,
 } from 'node:fs';
 import { join } from 'node:path';
@@ -185,10 +186,73 @@ export async function pollJob(
   throw new Error(`Job ${jobId} did not complete within ${timeoutMs}ms`);
 }
 
+// ── Result archives ────────────────────────────────────────────────
+
+/** Says which JSON file of a result archive is the one the caller wants. */
+export interface JsonPicker {
+  /** Human-readable description, used in error messages. */
+  what: string;
+  matches: (value: unknown) => boolean;
+}
+
+const isRecord = (v: unknown): v is Record<string, unknown> =>
+  v != null && typeof v === 'object' && !Array.isArray(v);
+
+/** A sampling result: `counts`, `sampling.counts`, or a bare counts object. */
+export const SAMPLING_RESULT: JsonPicker = {
+  what: 'a sampling result (counts)',
+  matches: (v) =>
+    isRecord(v) &&
+    (isRecord(v.counts) ||
+      (isRecord(v.sampling) && isRecord(v.sampling.counts)) ||
+      (Object.keys(v).length > 0 && Object.values(v).every((x) => typeof x === 'number'))),
+};
+
+/** A transpile result: the transpiled program and/or the qubit placement. */
+export const TRANSPILE_RESULT: JsonPicker = {
+  what: 'a transpile result',
+  matches: (v) =>
+    isRecord(v) &&
+    ['transpiled_program', 'virtual_physical_mapping', 'qubit_mapping', 'layout', 'initial_layout']
+      .some((k) => k in v),
+};
+
+/**
+ * Choose the JSON file of a result archive. A single JSON file is used as is.
+ * With several, exactly one must match `picker` — none or more than one is an
+ * error rather than a guess, so an unrelated JSON (metadata, logs, ...) is
+ * never read as the result.
+ */
+export function selectArchiveJson(
+  files: { name: string; content: string }[],
+  picker: JsonPicker,
+): unknown {
+  if (files.length === 0) throw new Error(`result archive has no JSON file (expected ${picker.what})`);
+  const parse = (f: { name: string; content: string }) => {
+    try {
+      return JSON.parse(f.content) as unknown;
+    } catch (e) {
+      throw new Error(`result archive file ${f.name} is not valid JSON: ${e}`);
+    }
+  };
+  if (files.length === 1) return parse(files[0]);
+  const parsed = files.map((f) => ({ name: f.name, value: parse(f) }));
+  const hits = parsed.filter((f) => picker.matches(f.value));
+  const names = (list: { name: string }[]) => list.map((f) => f.name).join(', ');
+  if (hits.length === 1) return hits[0].value;
+  if (hits.length === 0) {
+    throw new Error(`no JSON file in the result archive is ${picker.what} (files: ${names(parsed)})`);
+  }
+  throw new Error(
+    `cannot choose the result: ${hits.length} JSON files in the archive look like ${picker.what} (${names(hits)})`,
+  );
+}
+
 /** Step 5: Fetch the result JSON from the presigned result URL. */
 export async function fetchResult(
   ctx: APIRequestContext,
   resultUrl: string,
+  picker: JsonPicker = SAMPLING_RESULT,
 ): Promise<SamplingResult> {
   const res = await ctx.get(resultUrl);
   if (!res.ok()) {
@@ -201,23 +265,24 @@ export async function fetchResult(
   // The result may be a zip archive or bare JSON.
   // Zip files start with 'PK' (0x50 0x4B).
   if (body[0] === 0x50 && body[1] === 0x4b) {
-    return extractJsonFromZip(body);
+    return extractJsonFromZip(body, picker) as SamplingResult;
   }
   return JSON.parse(body.toString('utf-8')) as SamplingResult;
 }
 
-function extractJsonFromZip(zipBuffer: Buffer): SamplingResult {
+/** Unpack a result archive and pick its JSON with `selectArchiveJson`. */
+export function extractJsonFromZip(zipBuffer: Buffer, picker: JsonPicker): unknown {
   const dir = mkdtempSync(join(tmpdir(), 'result-'));
   try {
     const zipPath = join(dir, 'result.zip');
+    const outDir = join(dir, 'out');
     writeFileSync(zipPath, zipBuffer);
-    execSync(`unzip -o "${zipPath}" -d "${dir}"`, { stdio: 'pipe' });
-    // Find the first JSON file in the extracted directory.
-    const output = execSync(`find "${dir}" -name "*.json" -not -name "result.zip"`, {
-      encoding: 'utf-8',
-    }).trim();
-    const jsonPath = output.split('\n')[0];
-    return JSON.parse(readFileSync(jsonPath, 'utf-8')) as SamplingResult;
+    execSync(`unzip -o "${zipPath}" -d "${outDir}"`, { stdio: 'pipe' });
+    const files = (readdirSync(outDir, { recursive: true }) as string[])
+      .filter((f) => f.endsWith('.json') && !f.split('/').includes('__MACOSX'))
+      .sort()
+      .map((f) => ({ name: f, content: readFileSync(join(outDir, f), 'utf-8') }));
+    return selectArchiveJson(files, picker);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
@@ -295,7 +360,7 @@ export async function fetchTranspileResult(
   if (!url) return null;
 
   try {
-    const raw = await fetchResult(ctx, url);
+    const raw = await fetchResult(ctx, url, TRANSPILE_RESULT);
     return raw as unknown as Record<string, unknown>;
   } catch (e) {
     console.warn(`[job-runner] Failed to fetch transpile result: ${e}`);

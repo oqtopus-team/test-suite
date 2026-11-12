@@ -102,9 +102,19 @@ The device is read from `GET /devices/{DEVICE_ID}` before any job is submitted:
   `device_info.qubits` (falling back to `0..n_qubits-1` only when the device
   reports no qubits); logical pairs only need to fit within `n_qubits`.
 
-Each measured pair is saved to `results/bell/` and global teardown merges them
-into the outputs above, so a worker restart after a failing pair does not drop
-earlier pairs.
+Each measured pair is saved to `results/bell/` (emptied by global setup at the
+start of every run) and global teardown merges them into the outputs above, so
+a worker restart after a failing pair does not drop earlier pairs. Every
+attempt of a pair rewrites its file — on pass, fail or exception (API error,
+job failure or timeout, recorded as the row's error) — so only the last
+attempt of a retried pair is reported. A requested pair that ends up with no
+result at all is listed as `missing result` instead of being dropped.
+
+When a job result or transpile result arrives as a ZIP archive with several
+JSON files, the one with the expected shape is used (counts for a sampling
+result; the transpiled program or qubit mapping for a transpile result); no
+match, or more than one, is an error rather than a guess. A ZIP `device_info`
+is read from its `device_info.json` entry.
 
 Every basis's sampling result is validated before it is scored: every outcome
 label must be a 2-bit binary string and every count a non-negative integer
