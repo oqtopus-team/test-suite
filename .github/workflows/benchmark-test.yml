@@ -58,7 +58,9 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Show target device
-        run: echo "DEVICE_ID=${{ inputs.device_id || vars.DEVICE_ID }}"
+        env:
+          TARGET_DEVICE_ID: ${{ inputs.device_id || vars.DEVICE_ID }}
+        run: echo "DEVICE_ID=${TARGET_DEVICE_ID}"
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -79,7 +81,12 @@ jobs:
           [ -n "${Q_API_TOKEN}" ] || echo "::warning::Q_API_TOKEN is not set"
 
       - name: Run benchmark tests
-        run: npx playwright test ${{ inputs.test_files }}
+        env:
+          TEST_FILES: ${{ inputs.test_files }}
+        # Split the input into arguments without evaluating it as shell code.
+        run: |
+          read -ra files <<< "${TEST_FILES}"
+          npx playwright test "${files[@]}"
 
       - name: Render measured-vs-threshold chart
         if: always()

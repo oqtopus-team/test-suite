@@ -34,7 +34,9 @@ jobs:
           ref: ${{ inputs.ref || github.sha }}
 
       - name: Show target device
-        run: echo "DEVICE_ID=${{ inputs.device_id || vars.DEVICE_ID }}"
+        env:
+          TARGET_DEVICE_ID: ${{ inputs.device_id || vars.DEVICE_ID }}
+        run: echo "DEVICE_ID=${TARGET_DEVICE_ID}"
 
       - name: Install Task
         run: |
