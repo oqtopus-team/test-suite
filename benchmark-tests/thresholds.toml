@@ -22,3 +22,9 @@ max_readout_error = 0.3
 
 # Maximum allowed age (hours) of the most recent calibration.
 max_calibration_age_hours = 24
+
+[bell_fidelity]
+# Minimum Bell pair fidelity F(|Φ+⟩). Range 0.0–1.0.
+# F = (1 + ⟨XX⟩ − ⟨YY⟩ + ⟨ZZ⟩) / 4.  Maximally mixed state → 0.25.
+# F > 0.5 (the separable bound) means the pair is entangled.
+min_fidelity = 0.5
