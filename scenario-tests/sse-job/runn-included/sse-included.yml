@@ -49,7 +49,9 @@ steps:
         || (!vars.expected_sse_log_present && wait_res_body.job_info?.sse_log == null))
       && wait_res_body.job_info?.combined_program == null
   result-content-test:
-    if: vars.expected_result_present
+    # Only inspect result.json for succeeded jobs; for failed jobs we only
+    # check that the result zip exists (see basic-test).
+    if: vars.expected_result_present && vars.expected_status == "succeeded"
     include:
       path: ../../runn-included/extract_archive_json.yml
       vars:

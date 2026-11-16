@@ -45,6 +45,10 @@ Each test follows this flow:
 5.  Confirm that the job status becomes either **`succeeded` or `failed`**.
 6.  Verify that the returned Job metadata matches the expected output.
 
+> [!NOTE]
+> SSE uploads the result zip (`job_info.result`) and the SSE log zip (`job_info.sse_log`) on a best-effort basis even when the job fails.
+> Therefore, the `failed` scenarios also verify that both zips **exist**. The content of `result.json` is only verified for `succeeded` jobs.
+
 ---
 
 ## Test Matrix
