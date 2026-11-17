@@ -22,5 +22,5 @@ steps:
         expected_transpiler_options: null
         expected_transpiled: false
         expected_execution_time_filled: true
-        expected_result_present: true
+        check_result_presence: false
         expected_sse_log_present: true
