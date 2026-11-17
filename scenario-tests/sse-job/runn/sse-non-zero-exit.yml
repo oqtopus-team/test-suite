@@ -14,5 +14,5 @@ steps:
           optimization_level: 1
         pass_transpiler_result_check: true
         expected_execution_time_filled: true
-        expected_result_present: false
-        expected_sse_log_present: false
+        check_result_presence: false
+        expected_sse_log_present: true
