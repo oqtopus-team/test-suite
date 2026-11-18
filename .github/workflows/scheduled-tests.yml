@@ -15,6 +15,10 @@ on:
         type: string
         required: false
         description: "Set to 'true' to run the signup-blocked check (defaults to vars.E2E_SIGNUP_BLOCKED)"
+      upload_artifacts:
+        type: string
+        required: false
+        description: "Set to 'false' to skip uploading artifacts (e.g. when the artifact storage quota is exhausted). Defaults to 'true'"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -49,6 +53,7 @@ jobs:
       ref: ${{ inputs.ref || github.sha }}
       device_id: ${{ inputs.device_id || vars.DEVICE_ID }}
       signup_blocked: ${{ inputs.signup_blocked || vars.E2E_SIGNUP_BLOCKED }}
+      upload_artifacts: ${{ inputs.upload_artifacts || 'true' }}
     secrets:
       USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
       Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
@@ -63,6 +68,7 @@ jobs:
     with:
       ref: ${{ inputs.ref || github.sha }}
       device_id: ${{ inputs.device_id || vars.DEVICE_ID }}
+      upload_artifacts: ${{ inputs.upload_artifacts || 'true' }}
     secrets:
       USER_API_ENDPOINT: ${{ secrets.USER_API_ENDPOINT }}
       Q_API_TOKEN: ${{ secrets.Q_API_TOKEN }}
