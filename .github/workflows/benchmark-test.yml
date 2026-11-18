@@ -27,6 +27,10 @@ on:
         type: string
         required: false
         description: "Space-separated test file paths to run (default: all tests except tests/bell-fidelity.spec.ts, which runs only when listed here)"
+      upload_artifacts:
+        type: string
+        required: false
+        description: "Set to 'false' to skip uploading artifacts (e.g. when the artifact storage quota is exhausted). Defaults to 'true'"
     secrets:
       USER_API_ENDPOINT:
         required: true
@@ -93,7 +97,7 @@ jobs:
         run: npm run chart
 
       - name: Upload error-rate chart
-        if: always()
+        if: always() && inputs.upload_artifacts != 'false'
         uses: actions/upload-artifact@v7
         with:
           name: benchmark-error-rate-chart
@@ -124,7 +128,7 @@ jobs:
         run: npm run bell-map
 
       - name: Upload Bell fidelity results
-        if: always()
+        if: always() && inputs.upload_artifacts != 'false'
         uses: actions/upload-artifact@v7
         with:
           name: benchmark-bell-fidelity
@@ -136,7 +140,7 @@ jobs:
           retention-days: 7
 
       - name: Upload Playwright report
-        if: always()
+        if: always() && inputs.upload_artifacts != 'false'
         uses: actions/upload-artifact@v7
         with:
           name: benchmark-playwright-report
@@ -144,7 +148,7 @@ jobs:
           retention-days: 7
 
       - name: Upload test results
-        if: failure()
+        if: failure() && inputs.upload_artifacts != 'false'
         uses: actions/upload-artifact@v7
         with:
           name: benchmark-playwright-test-results
