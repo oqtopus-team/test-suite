@@ -150,7 +150,7 @@ task runn-my-device
 ## Test Categories
 
 - [Setup](./setup/README.md): Prepares device/qubit state before running scenario tests. Also acts as a health gate: it fails (aborting all scenario tests) when the target device's error rate reaches a threshold (default `0.4`, override with `ERROR_RATE_THRESHOLD`).
-- [Estimation Job](./estimation-job/README.md): Verifies estimation job execution across various parameter combinations.
+- [Estimation Job](./estimation-job/README.md): Verifies estimation job execution across various parameter combinations, including readout error mitigation (on/off).
 - [Multi-Programming (MP) Job](./mp-job/README.md): Verifies MP job execution.
 - [Sampling Job](./sampling-job/README.md): Verifies sampling job execution with different transpilers (qiskit, no transpiler, default transpiler) and mitigation settings (on/off).
 - [SSE Job](./sse-job/README.md): Verifies SSE job execution.

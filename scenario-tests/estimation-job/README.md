@@ -52,7 +52,7 @@ Each test follows this flow:
 | # | Transpiler | Mitigation | Expected | Implemented | memo |
 |---|---|---|---|---|---|
 | 1 | qiskit | off | succeeded | ✅ | |
-| 2 | qiskit | on | succeeded | | |
+| 2 | qiskit | on | succeeded | ✅ | pseudo_inverse |
 | 3 | qiskit | off | failed | | |
 | 4 | qiskit | on | failed | | |
 | 5 | no transpiler | off | succeeded | | |

@@ -1,0 +1,28 @@
+desc: estimation job with Qiskit transpiler and mitigation
+steps:
+  test-estimation-job-with-qiskit-and-mitigation:
+    desc: estimation job with readout error mitigation
+    include:
+      path: ../runn-included/estimation-included.yml
+      vars:
+        job_name: estimation-job-with-qiskit-and-mitigation
+        input_payload_path: payloads/estimation.zip
+        program:
+          - |
+            OPENQASM 3;
+            include "stdgates.inc";
+            qubit[2] q;
+            bit[2] c;
+            h q[0];
+            cx q[0],q[1];
+            c = measure q;
+        operator:
+          - { "pauli": "X 0 X 1", "coeff": 1.5 }
+          - { "pauli": "Y 0 Z 1", "coeff": 1.2 }
+        mitigation_info:
+          ro_error_mitigation: pseudo_inverse
+        expected_status: "succeeded"
+        expected_transpiler_lib: qiskit
+        expected_transpiler_options:
+          optimization_level: 1
+        expected_transpile_result_present: true
