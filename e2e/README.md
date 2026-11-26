@@ -98,6 +98,29 @@ profile fall back to `e2e/.env`. Running `task test` without `PROFILE` uses
 | `tests/logo.spec.ts` | logo is rendered in light/dark mode | The header logo is visible and has `naturalWidth > 0` in both light and dark color schemes |
 | `tests/smoke.spec.ts` | base URL is reachable | The frontend at `E2E_BASE_URL` returns a 2xx response on `/` |
 | `tests/authenticated/device-list.spec.ts` | device list shows qulacs after opening the devices page | After login, the `デバイス` page shows a `qulacs` row within 60s |
+| `tests/authenticated/api-docs.spec.ts` | API docs (Swagger UI) render without errors in light/dark mode | After login, the `/howto` API docs page fetches `static_assets/openapi.yaml` with 200, Swagger UI shows the API title and version, lists at least one operation, and expanding one shows its parameters and responses. Checked in both light and dark mode. See [API docs check](#api-docs-check) for how failures are reported |
+
+### API docs check
+
+`tests/authenticated/api-docs.spec.ts` fails when Swagger UI shows any of its
+in-page error states, even if the page itself loads:
+
+| Indicator | Typical text | Usual cause |
+| --- | --- | --- |
+| `.loading-container .title` + `.errors-wrapper .error-wrapper` | `Failed to load API definition.` / `Fetch error Not Found <url>` (or `Forbidden`, `Failed to fetch`) | `openapi.yaml` could not be fetched or parsed |
+| `.errors-wrapper .error-wrapper` | `Resolver error ...` | The definition has broken `$ref`s |
+| `.version-pragma` | `Unable to render this definition` | The response is not an OpenAPI document (e.g. `index.html` served with 200) |
+
+On failure the report keeps what users saw:
+
+- **Annotations**: each Swagger UI error message (`swagger-ui error`) and the
+  `openapi.yaml` request summary (`openapi.yaml fetch`: URL, status,
+  content-type, first 200 bytes of the body).
+- **Attachments**: `openapi-fetch-<mode>.txt` (always) and
+  `swagger-ui-error-<mode>.png` (full-page screenshot, on error).
+
+Like the other specs under `tests/authenticated/`, it is skipped when
+`E2E_BASE_URL` is unset or when the `setup` login fails.
 
 ### API tests (HTTP-driven)
 
