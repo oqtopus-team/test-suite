@@ -140,6 +140,7 @@ To pin the placement of all three bases, use manual pairs in physical mode
 | `BELL_QUBIT_PAIRS` | `auto`, or manual `control-target` pairs | (unset: the spec is skipped) |
 | `BELL_QUBIT_MODE` | `physical` or `logical` (manual only) | `physical` |
 | `BELL_SHOTS` | Shots per basis (each pair runs 3 jobs) | `1000` |
+| `BELL_ENFORCE_THRESHOLD` | `false`: a pair below `bell_fidelity.min_fidelity` is still marked FAIL in the results, but the test does not fail (and is not retried). Workflow input `bell_enforce_threshold` | `true` |
 
 ### How fidelity is measured
 

@@ -21,6 +21,10 @@
  *                        physical: gates target physical qubits directly (transpiler disabled)
  *                        logical:  transpiler maps logical → physical qubits
  *   BELL_SHOTS        — shots per basis (default: 1000)
+ *   BELL_ENFORCE_THRESHOLD — "false" records whether each pair passes
+ *                        `bell_fidelity.min_fidelity` but does not fail the test
+ *                        (so low fidelity is not retried). Anything else,
+ *                        including unset, fails a pair below the threshold.
  *   DEVICE_ID         — target device (default: "qulacs")
  *
  * Pair selection:
@@ -71,6 +75,7 @@ const API_BASE = process.env.USER_API_ENDPOINT ?? process.env.E2E_API_BASE_URL;
 const API_TOKEN = process.env.Q_API_TOKEN ?? process.env.E2E_API_TOKEN ?? '';
 const DEVICE_ID = process.env.DEVICE_ID ?? 'qulacs';
 const SHOTS = Number(process.env.BELL_SHOTS) || 1_000;
+const ENFORCE_THRESHOLD = (process.env.BELL_ENFORCE_THRESHOLD ?? '').trim().toLowerCase() !== 'false';
 const QUBIT_PAIRS_RAW = process.env.BELL_QUBIT_PAIRS ?? '';
 const AUTO = QUBIT_PAIRS_RAW.trim().toLowerCase() === AUTO_PAIR;
 // The auto-selected coupling is a physical pair, so it must not be remapped
@@ -525,10 +530,19 @@ test.describe('Bell pair fidelity (Layer 2)', () => {
         contentType: 'text/plain',
       });
 
-      expect(
-        fidelity,
-        `Bell fidelity ${fidelity.toFixed(4)} for ${QUBIT_MODE} qubits ${label} is below threshold ${threshold}`,
-      ).toBeGreaterThanOrEqual(threshold);
+      if (ENFORCE_THRESHOLD) {
+        expect(
+          fidelity,
+          `Bell fidelity ${fidelity.toFixed(4)} for ${QUBIT_MODE} qubits ${label} is below threshold ${threshold}`,
+        ).toBeGreaterThanOrEqual(threshold);
+      } else if (!pass) {
+        // Report-only: the result keeps `pass: false`, the test does not fail.
+        test.info().annotations.push({
+          type: 'warning',
+          description: `Bell fidelity ${fidelity.toFixed(4)} is below threshold ${threshold} (BELL_ENFORCE_THRESHOLD=false: not failing)`,
+        });
+        console.log(`[bell] pair=${label} below threshold ${threshold}; not failing (BELL_ENFORCE_THRESHOLD=false)`);
+      }
     } catch (e) {
       // An exception (API error, job failure or timeout, ...) still replaces
       // the result with this attempt's error, keeping any bases measured so far.

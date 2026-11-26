@@ -23,6 +23,10 @@ on:
         type: string
         required: false
         description: "Shots per measurement basis for Bell fidelity (ZZ, XX and YY are each run with this many shots; default: 1000). Used only when test_files includes tests/bell-fidelity.spec.ts"
+      bell_enforce_threshold:
+        type: string
+        required: false
+        description: "Set to 'false' to report Bell pairs below bell_fidelity.min_fidelity as FAIL in the results without failing the test (no retries for low fidelity). Defaults to 'true'. Used only when test_files includes tests/bell-fidelity.spec.ts"
       test_files:
         type: string
         required: false
@@ -53,6 +57,7 @@ jobs:
       BELL_QUBIT_PAIRS: ${{ inputs.bell_qubit_pairs || vars.BELL_QUBIT_PAIRS || '0-1,2-3' }}
       BELL_QUBIT_MODE: ${{ inputs.bell_qubit_mode || vars.BELL_QUBIT_MODE || 'physical' }}
       BELL_SHOTS: ${{ inputs.bell_shots || vars.BELL_SHOTS || '1000' }}
+      BELL_ENFORCE_THRESHOLD: ${{ inputs.bell_enforce_threshold || vars.BELL_ENFORCE_THRESHOLD || 'true' }}
       RUN_BELL_FIDELITY: ${{ contains(inputs.test_files, 'bell-fidelity.spec.ts') }}
     steps:
       - name: Checkout
