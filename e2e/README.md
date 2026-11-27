@@ -98,6 +98,46 @@ profile fall back to `e2e/.env`. Running `task test` without `PROFILE` uses
 | `tests/logo.spec.ts` | logo is rendered in light/dark mode | The header logo is visible and has `naturalWidth > 0` in both light and dark color schemes |
 | `tests/smoke.spec.ts` | base URL is reachable | The frontend at `E2E_BASE_URL` returns a 2xx response on `/` |
 | `tests/authenticated/device-list.spec.ts` | device list shows qulacs after opening the devices page | After login, the `デバイス` page shows a `qulacs` row within 60s |
+| `tests/authenticated/api-docs.spec.ts` | API docs (Swagger UI) render without errors in light/dark mode | After login, the `/howto` API docs page fetches `static_assets/openapi.yaml` with 200, Swagger UI shows the API title and version, lists at least one operation, and every operation, once expanded, shows its parameters and responses with no Swagger UI error. Checked in both light and dark mode. See [API docs check](#api-docs-check) for how failures are reported |
+| `tests/authenticated/api-docs.spec.ts` | API docs error detection › detects a broken openapi.yaml: … | Serves a broken `openapi.yaml` to the real page with `page.route` (404, 403, HTML with 200, empty body with 200, broken `$ref`) and checks that each Swagger UI error is detected and reported, so a Swagger UI change cannot silently disable the check |
+
+### API docs check
+
+`tests/authenticated/api-docs.spec.ts` fails when Swagger UI shows any of its
+in-page error states, even if the page itself loads. It checks once the
+definition has loaded and again after expanding every operation, because
+Swagger UI resolves an operation's `$ref`s only when it is expanded.
+
+| Indicator | Typical text | Usual cause |
+| --- | --- | --- |
+| `.loading-container .title` + `.errors-wrapper .error-wrapper` | `Failed to load API definition.` / `Fetch error Not Found <url>` (or `Forbidden`, `Failed to fetch`) | `openapi.yaml` could not be fetched or parsed |
+| `.errors-wrapper .error-wrapper` | `Resolver error ...` (after expanding) | The definition has broken `$ref`s |
+| `.version-pragma` | `Unable to render this definition` | The response is not an OpenAPI document (e.g. `index.html` served with 200) |
+| `h4` | `No API definition provided.` | The response body is empty |
+
+What the report keeps:
+
+- **Always**: `openapi-fetch-<mode>.txt` — every `openapi.yaml` request with
+  its URL, status (or `failed (...)` / `no response yet`), content-type and the
+  first 200 bytes of the body.
+- **On success**: `api-docs-<mode>.png`, a full-page screenshot per color
+  scheme.
+- **On failure** (including timeouts while waiting for Swagger UI to render):
+  `swagger-ui-error-<mode>.png`, a full-page screenshot, plus annotations for
+  each Swagger UI error message (`swagger-ui error`) and the request summary
+  (`openapi.yaml fetch`).
+
+The test has a 90 s budget (`test.setTimeout`); each wait inside it is bounded
+well below that, so a stuck step fails on its own wait and the report still
+gets written.
+
+Skipping: unlike the other specs under `tests/authenticated/`, this spec skips
+in a `beforeEach` hook when `E2E_BASE_URL` is unset or when the saved login
+state (`test-results/.auth/state.json`) does not exist, i.e. when `setup` was
+skipped because a credential is missing. When `setup` fails (login broken),
+Playwright skips it through the `setup` project dependency, like every other
+authenticated spec. (The other authenticated specs currently error rather than
+skip when `setup` was skipped; fixing them is out of scope here.)
 
 ### API tests (HTTP-driven)
 
